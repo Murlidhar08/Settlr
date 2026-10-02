@@ -1,17 +1,26 @@
 import { createTransport, SentMessageInfo } from "nodemailer";
 import { getAppConfig } from "./app-config";
-import { envServer } from "./env.server";
+import { hasRole } from "./auth/permissions";
+import { getUserSession } from "./auth/auth";
+import z from "zod";
+import { testSmtpSchema } from "./zod/email/smtpschema";
+import { getTestEmailHtml } from "./templates/email-test";
 
 async function getSmtpTransporter() {
   const config = await getAppConfig();
 
+  // If SMTP is not enabled, return null
+  if (!config.smtpHost || !config.smtpPort || !config.smtpUser || !config.smtpPass) {
+    throw new Error("SMTP is not enabled");
+  }
+
   return createTransport({
-    host: config.smtpHost || envServer.SMTP_HOST,
-    port: Number(config.smtpPort || envServer.SMTP_PORT),
-    secure: config.smtpSecure ?? (envServer.SMTP_SECURE === "true"),
+    host: config.smtpHost,
+    port: Number(config.smtpPort),
+    secure: !!config.smtpSecure,
     auth: {
-      user: config.smtpUser || envServer.SMTP_USER,
-      pass: config.smtpPass || envServer.SMTP_PASS,
+      user: config.smtpUser,
+      pass: config.smtpPass,
     },
   });
 }
@@ -51,7 +60,7 @@ export async function sendMail({ sendTo, subject, htmlContent }: sendMailProp):
 
     // Build email options
     const mailOptions = {
-      from: config.fromEmail || envServer.FROM_EMAIL,
+      from: config.fromEmail ?? "",
       to: sendTo,
       subject,
       html: htmlContent,
@@ -74,4 +83,40 @@ export async function sendMail({ sendTo, subject, htmlContent }: sendMailProp):
       data: null,
     };
   }
+}
+
+// Custom config
+export async function testSmtpConfig(data: z.infer<typeof testSmtpSchema>) {
+  const session = await getUserSession();
+
+  if (!hasRole(session?.user?.role, "admin")) {
+    throw new Error("Unauthorized");
+  }
+
+  const validated = testSmtpSchema.parse(data);
+
+  const transporter = createTransport({
+    host: validated.smtpHost,
+    port: validated.smtpPort,
+    secure: validated.smtpSecure,
+    auth: {
+      user: validated.smtpUser,
+      pass: validated.smtpPass,
+    },
+  });
+
+  // Verify connection first
+  await transporter.verify();
+
+  // Send a test email
+  const from = validated.fromEmail || validated.smtpUser;
+  const emailHtml = getTestEmailHtml(validated);
+  await transporter.sendMail({
+    from,
+    to: validated.toEmail,
+    subject: "Test Email - SMTP Configuration Verified",
+    html: emailHtml,
+  });
+
+  return { success: true };
 }

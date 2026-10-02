@@ -1,5 +1,6 @@
 "use client";
 
+import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
@@ -10,7 +11,7 @@ import { Mail, ShieldAlert, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -18,6 +19,8 @@ export default function ForgotPasswordPage() {
   const [success, setSuccess] = useState(false);
   const [loading, setLoading] = useState(false);
   const router = useRouter();
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -26,17 +29,38 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
+      let fetchOptions: { headers?: Record<string, string> } = {};
+
+      let token = captchaToken;
+      if (!token && turnstileRef.current) {
+        try {
+          token = (await turnstileRef.current.getResponsePromise(4000)) || null;
+        } catch {
+          // Token retrieval timed out or unavailable
+        }
+      }
+
+      if (token) {
+        fetchOptions = {
+          headers: { "x-captcha-response": token },
+        };
+      }
+
       const result = await authClient.requestPasswordReset({
         email,
         redirectTo: "/reset-password",
-      });
+      }, fetchOptions);
 
       if (result.error) {
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
         setError(result.error.message || "Failed to send reset email");
       } else {
         setSuccess(true);
       }
     } catch (err) {
+      turnstileRef.current?.reset();
+      setCaptchaToken(null);
       setError("Something went wrong. Please try again.");
       console.error(err);
     } finally {
@@ -122,6 +146,13 @@ export default function ForgotPasswordPage() {
                       />
                       <Mail className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-5 h-5" />
                     </div>
+                    <TurnstileWidget
+                      ref={turnstileRef}
+                      action="forgot_password"
+                      onSuccess={(token) => setCaptchaToken(token)}
+                      onExpire={() => setCaptchaToken(null)}
+                      onError={() => setCaptchaToken(null)}
+                    />
                   </div>
 
                   <AnimatePresence mode="wait">

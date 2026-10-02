@@ -73,8 +73,15 @@ export function TwoFactorAuth({ isEnabled }: { isEnabled: boolean }) {
       return
     }
 
-    setTwoFactorData(result.data)
-    reset()
+    if (result.data && "totpURI" in result.data) {
+      setTwoFactorData({
+        totpURI: result.data.totpURI,
+        backupCodes: result.data.backupCodes,
+      })
+      reset()
+    } else {
+      toast.error("Failed to generate TOTP authentication data")
+    }
   }
 
   async function disable2FA(values: PasswordForm) {

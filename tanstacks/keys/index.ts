@@ -9,7 +9,6 @@ export const QUERY_KEYS = {
         current: ["current-user"] as const,
         detail: (id: string) => ["user", id] as const,
         deviceSessions: ["device-sessions"] as const,
-        name: ["user-name"] as const,
         documents: (userId: string) => ["user-documents", userId] as const,
     },
     admin: {
@@ -26,9 +25,6 @@ export const QUERY_KEYS = {
         userAccounts: ["user-accounts"] as const,
         userSessions: ["user-sessions"] as const,
         oauthProviders: ["oauth-providers"] as const,
-    },
-    common: {
-        heatMapCoordinates: ["heat-map-coordinates"] as const,
     },
 } as const;
 

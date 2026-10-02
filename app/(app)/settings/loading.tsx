@@ -1,19 +1,8 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { ChevronLeft } from "lucide-react";
 
 export default function SettingsLoading() {
   return (
-    <div className="min-h-screen bg-background">
-      {/* Skeleton for Header - matches BackHeader style */}
-      <div className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-xl border-b border-border/10">
-        <div className="mx-auto max-w-lg h-16 px-4 flex items-center gap-4">
-          <div className="h-10 w-10 rounded-2xl bg-muted/30 flex items-center justify-center">
-            <ChevronLeft size={20} className="text-muted-foreground/30" />
-          </div>
-          <Skeleton className="h-6 w-32 rounded-lg opacity-40" />
-        </div>
-      </div>
-
+    <div className="w-full bg-background">
       <div className="mx-auto max-w-lg p-6 space-y-8 animate-in fade-in duration-500">
         {/* Profile Card Skeleton */}
         <div className="h-28 w-full rounded-[2.5rem] bg-muted/20 border border-border/10 flex items-center px-6 gap-4">

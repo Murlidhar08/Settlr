@@ -2,12 +2,10 @@ import {
     createUser,
     deleteUser,
     deleteUserDocument,
-    getAllUsers,
     getCurrentUser,
     getDeviceSessions,
     getUserById,
     getUserDocuments,
-    getUsersByType,
     removeUserProfile,
     removeUserRole,
     renameUserDocument,
@@ -41,21 +39,6 @@ export const useUserById = (userId: string) => {
         queryKey: QUERY_KEYS.user.detail(userId),
         queryFn: () => getUserById(userId),
         enabled: !!userId,
-    });
-};
-
-export const useAllUsers = () => {
-    return useQuery({
-        queryKey: QUERY_KEYS.user.all,
-        queryFn: () => getAllUsers(),
-    });
-};
-
-export const useUsersByType = (type: string) => {
-    return useQuery({
-        queryKey: ["users-by-type", type],
-        queryFn: () => getUsersByType(type),
-        enabled: !!type,
     });
 };
 

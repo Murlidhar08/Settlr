@@ -1,7 +1,7 @@
 "use client"
 
 import { togglePartyActive } from "@/actions/parties.actions"
-import { BackHeader } from "@/components/back-header"
+import { BackHeader } from "@/components/header/back-header"
 import {
   AlertDialog,
   AlertDialogAction,

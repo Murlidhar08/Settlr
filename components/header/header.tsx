@@ -7,10 +7,10 @@ import { Menu } from "lucide-react"
 import Image from "next/image"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import ProfileAvatar from "./auth/profile-avatar"
-import { useNavItems } from "./navbar/use-nav-items"
-import { Button } from "./ui/button"
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "./ui/sheet"
+import ProfileAvatar from "../user/profile-avatar"
+import { useNavItems } from "../navbar/use-nav-items"
+import { Button } from "../ui/button"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../ui/sheet"
 
 interface HeaderProps {
   title: string

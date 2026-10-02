@@ -1,3 +1,5 @@
+import { getRoleBadgeClasses } from "./users-fn";
+
 export function getInitials(name?: string | null) {
     if (!name) return "?";
 
@@ -11,14 +13,7 @@ export function getInitials(name?: string | null) {
 }
 
 export function getRoleBadgeColor(role: string) {
-    switch (role?.toLowerCase()) {
-        case "admin":
-            return "bg-rose-500/10 text-rose-600 border-rose-200 dark:border-rose-900/50 dark:text-rose-400";
-        case "user":
-            return "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-900/50 dark:text-blue-400";
-        default:
-            return "bg-muted text-muted-foreground border-border";
-    }
+    return getRoleBadgeClasses(role);
 }
 
 export function sendWhatsappMessage(phone: string, message?: string): string {

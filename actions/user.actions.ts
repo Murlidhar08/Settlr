@@ -1,10 +1,12 @@
 "use server";
 
 import { auth, getUserSession } from "@/lib/auth/auth";
-import { deleteDirectory, deleteFile, uploadFile } from "@/lib/file-operations";
-import { UserRole, UserStatus } from "@/lib/generated/prisma/enums";
+import { parseRoles, stringifyRoles } from "@/lib/auth/permissions";
+import { deleteFile, uploadFile } from "@/lib/file-operations";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
-import { headers } from "next/headers";
+import { deleteUserAndAllData } from "@/lib/user-cleanup";
+import { cookies, headers } from "next/headers";
 
 export async function getCurrentUser() {
     const session = await getUserSession();
@@ -93,85 +95,6 @@ export async function uploadProfileImage(formData: FormData, userId?: string) {
     return { filePath: dbPath };
 }
 
-export async function updateUserStatus(userId: string, status: string) {
-    return prisma.user.update({
-        where: { id: userId },
-        data: { status: status as any }
-    });
-}
-
-export async function updateUserRole(userId: string, role: string) {
-    const session = await getUserSession();
-    if (!session) throw new Error("Unauthorized");
-
-    return await prisma.user.update({
-        where: { id: userId },
-        data: {
-            role: role === "admin" ? "admin" : "user"
-        }
-    });
-}
-
-export async function getUsersByType(type: string) {
-    return prisma.user.findMany({
-        where: {
-            role: (type === "admin" || type === "user") ? type : undefined
-        },
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            contactNo: true,
-            createdAt: true,
-            occupation: true,
-            address: true
-        }
-    });
-}
-
-// Get list of Clients (including admins)
-export async function getClients() {
-    return prisma.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            contactNo: true,
-            createdAt: true,
-            occupation: true,
-            address: true
-        }
-    });
-}
-
-// Get List of Agents (including admins)
-export async function getAgents() {
-    return prisma.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            contactNo: true,
-            occupation: true
-        }
-    });
-}
-
-// Get List of Owners (including admins)
-export async function getOwners() {
-    return prisma.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            contactNo: true
-        }
-    });
-}
 
 export async function getUserById(userId: string) {
     const session = await getUserSession();
@@ -194,7 +117,7 @@ export async function getUserById(userId: string) {
         ...user,
         banned: user.banned ?? false,
         banReason: user.banReason ?? null,
-        roleTypes: [user.role || "user"],
+        roleTypes: parseRoles(user.role),
     };
 }
 
@@ -202,67 +125,81 @@ export async function removeUserRole(userId: string, roleToRemove: string) {
     const session = await getUserSession();
     if (!session) throw new Error("Unauthorized");
 
-    await prisma.account.deleteMany({ where: { userId } });
-    await prisma.session.deleteMany({ where: { userId } });
-    await prisma.user.delete({ where: { id: userId } });
-    return { success: true, deletedUser: true };
+    const targetUser = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { role: true }
+    });
+
+    if (!targetUser) throw new Error("User not found");
+
+    const currentRoles = parseRoles(targetUser.role);
+    const updatedRoles = currentRoles.filter((r) => r.toLowerCase() !== roleToRemove.toLowerCase());
+
+    if (updatedRoles.length === 0) {
+        await prisma.account.deleteMany({ where: { userId } });
+        await prisma.session.deleteMany({ where: { userId } });
+        await prisma.user.delete({ where: { id: userId } });
+        return { success: true, deletedUser: true };
+    }
+
+    await prisma.user.update({
+        where: { id: userId },
+        data: { role: updatedRoles.sort().join(",") }
+    });
+
+    return {
+        success: true,
+        deletedUser: false,
+        remainingRoles: updatedRoles
+    };
 }
 
 export async function deleteUser(userId: string) {
     const session = await getUserSession();
     if (!session) throw new Error("Unauthorized");
+    return await deleteUserAndAllData(userId);
+}
 
-    // 1. Fetch user image and documents to delete physical files
-    const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: {
-            image: true,
-            userDocuments: {
-                select: { documentRelativePath: true }
-            }
-        }
-    });
-
-    if (user) {
-        // Delete profile image file if stored locally
-        if (user.image && !user.image.startsWith("http")) {
-            const oldRelativePath = user.image.replace("/api/files/", "").split("?")[0];
-            try {
-                await deleteFile(oldRelativePath);
-            } catch (e) {
-                console.error("Failed to delete user profile image during deleteUser:", e);
-            }
-        }
-
-        // Delete document files stored locally
-        if (user.userDocuments && user.userDocuments.length > 0) {
-            for (const doc of user.userDocuments) {
-                const docRelativePath = doc.documentRelativePath.replace("/api/files/", "").split("?")[0];
-                try {
-                    await deleteFile(docRelativePath);
-                } catch (e) {
-                    console.error("Failed to delete user document file during deleteUser:", e);
-                }
-            }
-        }
-
-        // Delete entire user document folder (document/${userId})
-        try {
-            await deleteDirectory(`document/${userId}`);
-        } catch (e) {
-            console.error("Failed to delete user document folder during deleteUser:", e);
-        }
+export async function confirmDeleteAccountWithToken(token: string) {
+    if (!token) {
+        return { success: false, error: "Invalid or missing verification token" };
     }
 
-    // 2. Delete database records in transaction
-    return await prisma.$transaction(async (tx) => {
-        await tx.userDocument.deleteMany({ where: { userId } });
-        await tx.account.deleteMany({ where: { userId } });
-        await tx.session.deleteMany({ where: { userId } });
-        return tx.user.delete({
-            where: { id: userId }
-        });
+    const verification = await prisma.verification.findFirst({
+        where: {
+            identifier: `delete-account-${token}`,
+            expiresAt: { gt: new Date() }
+        }
     });
+
+    if (!verification) {
+        return { success: false, error: "Invalid or expired deletion token" };
+    }
+
+    const userId = verification.value;
+
+    try {
+        await deleteUserAndAllData(userId);
+
+        // Delete verification record
+        await prisma.verification.delete({
+            where: { id: verification.id }
+        }).catch(() => { });
+
+        // Clear session cookies
+        const cookieStore = await cookies();
+        const allCookies = cookieStore.getAll();
+        for (const cookie of allCookies) {
+            if (cookie.name.includes("better-auth") || cookie.name.includes("session")) {
+                cookieStore.delete(cookie.name);
+            }
+        }
+
+        return { success: true };
+    } catch (error: any) {
+        console.error("Failed to delete account with token:", error);
+        return { success: false, error: error.message || "Failed to delete account and data" };
+    }
 }
 
 export async function createUser(data: any) {
@@ -271,6 +208,7 @@ export async function createUser(data: any) {
     const {
         name,
         email,
+        emailVerified,
         contactNo,
         username,
         status,
@@ -281,19 +219,25 @@ export async function createUser(data: any) {
         roles
     } = data;
 
-    const userRole = role || (Array.isArray(roles) && roles.includes("admin") ? "admin" : "user");
+    const userRole = stringifyRoles(roles || role || "user");
+    const isEmailVerified = typeof emailVerified === "boolean"
+        ? emailVerified
+        : emailVerified !== undefined
+            ? (emailVerified === "true" || emailVerified === "yes")
+            : false;
 
     const user = await prisma.user.create({
         data: {
             name,
             email: email || null,
+            emailVerified: isEmailVerified,
             contactNo: contactNo || null,
             username: username || null,
             status: status || UserStatus.pendingapproval,
             occupation: occupation || null,
             address: address || null,
             description: description || null,
-            role: userRole as UserRole || UserRole.user
+            role: userRole
         }
     });
 
@@ -301,11 +245,10 @@ export async function createUser(data: any) {
 }
 
 export async function updateUser(id: string, data: any) {
-    const session = await getUserSession();
-
     const {
         name,
         email,
+        emailVerified,
         contactNo,
         username,
         status,
@@ -316,20 +259,26 @@ export async function updateUser(id: string, data: any) {
         roles
     } = data;
 
-    const userRole = role || (Array.isArray(roles) && roles.includes("admin") ? "admin" : "user");
+    const userRole = stringifyRoles(roles || role || "user");
+    const resolvedEmailVerified = typeof emailVerified === "boolean"
+        ? emailVerified
+        : emailVerified !== undefined
+            ? (emailVerified === "true" || emailVerified === "yes")
+            : undefined;
 
     const user = await prisma.user.update({
         where: { id },
         data: {
             name,
             email: email || null,
+            ...(resolvedEmailVerified !== undefined ? { emailVerified: resolvedEmailVerified } : {}),
             contactNo: contactNo || null,
             username: username || null,
             status: status || UserStatus.pendingapproval,
             occupation: occupation || null,
             address: address || null,
             description: description || null,
-            role: userRole || "user"
+            role: userRole
         }
     });
 
@@ -408,22 +357,6 @@ export async function renameUserDocument(documentId: string, newName: string) {
     return prisma.userDocument.update({
         where: { id: documentId },
         data: { fileName: newName }
-    });
-}
-
-export async function getAllUsers() {
-    return prisma.user.findMany({
-        select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            contactNo: true,
-            createdAt: true,
-            occupation: true,
-            address: true,
-            role: true
-        }
     });
 }
 

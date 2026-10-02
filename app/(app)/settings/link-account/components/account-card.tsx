@@ -51,7 +51,6 @@ export default function AccountCard({
         return authClient.unlinkAccount(
             {
                 accountId: account.accountId,
-                providerId: provider,
             },
             {
                 onSuccess: () => router.refresh(),

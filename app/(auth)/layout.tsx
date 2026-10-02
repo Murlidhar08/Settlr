@@ -1,4 +1,5 @@
 import { BuildVersion } from "@/components/auth/build-version";
+import { TurnstileProvider } from "@/components/providers/turnstile-provider";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { isSetupRequired } from "@/lib/setup";
 import { headers } from "next/headers";
@@ -21,14 +22,18 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
-      <div className="absolute top-4 right-4 z-50">
-        <ThemeToggle />
+    <TurnstileProvider>
+      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+        <div className="absolute top-4 right-4 z-50">
+          <ThemeToggle />
+        </div>
+
+        <main className="w-full h-screen overflow-hidden">
+          {children}
+        </main>
+
+        <BuildVersion />
       </div>
-      <main className="w-full h-screen overflow-hidden">
-        {children}
-      </main>
-      <BuildVersion />
-    </div>
+    </TurnstileProvider>
   );
 }

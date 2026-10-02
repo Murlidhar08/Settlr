@@ -1,6 +1,7 @@
 "use client";
 
 import { DocumentPreview } from "@/components/document-preview";
+import { useConfirm } from "@/components/providers/confirm-provider";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -29,7 +30,8 @@ import {
     RefreshCw,
     Trash2
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface StorageItemProps {
     item: {
@@ -49,13 +51,80 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
     const [isPreviewOpen, setIsPreviewOpen] = useState(false);
     const [isRenameOpen, setIsRenameOpen] = useState(false);
     const [newName, setNewName] = useState(item.name);
+    const confirm = useConfirm();
 
-    const { data: children, isLoading, refetch } = useStorageItems(item.path, item.isDir && isExpanded);
+    const { data: children, isLoading, refetch, error: childrenError } = useStorageItems(item.path, item.isDir && isExpanded);
     const renameMutation = useRenameStorageItem();
     const deleteMutation = useDeleteStorageItem();
 
+    useEffect(() => {
+        if (childrenError) {
+            const message = childrenError.message === "FORBIDDEN"
+                ? `Permission denied to view contents of ${item.name}`
+                : childrenError.message || `Failed to load ${item.name}`;
+            toast.error(message);
+        }
+    }, [childrenError, item.name]);
+
     const isImage = item.extension.match(/(jpg|jpeg|png|gif|webp)$/i);
     const isPDF = item.extension === ".pdf";
+
+    const handleRename = () => {
+        const trimmed = newName.trim();
+        if (!trimmed) {
+            toast.error("Name cannot be empty");
+            return;
+        }
+        if (trimmed === item.name) {
+            setIsRenameOpen(false);
+            return;
+        }
+
+        renameMutation.mutate(
+            { oldPath: item.path, newName: trimmed },
+            {
+                onSuccess: () => {
+                    toast.success("Item renamed successfully");
+                    setIsRenameOpen(false);
+                    onRefresh();
+                },
+                onError: (err: any) => {
+                    const message = err?.message === "FORBIDDEN"
+                        ? "Permission denied: you cannot rename this item"
+                        : err?.message || "Failed to rename item";
+                    toast.error(message);
+                },
+            }
+        );
+    };
+
+    const handleDelete = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+
+        const isConfirmed = await confirm({
+            title: `Delete ${item.isDir ? "folder" : "file"}`,
+            description: `Are you sure you want to delete ${item.isDir ? `folder <strong>${item.name}</strong>` : `file <strong>${item.name}</strong>`}?`,
+            confirmText: `Delete ${item.isDir ? "folder" : "file"}`,
+            destructive: true
+        });
+        if (!isConfirmed) return;
+
+        deleteMutation.mutate(
+            { relativePath: item.path, isDir: item.isDir },
+            {
+                onSuccess: () => {
+                    toast.success(`${item.isDir ? "Folder" : "File"} deleted successfully`);
+                    onRefresh();
+                },
+                onError: (err: any) => {
+                    const message = err?.message === "FORBIDDEN"
+                        ? "Permission denied: you cannot delete this item"
+                        : err?.message || "Failed to delete item";
+                    toast.error(message);
+                },
+            }
+        );
+    };
 
     return (
         <div className="flex flex-col w-full">
@@ -111,7 +180,7 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8 rounded-lg hover:bg-destructive/10 hover:text-destructive transition-all"
-                        onClick={(e) => { e.stopPropagation(); if (confirm("Are you sure?")) deleteMutation.mutate({ relativePath: item.path, isDir: item.isDir }); }}
+                        onClick={handleDelete}
                     >
                         <Trash2 size={14} />
                     </Button>
@@ -129,10 +198,15 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
                             value={newName}
                             onChange={(e) => setNewName(e.target.value)}
                             className="h-12 rounded-xl border-border bg-muted/20 font-bold px-4"
+                            disabled={renameMutation.isPending}
                         />
                         <div className="flex gap-3">
-                            <Button variant="ghost" className="flex-1 rounded-xl" onClick={() => setIsRenameOpen(false)}>Cancel</Button>
-                            <Button className="flex-1 rounded-xl font-black" onClick={() => renameMutation.mutate({ oldPath: item.path, newName })}>Save Name</Button>
+                            <Button variant="ghost" className="flex-1 rounded-xl" onClick={() => setIsRenameOpen(false)} disabled={renameMutation.isPending}>
+                                Cancel
+                            </Button>
+                            <Button className="flex-1 rounded-xl font-black" onClick={handleRename} disabled={renameMutation.isPending}>
+                                {renameMutation.isPending ? "Saving..." : "Save Name"}
+                            </Button>
                         </div>
                     </div>
                 </DialogContent>
@@ -172,7 +246,16 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
 };
 
 export const AdminStorageManager = () => {
-    const { data: items, isLoading, refetch } = useStorageItems("/");
+    const { data: items, isLoading, refetch, error } = useStorageItems("/");
+
+    useEffect(() => {
+        if (error) {
+            const message = error.message === "FORBIDDEN"
+                ? "You do not have permission to access system storage"
+                : error.message || "Failed to load storage items";
+            toast.error(message);
+        }
+    }, [error]);
 
     return (
         <div className="space-y-6">
@@ -200,6 +283,25 @@ export const AdminStorageManager = () => {
                 {isLoading ? (
                     <div className="h-40 flex items-center justify-center text-muted-foreground animate-pulse font-black uppercase tracking-widest text-xs">
                         Scanning directory...
+                    </div>
+                ) : error ? (
+                    <div className="h-60 flex flex-col items-center justify-center text-center space-y-3 p-6">
+                        <div className="w-12 h-12 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center">
+                            <Database size={24} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-foreground">
+                                {error.message === "FORBIDDEN" ? "Permission Denied" : "Error Loading Storage"}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                                {error.message === "FORBIDDEN"
+                                    ? "You do not have the required permissions to view system storage."
+                                    : error.message || "An unexpected error occurred."}
+                            </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => refetch()} className="rounded-xl font-bold">
+                            <RefreshCw size={14} className="mr-2" /> Retry
+                        </Button>
                     </div>
                 ) : items?.length === 0 ? (
                     <div className="h-40 flex flex-col items-center justify-center text-muted-foreground/30">

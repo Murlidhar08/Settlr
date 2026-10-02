@@ -1,6 +1,5 @@
 "use client";
 
-import { AppHeader } from "@/components/app-header";
 import { FooterButtons } from "@/components/footer-buttons";
 import { useUserConfig } from "@/components/providers/user-config-provider";
 import MobileNav from "@/components/tab/mobile-tab";
@@ -19,7 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { containerVariants, itemVariants } from "@/lib/animations";
-import { signOut, useSession } from "@/lib/auth/auth-client";
+import { useSession } from "@/lib/auth/auth-client";
 import { envClient } from "@/lib/env.client";
 import { Currency, ThemeMode } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
@@ -90,8 +89,6 @@ export default function SettingsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-34">
-      <AppHeader title={tran("settings.title")} />
-
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -152,7 +149,7 @@ export default function SettingsPage() {
                   toast.success(tran("settings.msg.currency_updated"))
                 }}
               >
-                <SelectTrigger className="w-35 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
+                <SelectTrigger className="w-45 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl">
@@ -179,7 +176,7 @@ export default function SettingsPage() {
                   toast.success(tran("settings.msg.locale_updated"))
                 }}
               >
-                <SelectTrigger className="w-35 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
+                <SelectTrigger className="w-45 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl">
@@ -204,7 +201,7 @@ export default function SettingsPage() {
                   toast.success(tran("settings.msg.date_format_updated"))
                 }}
               >
-                <SelectTrigger className="w-35 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
+                <SelectTrigger className="w-45 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl">
@@ -229,7 +226,7 @@ export default function SettingsPage() {
                   toast.success(tran("settings.msg.time_format_updated"))
                 }}
               >
-                <SelectTrigger className="w-35 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
+                <SelectTrigger className="w-45 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl">
@@ -254,7 +251,7 @@ export default function SettingsPage() {
                   toast.success(tran("settings.msg.language_updated"))
                 }}
               >
-                <SelectTrigger className="w-35 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
+                <SelectTrigger className="w-45 h-10 rounded-xl border-2 font-bold focus:ring-primary/20">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="rounded-2xl shadow-2xl">
@@ -340,7 +337,7 @@ export default function SettingsPage() {
           <Section title={tran("settings.security_privacy")}>
             <Row
               icon={Link2Icon}
-              label={tran("settings.connected_accounts")}
+              label={tran("settings.linked_accounts")}
               href="/settings/link-account"
             />
             <Row
@@ -392,7 +389,6 @@ import { currencyItems, dateFormatItems, languageItems, localeItems, timeFormatI
 function SettingsSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <AppHeader title={"..."} />
       <div className="mx-auto max-w-4xl pb-32 mt-6 space-y-8 px-6 animate-pulse">
         {/* Profile Card Skeleton */}
         <div className="h-28 w-full rounded-[2rem] bg-muted/10 border border-border/50 p-6 flex items-center gap-4">

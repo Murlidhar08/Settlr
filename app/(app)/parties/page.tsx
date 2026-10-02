@@ -3,7 +3,6 @@ import { PartyType } from "@/lib/generated/prisma/enums";
 import { Suspense } from "react";
 
 // Components
-import { AppHeader } from "@/components/app-header";
 import MobileNav from "@/components/tab/mobile-tab";
 import * as motion from "framer-motion/client";
 import CustomersTab from "./components/customers-tab";
@@ -41,8 +40,6 @@ export default async function Parties({ searchParams }: PageProps) {
 
   return (
     <div className="w-full mx-auto pb-34">
-      <AppHeader title={"parties.title"} />
-
       <div className="w-full mx-auto max-w-4xl mt-6 space-y-8 px-6">
         <PartiesClientProvider currentTab={currentTab}>
           <PartyFilters />

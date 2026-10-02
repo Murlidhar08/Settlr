@@ -13,7 +13,6 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { BackHeader } from "@/components/back-header";
 import { DocumentPreview } from "@/components/document-preview";
 import { FooterButtons } from "@/components/footer-buttons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -38,10 +37,6 @@ export default function ProfilePage() {
 
     return (
         <div className="w-full bg-background pb-34">
-            <BackHeader
-                title={tran("profile.title")}
-                backUrl="/settings"
-            />
             <motion.div
                 variants={containerVariants}
                 initial="hidden"

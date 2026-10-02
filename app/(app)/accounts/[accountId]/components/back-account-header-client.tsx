@@ -2,7 +2,7 @@
 
 import { deleteFinancialAccount, setAccountAsDefault, toggleFinancialAccountActive } from "@/actions/financial-account.actions"
 import { AddAccountModal } from "@/components/account/add-account-modal"
-import { BackHeader } from "@/components/back-header"
+import { BackHeader } from "@/components/header/back-header"
 import {
     AlertDialog,
     AlertDialogAction,

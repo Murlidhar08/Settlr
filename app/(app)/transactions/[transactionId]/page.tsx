@@ -1,9 +1,7 @@
 "use client"
 
-import { BackHeader } from "@/components/back-header"
 import { Skeleton } from "@/components/ui/skeleton"
 import { FinancialAccountType } from "@/lib/generated/prisma/enums"
-import { tran } from "@/lib/languages/i18n"
 import { getTransactionPerspective } from "@/lib/transaction-logic"
 import { useTransactionDetail } from "@/tanstacks/cashbook"
 import { TransactionDirection } from "@/types/transaction/TransactionDirection"
@@ -49,7 +47,6 @@ export default function TransactionDetailPage({ params: paramsPromise }: { param
 function TransactionDetailSkeleton() {
   return (
     <div className="min-h-full bg-background relative">
-      <BackHeader title={tran("transactions.details")} />
       <main className="mx-auto max-w-6xl px-4 pb-32 pt-4 md:px-8 space-y-12">
         <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-12">
           <div className="lg:col-span-5 space-y-8">

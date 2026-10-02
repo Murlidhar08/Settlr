@@ -1,6 +1,6 @@
 "use client"
 
-import { BackHeader } from "@/components/back-header"
+import { BackHeader } from "@/components/header/back-header"
 import { useConfirm } from "@/components/providers/confirm-provider"
 import { useUserConfig } from "@/components/providers/user-config-provider"
 import { AddTransactionModal } from "@/components/transaction/add-transaction-modal"
@@ -69,7 +69,7 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
 
             <BackHeader
                 title={tran("transactions.details")}
-                description={transaction.description || tran("transactions.audit")}
+                showProfile={false}
                 menuItems={[
                     {
                         icon: <Pencil size={18} />,

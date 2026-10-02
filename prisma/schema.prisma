@@ -1,3 +1,4 @@
+
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -8,6 +9,7 @@ datasource db {
 }
 
 // Enums
+
 enum ThemeMode {
   AUTO
   LIGHT
@@ -17,6 +19,7 @@ enum ThemeMode {
 enum UserRole {
   admin
   user
+  moderator
 }
 
 enum UserStatus {
@@ -40,6 +43,7 @@ enum UserDocumentType {
 }
 
 // Better Auth tables
+
 model User {
   id               String     @id @default(cuid())
   name             String
@@ -48,7 +52,7 @@ model User {
   image            String?
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
-  role             UserRole   @default(user)
+  role             String     @default("user")
   status           UserStatus @default(pendingapproval)
   banned           Boolean?   @default(false)
   banReason        String?
@@ -137,6 +141,9 @@ model TwoFactor {
   user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   verified    Boolean? @default(true)
 
+  failedVerificationCount Int?      @default(0)
+  lockedUntil             DateTime?
+
   @@index([secret])
   @@index([userId])
   @@map("twoFactor")
@@ -162,11 +169,12 @@ model Passkey {
 }
 
 // Application settings tables
+
 model UserSettings {
   userId     String    @id
   currency   Currency  @default(INR)
   locale     String    @default("en-IN")
-  dateFormat String    @default("dd/MM/yyyy")
+  dateFormat String    @default("dd MMM, yyyy")
   timeFormat String    @default("hh:mm a")
   language   String    @default("en")
   theme      ThemeMode @default(AUTO)

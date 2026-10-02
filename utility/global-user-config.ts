@@ -3,7 +3,7 @@ import { UserSettingsInput } from "@/types/user/UserSettingsInput";
 import { getCurrencySymbol } from "./currency-fn";
 
 let globalUserConfig: UserSettingsInput = {
-    dateFormat: "dd/MM/yyyy",
+    dateFormat: "dd MMM, yyyy",
     timeFormat: "hh:mm a",
     currency: Currency.INR,
     currencySymbol: "₹",

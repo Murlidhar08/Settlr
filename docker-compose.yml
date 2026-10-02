@@ -26,8 +26,25 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 30s
 
+  prisma-studio:
+    image: chavda2772/prisma-studio:latest
+    container_name: property_prisma_studio
+    restart: always
+    ports:
+      - "5555:5555"
+    environment:
+      DATABASE_URL: "postgresql://next_user:next_pass@postgres_db:5432/next_template?schema=public"
+      STUDIO_PORT: 5555
+      STUDIO_HOST: "0.0.0.0"
+      STUDIO_BROWSER: "none"
+      AUTO_INTROSPECT: ${AUTO_INTROSPECT:-true}
+    networks:
+      - prisma-network
+    depends_on:
+      settlr:
+        condition: service_healthy
 
 volumes:
   uploads:

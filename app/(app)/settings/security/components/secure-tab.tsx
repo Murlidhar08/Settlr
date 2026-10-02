@@ -38,7 +38,7 @@ export function SecureTab({ email, hasPasswordAccount }: { email: string, hasPas
                 ) : hasPasswordAccount ? (
                     <ChangePasswordForm />
                 ) : (
-                    <SetPasswordForm email={email} />
+                    <SetPasswordForm />
                 )}
             </div>
         </motion.section>
@@ -53,6 +53,9 @@ type ChangePasswordFormValues = {
 }
 
 function ChangePasswordForm() {
+    const { data: session } = authClient.useSession()
+    const userEmail = session?.user?.email || ""
+
     const { register, handleSubmit, reset, watch, formState: { errors, isSubmitting }, setValue } = useForm<ChangePasswordFormValues>({
         defaultValues: { currentPassword: "", newPassword: "", revokeOtherSessions: false },
     })
@@ -70,61 +73,99 @@ function ChangePasswordForm() {
     }
 
     return (
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6 relative z-10">
-            <div className="grid gap-6">
-                <div className="space-y-2">
-                    <label className="ml-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">
-                        {tran("security.access.current_password")}
-                    </label>
-                    <Input
-                        {...register("currentPassword", { required: tran("security.access.required") })}
-                        type="password"
-                        className="h-14 rounded-2xl bg-muted/10 border-muted-foreground/10 focus:bg-background transition-all"
-                    />
-                    {errors.currentPassword && <p className="ml-1 text-xs font-bold text-rose-500 italic">
-                        {tran("security.access.msg.enter_current_password")}
-                    </p>}
+        <div className="space-y-8 relative z-10">
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid gap-6">
+                    <div className="space-y-2">
+                        <label className="ml-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">
+                            {tran("security.access.current_password")}
+                        </label>
+                        <Input
+                            {...register("currentPassword", { required: tran("security.access.required") })}
+                            type="password"
+                            className="h-14 rounded-2xl bg-muted/10 border-muted-foreground/10 focus:bg-background transition-all"
+                        />
+                        {errors.currentPassword && <p className="ml-1 text-xs font-bold text-rose-500 italic">
+                            {tran("security.access.msg.enter_current_password")}
+                        </p>}
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="ml-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">
+                            {tran("security.access.new_password")}
+                        </label>
+                        <Input
+                            {...register("newPassword", { required: tran("security.access.required"), minLength: 8 })}
+                            type="password"
+                            className="h-14 rounded-2xl bg-muted/10 border-muted-foreground/10 focus:bg-background transition-all"
+                        />
+                        {errors.newPassword && <p className="ml-1 text-xs font-bold text-rose-500 italic">
+                            {tran("security.access.min_length_8")}
+                        </p>}
+                    </div>
                 </div>
 
-                <div className="space-y-2">
-                    <label className="ml-1 text-[11px] font-black uppercase tracking-widest text-muted-foreground italic">
-                        {tran("security.access.new_password")}
-                    </label>
-                    <Input
-                        {...register("newPassword", { required: tran("security.access.required"), minLength: 8 })}
-                        type="password"
-                        className="h-14 rounded-2xl bg-muted/10 border-muted-foreground/10 focus:bg-background transition-all"
+                <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/20 border border-muted-foreground/5 cursor-pointer hover:bg-muted/30 transition-colors group">
+                    <Checkbox
+                        checked={watch("revokeOtherSessions")}
+                        onCheckedChange={(checked) => setValue("revokeOtherSessions", Boolean(checked))}
+                        id="revoke-sessions"
+                        className="size-5 rounded-lg border-2"
                     />
-                    {errors.newPassword && <p className="ml-1 text-xs font-bold text-rose-500 italic">
-                        {tran("security.access.min_length_8")}
-                    </p>}
+                    <label htmlFor="revoke-sessions" className="text-sm font-bold text-muted-foreground group-hover:text-foreground cursor-pointer transition-colors">
+                        {tran("security.access.revoke_others_label")}
+                    </label>
+                </div>
+
+                <Button
+                    type="submit"
+                    className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl transition-all active:scale-[0.98]"
+                    disabled={isSubmitting}
+                >
+                    <LoadingSwap isLoading={isSubmitting}>{tran("security.access.update_password")}</LoadingSwap>
+                </Button>
+            </form>
+
+            <div className="pt-2 space-y-4">
+                <div className="relative flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-muted-foreground/10" />
+                    </div>
+                    <span className="relative bg-card px-3 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                        {tran("security.access.or_forgot_password")}
+                    </span>
+                </div>
+
+                <div className="space-y-3">
+                    <div className="space-y-1 text-center sm:text-left">
+                        <p className="font-bold text-sm text-foreground">
+                            {tran("security.access.forgot_password_title")}
+                        </p>
+                        <p className="text-xs text-muted-foreground leading-relaxed">
+                            {tran("security.access.forgot_password_description")}
+                        </p>
+                    </div>
+
+                    <BetterAuthActionButton
+                        type="button"
+                        variant="outline"
+                        className="w-full h-14 rounded-2xl font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 transition-all text-primary"
+                        successMessage={tran("security.access.msg.recovery_link_sent")}
+                        action={() => authClient.requestPasswordReset({ email: userEmail, redirectTo: "/reset-password" })}
+                    >
+                        <Mail className="size-4 mr-2" />
+                        {tran("security.access.send_reset_link")}
+                    </BetterAuthActionButton>
                 </div>
             </div>
-
-            <div className="flex items-center gap-3 p-4 rounded-2xl bg-muted/20 border border-muted-foreground/5 cursor-pointer hover:bg-muted/30 transition-colors group">
-                <Checkbox
-                    checked={watch("revokeOtherSessions")}
-                    onCheckedChange={(checked) => setValue("revokeOtherSessions", Boolean(checked))}
-                    id="revoke-sessions"
-                    className="size-5 rounded-lg border-2"
-                />
-                <label htmlFor="revoke-sessions" className="text-sm font-bold text-muted-foreground group-hover:text-foreground cursor-pointer transition-colors">
-                    {tran("security.access.revoke_others_label")}
-                </label>
-            </div>
-
-            <Button
-                type="submit"
-                className="w-full h-14 rounded-2xl font-black uppercase tracking-widest shadow-xl shadow-primary/20 hover:shadow-2xl transition-all active:scale-[0.98]"
-                disabled={isSubmitting}
-            >
-                <LoadingSwap isLoading={isSubmitting}>{tran("security.access.update_password")}</LoadingSwap>
-            </Button>
-        </form>
+        </div>
     )
 }
 
-function SetPasswordForm({ email }: { email: string }) {
+function SetPasswordForm() {
+    const { data: session } = authClient.useSession()
+    const userEmail = session?.user?.email || ""
+
     return (
         <div className="space-y-6 relative z-10 text-center sm:text-left">
             <div className="space-y-2">
@@ -135,10 +176,11 @@ function SetPasswordForm({ email }: { email: string }) {
             </div>
 
             <BetterAuthActionButton
+                type="button"
                 variant="outline"
                 className="w-full h-14 rounded-2xl font-black uppercase tracking-widest border-primary/20 hover:bg-primary/5 transition-all text-primary"
                 successMessage={tran("security.access.msg.recovery_link_sent")}
-                action={() => authClient.requestPasswordReset({ email, redirectTo: "/reset-password" })}
+                action={() => authClient.requestPasswordReset({ email: userEmail, redirectTo: "/reset-password" })}
             >
                 <Mail className="size-4 mr-2" />
                 {tran("security.access.initialize_password_setup")}

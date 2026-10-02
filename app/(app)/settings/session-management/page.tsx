@@ -1,6 +1,5 @@
 "use client";
 
-import { BackHeader } from "@/components/back-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { containerVariants } from "@/lib/animations";
 import { useSession } from "@/lib/auth/auth-client";
@@ -19,11 +18,6 @@ export default function SessionManagementPage() {
 
     return (
         <div className="min-h-screen bg-background pb-20">
-            <BackHeader
-                title={tran("session.title")}
-                backUrl="/settings"
-            />
-
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -44,7 +38,6 @@ export default function SessionManagementPage() {
 function SessionSkeleton() {
     return (
         <div className="min-h-screen bg-background">
-            <BackHeader title={tran("session.title")} />
             <div className="mx-auto max-w-lg p-6 mt-6 space-y-8">
                 <div className="space-y-4">
                     <Skeleton className="h-5 w-40" />

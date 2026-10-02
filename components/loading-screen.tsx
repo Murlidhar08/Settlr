@@ -32,7 +32,7 @@ const ANIMATION_VARIANTS = [
 ] as const;
 
 export function LoadingScreen() {
-    const [message, setMessage] = useState("");
+    const [message, setMessage] = useState(MESSAGES[0]);
     const [variant, setVariant] = useState<typeof ANIMATION_VARIANTS[number]>("float");
     const { resolvedTheme } = useTheme();
     const [mounted, setMounted] = useState(false);
@@ -76,7 +76,7 @@ export function LoadingScreen() {
     };
 
     return (
-        <div className="h-full w-full flex flex-col items-center justify-center bg-background overflow-hidden">
+        <div className="relative flex-1 min-h-[50vh] w-full flex flex-col items-center justify-center bg-background overflow-hidden py-12 my-auto select-none">
             {/* Dynamic Background Elements */}
             <div className="absolute inset-0 pointer-events-none overflow-hidden">
                 <motion.div

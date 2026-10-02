@@ -19,7 +19,7 @@ services:
       - "3000:3000"
     networks:
       - prisma-network
-    restart: always
+    restart: unless-stopped
     volumes:
       - uploads:/app/uploads
     healthcheck:
@@ -27,7 +27,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
+      start_period: 30s
 
   prisma-studio:
     image: chavda2772/prisma-studio:latest
@@ -52,5 +52,4 @@ networks:
     name: prisma-network
 
 volumes:
-  db:
   uploads:

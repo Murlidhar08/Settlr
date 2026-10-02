@@ -1,6 +1,5 @@
 "use client"
 
-import { BackHeader } from "@/components/back-header"
 import { FooterButtons } from "@/components/footer-buttons"
 import MobileNav from "@/components/tab/mobile-tab"
 import { Button } from "@/components/ui/button"
@@ -63,8 +62,6 @@ export default function BusinessPage() {
 
     return (
         <div className="flex-1 w-full bg-background pb-34">
-            <BackHeader title={"business.manage_businesses"} />
-
             <div className="mx-auto w-full max-w-4xl px-6 py-8">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex flex-col">

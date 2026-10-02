@@ -1,10 +1,9 @@
 import {
     comprehensiveDeleteUser,
-    getAdminAppConfig,
     getAdminUsers,
     updateUserStatus
 } from "@/actions/admin.actions";
-import { updateAppConfig } from "@/actions/admin/app-config";
+import { getAdminAppConfig, testSmtpConfig, updateAppConfig } from "@/actions/admin/app-config";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "./keys";
@@ -34,6 +33,12 @@ export const useUpdateAppConfig = () => {
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.appConfig });
         },
+    });
+};
+
+export const useTestSmtpConfig = () => {
+    return useMutation({
+        mutationFn: (data: Parameters<typeof testSmtpConfig>[0]) => testSmtpConfig(data),
     });
 };
 

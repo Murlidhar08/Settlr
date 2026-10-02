@@ -41,7 +41,7 @@ export default async function UserDetailsPage({ params }: { params: Promise<{ us
 
     return (
         <>
-            <UserHeader userId={userId} />
+            <UserHeader userId={userId} hasImage={!!user.image} />
 
             <div className="min-h-full w-full bg-background p-4 sm:p-8 lg:p-12 space-y-10 max-w-7xl mx-auto">
                 {/* Header Section */}
