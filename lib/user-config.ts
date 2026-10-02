@@ -13,10 +13,10 @@ export function getDefaultConfig() {
   return {
     currency: Currency.INR,
     locale: "en-IN",
-    dateFormat: "dd/MM/yyyy",
+    dateFormat: "dd MMM, yyyy",
     timeFormat: "hh:mm a",
     language: "en",
-    theme: ThemeMode.AUTO,
+    theme: ThemeMode.LIGHT,
     defAccId: null as string | null,
     defIncomeAccId: null as string | null,
     defExpenseAccId: null as string | null,

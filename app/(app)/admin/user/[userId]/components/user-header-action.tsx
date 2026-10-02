@@ -1,6 +1,6 @@
 "use client";
 
-import { BackHeader } from "@/components/back-header";
+import { BackHeader } from "@/components/header/back-header";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { authClient } from "@/lib/auth/auth-client";
-import { useRemoveUserProfile } from "@/tanstacks/user";
+import { useRemoveUserProfile, useUserById } from "@/tanstacks/user";
 import { Eye, EyeOff, Lock, Pencil, RefreshCw, Trash } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -20,9 +20,10 @@ import { toast } from "sonner";
 
 interface UserHeaderMenuProps {
     userId: string;
+    hasImage?: boolean;
 }
 
-export function UserHeader({ userId }: UserHeaderMenuProps) {
+export function UserHeader({ userId, hasImage }: UserHeaderMenuProps) {
     const router = useRouter();
     const [isOpen, setIsOpen] = useState(false);
     const [newPassword, setNewPassword] = useState("");
@@ -84,6 +85,7 @@ export function UserHeader({ userId }: UserHeaderMenuProps) {
         <>
             <BackHeader
                 title={"User Details"}
+                showProfile={false}
                 menuItems={[
                     {
                         label: "Refresh",
@@ -95,11 +97,11 @@ export function UserHeader({ userId }: UserHeaderMenuProps) {
                         onClick: () => router.push(`/admin/user/${userId}/edit` as any),
                         icon: <Pencil size={18} className="text-blue-600" />
                     },
-                    {
+                    ...(hasImage ? [{
                         label: "Remove Profile",
                         onClick: () => removeProfile(),
                         icon: <Trash size={18} className="text-red-600" />
-                    },
+                    }] : []),
                     {
                         label: "Update Password",
                         onClick: () => setIsOpen(true),
@@ -159,6 +161,12 @@ export function UserHeader({ userId }: UserHeaderMenuProps) {
                                     type={showConfirmPassword ? "text" : "password"}
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" && !loading) {
+                                            e.preventDefault();
+                                            handleUpdatePassword();
+                                        }
+                                    }}
                                     className="h-12 rounded-xl border-border bg-muted/20 font-bold pl-4 pr-12 focus:ring-primary w-full"
                                     placeholder="Confirm new password..."
                                     disabled={loading}

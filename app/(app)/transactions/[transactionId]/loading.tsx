@@ -1,10 +1,6 @@
-import { BackHeader } from "@/components/back-header"
-
 export default function Loading() {
     return (
         <div className="min-h-full bg-background relative overflow-hidden">
-            <BackHeader title="Transaction Details" />
-
             <main className="relative z-10 mx-auto max-w-4xl px-4 pb-36 pt-12 md:px-6">
                 <div className="space-y-12">
                     {/* STATUS SECTION SKELETON */}

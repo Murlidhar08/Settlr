@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { parseRoles } from "@/lib/auth/permissions";
 import { cn, getFileUrl } from "@/lib/utils";
 import { useRemoveUserRole } from "@/tanstacks/user";
 import { getInitials, getRoleBadgeColor } from "@/utility/common-function";
@@ -87,7 +88,7 @@ export function UserDetailView({ user, role }: UserDetailViewProps) {
     }
   };
 
-  const roles = [user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : "User"];
+  const roles = parseRoles(user?.role).map((r) => r.charAt(0).toUpperCase() + r.slice(1));
 
   const menuItems = [
     { label: "Refresh", icon: <RefreshCw size={16} className="text-emerald-500" />, onClick: () => window.location.reload() },

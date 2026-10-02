@@ -1,10 +1,11 @@
 "use server";
 
+import { getAppConfig } from "@/lib/app-config";
+import { requirePermission } from "@/lib/auth/guard";
+import { testSmtpConfig as runTestSmtpConfig } from "@/lib/nodemailer";
 import { prisma } from "@/lib/prisma/prisma";
-import { getUserSession } from "@/lib/auth/auth";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { UserRole } from "@/lib/generated/prisma/enums";
 
 const appConfigSchema = z.object({
   smtpHost: z.string().optional().nullable(),
@@ -19,12 +20,13 @@ const appConfigSchema = z.object({
   discordClientSecret: z.string().optional().nullable(),
 });
 
-export async function updateAppConfig(data: z.infer<typeof appConfigSchema>) {
-  const session = await getUserSession();
+export async function getAdminAppConfig() {
+  await requirePermission("config", "read");
+  return await getAppConfig();
+}
 
-  if (session?.user.role !== UserRole.admin) {
-    throw new Error("Unauthorized");
-  }
+export async function updateAppConfig(data: z.infer<typeof appConfigSchema>) {
+  await requirePermission("config", "update");
 
   const validated = appConfigSchema.parse(data);
 
@@ -47,4 +49,8 @@ export async function updateAppConfig(data: z.infer<typeof appConfigSchema>) {
 
   revalidatePath("/admin");
   return { success: true };
+}
+
+export async function testSmtpConfig(data: Parameters<typeof runTestSmtpConfig>[0]) {
+  return runTestSmtpConfig(data);
 }

@@ -1,7 +1,7 @@
 // Packages
 import { Toaster } from "@/components/ui/sonner";
 import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono, Nunito_Sans } from "next/font/google";
+import { Geist_Mono, Nunito_Sans } from "next/font/google";
 
 // Style
 import "./globals.css";
@@ -18,17 +18,14 @@ import NextTopLoader from 'nextjs-toploader';
 
 const nunitoSans = Nunito_Sans({
   variable: '--font-sans',
-  subsets: ["latin"]
-});
-
-const geistSans = Geist({
-  variable: "--font-geist-sans",
   subsets: ["latin"],
+  display: "swap",
 });
 
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const viewport: Viewport = {
@@ -88,7 +85,7 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
       <head>
         <AppIconsMetaTags />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background`}>
+      <body className={`${geistMono.variable} font-sans antialiased bg-background`}>
 
         <NextTopLoader
           color="oklch(0.541 0.281 293.009)"
@@ -110,6 +107,9 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         <Toaster
           position="top-center"
           expand={false}
+          richColors
+          closeButton
+          theme="light"
         />
 
         {/* Only when admin is impersonating */}

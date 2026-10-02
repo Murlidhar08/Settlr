@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/app-header";
 import MobileNav from "@/components/tab/mobile-tab";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getUserSession } from "@/lib/auth/auth";
@@ -14,15 +13,13 @@ import SummaryCard, { SummaryCardSkeleton } from "./components/summary-card";
 import { TransactionListSkeletons } from "./components/transaction-item-skeleton";
 import WelcomeNote from "./components/welcome-note";
 
-// Components
+
 export default async function Page() {
   const session = await getUserSession();
   const firstName = session?.user.name?.split(" ")[0] || "User";
 
   return (
     <>
-      <AppHeader title="dashboard.title" />
-
       <div className="flex-1 px-4 space-y-6 sm:space-y-8 pb-34">
         {/* Header Section */}
         <section className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-4">

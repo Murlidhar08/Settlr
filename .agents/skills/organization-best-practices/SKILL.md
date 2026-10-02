@@ -122,7 +122,7 @@ For client-side member additions, use the invitation system instead.
 await auth.api.addMember({
   body: {
     userId: "user-id",
-    role: ["admin", "moderator"],
+    role: ["admin"],
     organizationId: "org-id",
   },
 });

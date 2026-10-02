@@ -4,8 +4,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getFileUrl } from "@/lib/utils";
+import { cn, getFileUrl } from "@/lib/utils";
 import { getInitials } from "@/utility/common-function";
+import { getRoleConfig } from "@/utility/users-fn";
 import { motion } from "framer-motion";
 import {
     Mail,
@@ -45,19 +46,19 @@ export function UserCard({ user, delay }: AgentListProps) {
     }
 
     const getBadge = (role: string) => {
-        const r = role.toLowerCase();
-        switch (r) {
-            case "admin":
-                return <Badge key={r} className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-300 border border-indigo-500/20 backdrop-blur-md text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 shadow-sm rounded-full">Admin</Badge>;
-            case "agent":
-                return <Badge key={r} className="bg-amber-500/10 text-amber-600 dark:text-amber-300 border border-amber-500/20 backdrop-blur-md text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 shadow-sm rounded-full">Agent</Badge>;
-            case "client":
-                return <Badge key={r} className="bg-blue-500/10 text-blue-600 dark:text-blue-300 border border-blue-500/20 backdrop-blur-md text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 shadow-sm rounded-full">Client</Badge>;
-            case "owner":
-                return <Badge key={r} className="bg-purple-500/10 text-purple-600 dark:text-purple-300 border border-purple-500/20 backdrop-blur-md text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 shadow-sm rounded-full">Owner</Badge>;
-            default:
-                return null;
-        }
+        if (!role || role.toLowerCase() === "user") return null;
+        const config = getRoleConfig(role);
+        return (
+            <Badge
+                key={config.id}
+                className={cn(
+                    config.colors.badge,
+                    "backdrop-blur-md text-[8px] font-black uppercase tracking-widest px-2.5 py-0.5 shadow-sm rounded-full"
+                )}
+            >
+                {config.label}
+            </Badge>
+        );
     }
 
     return (

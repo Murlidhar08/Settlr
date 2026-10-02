@@ -7,7 +7,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useForm, UseFormRegisterReturn } from 'react-hook-form'
 import { toast } from 'sonner'
 
-import { BackHeader } from '@/components/back-header'
 import { FooterButtons } from '@/components/footer-buttons'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
@@ -208,10 +207,6 @@ export default function EditProfilePage() {
 
   return (
     <div className="w-full bg-background pb-34">
-      <BackHeader
-        title={tran("profile.title")}
-        backUrl="/settings"
-      />
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -358,7 +353,6 @@ export default function EditProfilePage() {
 function EditProfileSkeleton() {
   return (
     <div className="min-h-screen bg-background">
-      <BackHeader title={tran("profile.edit.title")} />
       <div className="flex flex-col items-center py-10 space-y-4">
         <Skeleton className="h-32 w-32 rounded-full" />
         <Skeleton className="h-4 w-32" />

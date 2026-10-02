@@ -6,13 +6,15 @@ import { Eye, EyeOff, Mail, User } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 
+// Lib
 import { authClient, signIn } from "@/lib/auth/auth-client";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 
 // Components
+import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import DiscordAuth from "./components/discord-auth";
@@ -39,6 +41,9 @@ function LoginFormContent({ providers }: LoginFormProps) {
   const [lastLogin, setLastLogin] = useState("");
   const searchParams = useSearchParams();
   const errorCode = searchParams.get("error");
+  const turnstileRef = useRef<TurnstileInstance>(null);
+  const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const [isAddAccount, setIsAddAccount] = useState<boolean>(false);
 
   const hasSocialLogin = providers.google || providers.discord || providers.facebook;
 
@@ -51,12 +56,14 @@ function LoginFormContent({ providers }: LoginFormProps) {
 
   // Redirect to dashboard (skip if adding an account)
   useEffect(() => {
-    const isAddAccount = searchParams.get("add_account") === "1";
-    if (isAddAccount) {
+    const isAddAcc = searchParams.get("add_account") === "1";
+    if (isAddAcc) {
       setLastLogin(authClient.getLastUsedLoginMethod() || "");
+      setIsAddAccount(true);
       return;
     }
 
+    // Redirect to banned
     authClient.getSession()
       .then((session) => {
         if (session.data) {
@@ -76,12 +83,33 @@ function LoginFormContent({ providers }: LoginFormProps) {
     setLoading(true);
 
     try {
+      let fetchOptions: { headers?: Record<string, string> } = {};
+
+      let token = captchaToken;
+      if (!token && turnstileRef.current) {
+        try {
+          token = (await turnstileRef.current.getResponsePromise(4000)) || null;
+        } catch {
+          // Token retrieval timed out or unavailable
+        }
+      }
+
+      if (token) {
+        fetchOptions = {
+          headers: {
+            "x-captcha-response": token,
+          },
+        };
+      }
+
       const isEmail = emailOrUsername.includes("@");
       const result = isEmail
-        ? await signIn.email({ email: emailOrUsername, password })
-        : await signIn.username({ username: emailOrUsername, password });
+        ? await signIn.email({ email: emailOrUsername, password }, fetchOptions)
+        : await signIn.username({ username: emailOrUsername, password }, fetchOptions);
 
       if (result.error) {
+        turnstileRef.current?.reset();
+        setCaptchaToken(null);
         if (result.error.code === "BANNED_USER") {
           router.push(`/banned?reason=${encodeURIComponent(result.error.message || "")}`);
           return;
@@ -90,6 +118,8 @@ function LoginFormContent({ providers }: LoginFormProps) {
       }
       else router.push("/dashboard");
     } catch (err) {
+      turnstileRef.current?.reset();
+      setCaptchaToken(null);
       setError("An error occurred during sign in");
       console.error(err);
     } finally {
@@ -215,6 +245,14 @@ function LoginFormContent({ providers }: LoginFormProps) {
                     {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                   </button>
                 </div>
+
+                <TurnstileWidget
+                  ref={turnstileRef}
+                  action="sign_in"
+                  onSuccess={(token) => setCaptchaToken(token)}
+                  onExpire={() => setCaptchaToken(null)}
+                  onError={() => setCaptchaToken(null)}
+                />
               </div>
             </div>
 
@@ -270,14 +308,16 @@ function LoginFormContent({ providers }: LoginFormProps) {
         </div>
 
         {/* SIGN UP */}
-        <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
-          <p className="text-center text-muted-foreground">
-            Don&apos;t have an account?{" "}
-            <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              Get Started
-            </Link>
-          </p>
-        </motion.div>
+        {!isAddAccount && (
+          <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
+            <p className="text-center text-muted-foreground">
+              Don&apos;t have an account?{" "}
+              <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
+                Get Started
+              </Link>
+            </p>
+          </motion.div>
+        )}
       </motion.div >
 
       {/* RIGHT SIDE: ILLUSTRATION & FEATURES */}

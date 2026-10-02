@@ -39,16 +39,16 @@ export function UserStatusModal({ user, onClose, onSuccess }: UserStatusModalPro
 
         setLoading(true);
         try {
-            const res = await updateStatusMutation.mutateAsync({ userId: user.id, status: newStatus });
-            if (res?.error) {
-                toast.error(res.error || "Failed to update user status");
-                return;
-            }
+            await updateStatusMutation.mutateAsync({ userId: user.id, status: newStatus });
             toast.success("User status updated successfully");
             onSuccess();
             onClose();
-        } catch (error) {
-            toast.error("Failed to update user status");
+        } catch (error: unknown) {
+            if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("Failed to update user status");
+            }
         } finally {
             setLoading(false);
         }

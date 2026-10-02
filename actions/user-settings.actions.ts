@@ -18,10 +18,10 @@ export async function upsertUserSettings(data: UserSettingsInput) {
     where: { userId },
     create: {
       userId: userId,
-      dateFormat: data.dateFormat ?? "dd/MM/yyyy",
+      dateFormat: data.dateFormat ?? "dd MMM, yyyy",
       timeFormat: data.timeFormat ?? "hh:mm a",
       language: data.language ?? "en",
-      theme: data.theme ?? ThemeMode.AUTO,
+      theme: data.theme ?? ThemeMode.LIGHT,
       currency: data.currency ?? Currency.INR,
       locale: data.locale ?? "en-IN"
     },
@@ -57,13 +57,6 @@ export async function getListSessions() {
   return await auth.api.listSessions({
     headers: await headers(),
   });
-}
-
-export async function getCredientialAccounts() {
-  const accounts = await auth.api.listUserAccounts({
-    headers: await headers(),
-  });
-  return accounts.filter(a => a.providerId !== "credential");
 }
 
 export async function getAppVersion() {

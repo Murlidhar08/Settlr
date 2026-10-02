@@ -1,31 +1,21 @@
 "use server";
 
 import { deleteUser } from "@/actions/user.actions";
-import { getAppConfig } from "@/lib/app-config";
-import { auth, getUserSession } from "@/lib/auth/auth";
-import { UserRole, UserStatus } from "@/lib/generated/prisma/enums";
+import { auth } from "@/lib/auth/auth";
+import { requirePermission } from "@/lib/auth/guard";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import { headers } from "next/headers";
 
-export async function getAdminAppConfig() {
-    const session = await getUserSession();
-    if (session?.user.role !== UserRole.admin)
-        throw new Error("Unauthorized");
-
-    return await getAppConfig();
-}
-
 export async function getAdminUsers() {
-    const session = await getUserSession();
-    if (session?.user.role !== UserRole.admin)
-        throw new Error("Unauthorized");
+    const { user } = await requirePermission("user", "list");
 
     const usersList = await auth.api.listUsers({
         headers: await headers(),
         query: { limit: 100, sortBy: "createdAt", sortDirection: "desc" },
     });
 
-    const filteredUsers = usersList.users.filter((u: any) => u.id !== session.user.id);
+    const filteredUsers = usersList.users.filter((u: any) => u.id !== user.id);
 
     const usersWithCounts = await prisma.user.findMany({
         where: { id: { in: filteredUsers.map((u: any) => u.id) } },
@@ -47,9 +37,7 @@ export async function getAdminUsers() {
 }
 
 export async function comprehensiveDeleteUser(userId: string) {
-    const session = await getUserSession();
-    if (session?.user.role !== UserRole.admin)
-        throw new Error("Unauthorized");
+    await requirePermission("user", "delete");
 
     try {
         await deleteUser(userId);
@@ -61,18 +49,12 @@ export async function comprehensiveDeleteUser(userId: string) {
 }
 
 export async function updateUserStatus(userId: string, status: UserStatus) {
-    const session = await getUserSession();
-    if (session?.user.role !== UserRole.admin) throw new Error("Unauthorized");
+    await requirePermission("user", "update");
 
-    try {
-        await prisma.user.update({
-            where: { id: userId },
-            data: { status }
-        });
+    await prisma.user.update({
+        where: { id: userId },
+        data: { status }
+    });
 
-        return { success: true };
-    } catch (error: any) {
-        console.error("Failed to update user status:", error);
-        return { error: error.message || "Failed to update user status" };
-    }
+    return { success: true };
 }

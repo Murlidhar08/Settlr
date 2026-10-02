@@ -1,6 +1,5 @@
 "use client";
 
-import { BackHeader } from "@/components/back-header";
 import { Skeleton } from "@/components/ui/skeleton";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import { SUPPORTED_OAUTH_PROVIDERS } from '@/lib/auth/o-auth-providers';
@@ -22,11 +21,6 @@ export default function LinkAccountPage() {
 
     return (
         <div className="min-h-screen bg-background pb-20">
-            <BackHeader
-                title={tran("linked_accounts.title")}
-                backUrl="/settings"
-            />
-
             <motion.div
                 variants={containerVariants}
                 initial="hidden"
@@ -87,7 +81,6 @@ export default function LinkAccountPage() {
 function LinkAccountSkeleton() {
     return (
         <div className="min-h-screen bg-background">
-            <BackHeader title={tran("linked_accounts.title")} />
             <div className="mx-auto max-w-lg p-6 mt-6 space-y-8">
                 <div className="space-y-4">
                     <Skeleton className="h-5 w-32" />

@@ -3,12 +3,14 @@ import { passkey } from "@better-auth/passkey";
 import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
-import { admin as adminPlugin, customSession, haveIBeenPwned, lastLoginMethod, multiSession, twoFactor, username } from "better-auth/plugins";
+import { admin as adminPlugin, customSession, haveIBeenPwned, lastLoginMethod, multiSession, twoFactor, username, captcha } from "better-auth/plugins";
 import { redirect } from "next/navigation";
 
 // Lib
 import { sendMail } from "../nodemailer";
 import { prisma } from "../prisma/prisma";
+import { ac, parseRoles, roles } from "./permissions";
+import { deleteUserPhysicalFiles } from "../user-cleanup";
 
 // Template
 import { createDefaultAccountsForBusiness } from "@/actions/business.actions";
@@ -56,9 +58,15 @@ export const auth = betterAuth({
     },
     deleteUser: {
       enabled: true,
-      sendDeleteAccountVerification: async ({ user, url }) => {
+      sendDeleteAccountVerification: async ({ user, url, token }: any) => {
         try {
-          const emailHtml = getDeleteAccountEmailHtml(user.email, url)
+          const confirmUrl = token ? `${envServer.BETTER_AUTH_URL}/confirm-delete-account?token=${token}` : url;
+          const emailHtml = getDeleteAccountEmailHtml(user.email, confirmUrl);
+
+          // Dev-only helper
+          if (envServer.NODE_ENV === "development") {
+            console.log("Delete confirmation URL (dev only):", confirmUrl);
+          }
 
           const { data, error } = await sendMail({
             sendTo: user.email,
@@ -67,20 +75,24 @@ export const auth = betterAuth({
           });
 
           if (error) {
-            console.error("Failed to send delete account email:", error)
-            throw new Error("Failed to send delete account email")
+            console.error("Failed to send delete account email:", error);
+            throw new Error("Failed to send delete account email");
           }
 
-          console.log("Delete account confirmation email sent to:", user.email)
-          console.log("Email ID:", data?.id)
-
-          // Dev-only helper
-          if (envServer.NODE_ENV === "development") {
-            console.log("Delete confirmation URL (dev only):", url)
-          }
+          console.log("Delete account confirmation email sent to:", user.email);
+          console.log("Email ID:", data?.id);
         } catch (error) {
-          console.error("Error in sendDeleteAccountVerification:", error)
-          throw error
+          console.error("Error in sendDeleteAccountVerification:", error);
+          throw error;
+        }
+      },
+      beforeDelete: async (user: any) => {
+        try {
+          if (user?.id) {
+            await deleteUserPhysicalFiles(user.id);
+          }
+        } catch (e) {
+          console.error("Error cleaning up user files before delete:", e);
         }
       }
     }
@@ -91,13 +103,12 @@ export const auth = betterAuth({
     // Send password reset mail
     sendResetPassword: async ({ user, url }) => {
       try {
-        const emailHtml = getResetPasswordEmailHtml(user.email, url);
-
         // In development, also log the URL for easy testing
         if (envServer.NODE_ENV === "development") {
           console.log("verification URL (dev only):", url)
         }
 
+        const emailHtml = getResetPasswordEmailHtml(user.email, url)
         const { data, error } = await sendMail({
           sendTo: user.email,
           subject: "Reset Your Password",
@@ -110,12 +121,6 @@ export const auth = betterAuth({
         }
         console.log("Reset password email sent successfully to:", user.email)
         console.log("Email data:", data)
-
-        // In development, also log the URL for easy testing
-        if (envServer.NODE_ENV === "development") {
-          console.log("Reset URL (dev only):", url)
-        }
-
       } catch (error) {
         console.error("Error in sendResetPassword:", error)
         throw error
@@ -123,8 +128,30 @@ export const auth = betterAuth({
     },
 
     // Send password reset successfully mail
-    onPasswordReset: async ({ user }) => {
+    onPasswordReset: async ({ user }, request) => {
       try {
+        const revokeHeader = request?.headers?.get("x-revoke-all-sessions") || request?.headers?.get("x-revoke-other-sessions");
+        let shouldRevoke = revokeHeader === "true";
+        if (!shouldRevoke && request?.url) {
+          try {
+            const url = new URL(request.url, envServer.BETTER_AUTH_URL);
+            if (url.searchParams.get("revokeSessions") === "true") {
+              shouldRevoke = true;
+            }
+          } catch {
+            // ignore URL parse errors
+          }
+        }
+
+        if (shouldRevoke) {
+          await prisma.session.deleteMany({
+            where: {
+              userId: user.id,
+            },
+          });
+          console.log(`Successfully revoked all sessions for user ${user.email} on password reset.`);
+        }
+
         const appUrl = envServer.BETTER_AUTH_URL;
         const emailHtml = getPasswordResetSuccessEmailHtml(user.email, appUrl);
 
@@ -207,7 +234,12 @@ export const auth = betterAuth({
     }
   },
   plugins: [
-    adminPlugin(),
+    adminPlugin({
+      ac,
+      roles,
+      defaultRole: "user",
+      adminRoles: ["admin"],
+    }),
     twoFactor(),
     lastLoginMethod(),
     passkey(),
@@ -251,6 +283,7 @@ export const auth = betterAuth({
       const activeBusinessId = dbUser?.activeBusinessId
       const settings = dbUser?.userSettings
       const dbSession = dbUser?.sessions[0];
+      const userRole = dbUser?.role ?? "user";
 
       // Fetch active business defaults if available
       let businessDefaults = {
@@ -285,10 +318,10 @@ export const auth = betterAuth({
           userSettings: {
             currency: settings?.currency ?? Currency.INR,
             locale: settings?.locale ?? "en-IN",
-            dateFormat: settings?.dateFormat ?? "dd/MM/yyyy",
+            dateFormat: settings?.dateFormat ?? "dd MMM, yyyy",
             timeFormat: settings?.timeFormat ?? "hh:mm a",
             language: settings?.language ?? "en",
-            theme: settings?.theme ?? ThemeMode.AUTO,
+            theme: settings?.theme ?? ThemeMode.LIGHT,
             ...businessDefaults,
           },
         },
@@ -296,8 +329,9 @@ export const auth = betterAuth({
         user: {
           ...user,
           status: dbUser?.status ?? UserStatus.pendingapproval,
-          role: dbUser?.role,
           activeBusinessId: activeBusinessId,
+          role: userRole,
+          roles: parseRoles(userRole),
           contactNo: dbUser?.contactNo,
           address: dbUser?.address,
           twoFactorEnabled: dbUser?.twoFactorEnabled ?? false,
@@ -314,7 +348,20 @@ export const auth = betterAuth({
       customPasswordCompromisedMessage: "This password has appeared in data breaches. Please choose a stronger, unique password."
     }),
     username(),
-    nextCookies()
+    nextCookies(),
+    ...((envServer.TURNSTILE_SECRET_KEY && envServer.NEXT_PUBLIC_TURNSTILE_SITE_KEY) ? [
+      captcha({
+        provider: "cloudflare-turnstile",
+        secretKey: envServer.TURNSTILE_SECRET_KEY as string,
+        endpoints: [
+          "/sign-in/email",
+          "/sign-in/username",
+          "/sign-up/email",
+          "/forget-password",
+          "/request-password-reset",
+        ],
+      }),
+    ] : []),
   ],
   databaseHooks: {
     user: {

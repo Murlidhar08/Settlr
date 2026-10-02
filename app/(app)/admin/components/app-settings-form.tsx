@@ -13,8 +13,6 @@ import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import * as z from "zod";
 
-const emailRegex = /^([^<]+<)?([^@\s<>]+@[^@\s<>.]+\.[^@\s<>.]+)>?$/;
-
 const appConfigSchema = z.object({
     smtpHost: z.string().optional().nullable(),
     smtpPort: z.coerce.number().int().optional().nullable(),
@@ -33,7 +31,9 @@ const appConfigSchema = z.object({
 type AppConfigValues = z.infer<typeof appConfigSchema>;
 
 import { FooterButtons } from "@/components/footer-buttons";
+import { emailRegex } from "@/lib/constants/regex-list";
 import { tran } from "@/lib/languages/i18n";
+import { SendMail } from "./send-mail";
 
 interface AppSettingsFormProps {
     initialData: any;
@@ -99,7 +99,7 @@ export function AppSettingsForm({ initialData }: AppSettingsFormProps) {
                     <Input
                         {...form.register("fromEmail")}
                         className="h-12 rounded-2xl border-none bg-muted/40 shadow-inner focus-visible:ring-primary/20 transition-all font-bold"
-                        placeholder="noreply@example.com"
+                        placeholder="App <noreply@example.com>"
                     />
                 </div>
                 <div className="grid gap-6 sm:grid-cols-3">
@@ -126,6 +126,7 @@ export function AppSettingsForm({ initialData }: AppSettingsFormProps) {
                         <Input
                             {...form.register("smtpUser")}
                             className="h-12 rounded-2xl border-none bg-muted/40 shadow-inner focus-visible:ring-primary/20 transition-all font-bold"
+                            placeholder="example@gmail.com"
                         />
                     </div>
                     <div className="space-y-2">
@@ -134,6 +135,7 @@ export function AppSettingsForm({ initialData }: AppSettingsFormProps) {
                             type="password"
                             {...form.register("smtpPass")}
                             className="h-12 rounded-2xl border-none bg-muted/40 shadow-inner focus-visible:ring-primary/20 transition-all font-bold"
+                            placeholder="******"
                         />
                     </div>
                 </div>
@@ -149,6 +151,9 @@ export function AppSettingsForm({ initialData }: AppSettingsFormProps) {
                         <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest italic">{tran("admin.app_config.secure_connection_desc")}</p>
                     </div>
                 </div>
+
+                {/* Test Email Section */}
+                <SendMail form={form} />
             </ConfigCard>
 
             {/* Email Auth Card (OAuth) */}

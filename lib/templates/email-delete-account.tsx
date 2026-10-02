@@ -1,10 +1,10 @@
-import { envServer } from '../env.server';
+import { envServer } from "../env.server";
 
 export function getDeleteAccountEmailHtml(
   email: string,
   deleteUrl: string
 ): string {
-  const primaryColor = "#dc2626"; // Red for deletion
+  const primaryColor = "#dc2626"; // Vibrant danger red
   const appName = envServer.NEXT_PUBLIC_APP_NAME;
   const appUrl = envServer.BETTER_AUTH_URL;
 
@@ -20,12 +20,12 @@ export function getDeleteAccountEmailHtml(
     <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f8fafc; padding:40px 20px;">
       <tr>
         <td align="center">
-          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:16px; border:1px solid #e2e8f0; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);">
+          <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px; background-color:#ffffff; border-radius:16px; border:1px solid #fee2e2; box-shadow:0 10px 25px -5px rgba(220, 38, 38, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);">
             <!-- Header -->
             <tr>
               <td style="padding:40px 40px 20px 40px; text-align:center;">
                 <img src="${appUrl}/images/logo/light_logo.png" alt="${appName} Logo" style="height:48px; width:auto; display:inline-block; margin-bottom:16px;" />
-                <div style="font-size:24px; font-weight:700; color:#0f172a; letter-spacing:-0.5px;">
+                <div style="font-size:24px; font-weight:800; color:${primaryColor}; letter-spacing:-0.5px;">
                   ${appName}
                 </div>
               </td>
@@ -34,50 +34,61 @@ export function getDeleteAccountEmailHtml(
             <!-- Content -->
             <tr>
               <td style="padding:0 40px 40px 40px;">
-                <h1 style="margin:0 0 16px 0; font-size:24px; font-weight:700; color:#0f172a; text-align:center;">
+                <h1 style="margin:0 0 16px 0; font-size:24px; font-weight:800; color:#0f172a; text-align:center;">
                   Confirm Account Deletion
                 </h1>
-                <p style="margin:0 0 18px 0; font-size:16px; line-height:24px; color:#475569;">
-                  Hi,
+                <p style="margin:0 0 16px 0; font-size:16px; line-height:24px; color:#475569;">
+                  Hello,
                 </p>
-                <p style="margin:0 0 18px 0; font-size:16px; line-height:24px; color:#475569;">
-                  A request was made to <strong>permanently delete</strong> the ${appName} account associated with: <strong>${email}</strong>
+                <p style="margin:0 0 20px 0; font-size:16px; line-height:24px; color:#475569;">
+                  We received a request to permanently delete the ${appName} account associated with <strong>${email}</strong>.
                 </p>
-                <p style="margin:0 0 24px 0; font-size:16px; line-height:24px; color:#ef4444; background-color:#fef2f2; padding:16px; border-radius:12px; border:1px solid #fee2e2;">
-                  <strong>⚠️ Warning:</strong> This action is irreversible. All your data, businesses, transactions, and settings will be permanently removed.
-                </p>
-                <p style="margin:0 0 24px 0; font-size:16px; line-height:24px; color:#475569; text-align:center;">
-                  If you’re sure you want to continue, click the button below.
+
+                <!-- Danger Warning Card -->
+                <div style="margin:0 0 24px 0; padding:16px; background-color:#fef2f2; border:1px solid #fecaca; border-radius:12px; text-align:left;">
+                  <div style="font-size:14px; font-weight:700; color:#991b1b; margin-bottom:6px;">
+                    ⚠️ Permanent & Irreversible Action
+                  </div>
+                  <p style="margin:0; font-size:13px; line-height:20px; color:#b91c1c;">
+                    Once confirmed, your account, personal data, uploaded documents, active sessions, and configurations will be permanently deleted and cannot be recovered.
+                  </p>
+                </div>
+
+                <p style="margin:0 0 24px 0; font-size:15px; line-height:22px; color:#475569; text-align:center;">
+                  If you are certain you want to proceed with permanent deletion, click the button below:
                 </p>
 
                 <!-- Button -->
                 <table width="100%" cellpadding="0" cellspacing="0">
                   <tr>
-                    <td align="center" style="padding:10px 0 30px 0;">
-                      <a href="${deleteUrl}" style="display:inline-block; padding:14px 32px; background-color:${primaryColor}; color:#ffffff; text-decoration:none; border-radius:12px; font-size:16px; font-weight:600; box-shadow:0 4px 10px rgba(220, 38, 38, 0.25);">
-                        Delete Account Permanently
+                    <td align="center" style="padding:10px 0 28px 0;">
+                      <a href="${deleteUrl}" style="display:inline-block; padding:14px 32px; background-color:${primaryColor}; color:#ffffff; text-decoration:none; border-radius:12px; font-size:15px; font-weight:700; letter-spacing:0.5px; text-transform:uppercase; box-shadow:0 4px 14px rgba(220, 38, 38, 0.35);">
+                        Permanently Delete Account
                       </a>
                     </td>
                   </tr>
                 </table>
 
-                <p style="margin:0 0 12px 0; font-size:14px; color:#64748b; text-align:center;">
-                  Or paste this link into your browser:
+                <p style="margin:0 0 12px 0; font-size:13px; color:#64748b; text-align:center;">
+                  Or copy and paste this link into your browser:
                 </p>
-                <div style="padding:12px; background-color:#f1f5f9; border-radius:8px; font-size:12px; color:#2563eb; word-break:break-all; text-align:center; font-family:monospace;">
+                <div style="padding:12px; background-color:#fef2f2; border:1px solid #fee2e2; border-radius:8px; font-size:12px; color:${primaryColor}; word-break:break-all; text-align:center; font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;">
                   ${deleteUrl}
                 </div>
                 
-                <p style="margin:30px 0 0 0; font-size:14px; line-height:20px; color:#94a3b8; text-align:center;">
-                  This link will expire in 1 hour. If you didn't request deletion, you can safely ignore this email.
+                <p style="margin:28px 0 0 0; font-size:13px; line-height:20px; color:#94a3b8; text-align:center;">
+                  This link will expire in 24 hours. If you did not make this request, please ignore this email and your account will remain safe.
                 </p>
               </td>
             </tr>
 
             <!-- Footer -->
             <tr>
-              <td style="padding:32px 40px; background-color:#f8fafc; border-top:1px solid #e2e8f0; border-bottom-left-radius:16px; border-bottom-right-radius:16px; text-align:center;">
-                <p style="margin:0; font-size:12px; color:#94a3b8; line-height:18px;">
+              <td style="padding:28px 40px; background-color:#fff1f2; border-top:1px solid #fee2e2; border-bottom-left-radius:16px; border-bottom-right-radius:16px; text-align:center;">
+                <p style="margin:0; font-size:12px; color:#e11d48; line-height:18px; font-weight:600;">
+                  Security & Privacy Alert
+                </p>
+                <p style="margin:6px 0 0 0; font-size:12px; color:#94a3b8; line-height:18px;">
                   © ${new Date().getFullYear()} ${appName}. All rights reserved.
                 </p>
               </td>

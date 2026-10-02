@@ -13,11 +13,13 @@ import {
     DropdownMenuTrigger
 } from "@/components/ui/dropdown-menu";
 import { authClient } from "@/lib/auth/auth-client";
+import { getRoleConfig, parseRoles, Role } from "@/utility/users-fn";
 import {
     Activity,
     Ban,
     Check,
     MoreHorizontal,
+    Pencil,
     Phone,
     RefreshCw,
     Shield,
@@ -29,13 +31,23 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { UserRole, UserStatus } from "@/lib/generated/prisma/enums";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
-import { getFileUrl } from "@/lib/utils";
+import { cn, getFileUrl } from "@/lib/utils";
 import { useComprehensiveDeleteUser } from "@/tanstacks/admin";
 import { getInitials } from "@/utility/common-function";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
-import { UserStatusModal } from "./user-status-modal";
+
+const UserRoleModal = dynamic(
+    () => import("./user-role-modal").then((m) => m.UserRoleModal),
+    { ssr: false }
+);
+
+const UserStatusModal = dynamic(
+    () => import("./user-status-modal").then((m) => m.UserStatusModal),
+    { ssr: false }
+);
 
 interface User {
     id: string;
@@ -64,6 +76,9 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
     // User Status Update
     const [selectedUserForStatus, setSelectedUserForStatus] = useState<User | null>(null);
 
+    // User Role Update
+    const [selectedUserForRole, setSelectedUserForRole] = useState<User | null>(null);
+
     const handleAction = async (userId: string, action: () => Promise<any>, successMsg: string) => {
         setActionLoading(userId);
         try {
@@ -79,14 +94,6 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
         } finally {
             setActionLoading(null);
         }
-    };
-
-    const setRole = async (userId: string, role: string) => {
-        await handleAction(
-            userId,
-            () => authClient.admin.setRole({ userId, role: role as any }),
-            tran("admin.user_mng.msg.success_role_updated", { role })
-        );
     };
 
     const banUser = async (userId: string) => {
@@ -149,16 +156,21 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
         );
     };
 
-    const getRoleBadge = (role: string) => {
-        const r = role.toLowerCase();
-        switch (r) {
-            case "admin":
-                return <Badge key={r} variant="secondary" className="bg-indigo-500/10 text-indigo-500 border-none text-[9px] font-black tracking-widest h-5 px-2">Admin</Badge>;
-            case "user":
-                return null;
-            default:
-                return <Badge key={r} variant="secondary" className="bg-muted text-muted-foreground border-none text-[9px] font-black tracking-widest h-5 px-2">{role}</Badge>;
-        }
+    const getRoleBadges = (roleString?: string | null) => {
+        const userRoles = parseRoles(roleString);
+        return userRoles.map((r) => {
+            if (r === "user" && userRoles.length === 1) return null;
+            const config = getRoleConfig(r);
+            return (
+                <Badge
+                    key={r}
+                    variant="secondary"
+                    className={cn(config.colors.badge, "text-[9px] font-black tracking-widest h-5 px-2")}
+                >
+                    {config.label}
+                </Badge>
+            );
+        });
     };
 
     return (
@@ -208,7 +220,7 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
                                 </Badge>
                             )}
                             <div className="flex flex-wrap gap-1">
-                                {user.role && getRoleBadge(user.role)}
+                                {getRoleBadges(user.role)}
                             </div>
                         </div>
                         <div className="flex items-center gap-4">
@@ -223,7 +235,7 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
                     </div>
                 </div>
 
-                <div className="flex items-center gap-8" onClick={(e) => e.stopPropagation()}>
+                <div className="flex items-center gap-2 sm:gap-3" onClick={(e) => e.stopPropagation()}>
                     <DropdownMenu>
                         <DropdownMenuTrigger
                             render={
@@ -239,6 +251,20 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
                         />
                         <DropdownMenuContent align="end" className="w-60 rounded-3xl p-2 border-none shadow-2xl bg-background/95 backdrop-blur-xl">
                             <DropdownMenuGroup>
+                                {/* Edit User */}
+                                <DropdownMenuItem
+                                    onClick={() => router.push(`/admin/user/${user.id}/edit`)}
+                                    className="group rounded-2xl gap-3 p-2.5 focus:bg-blue-600 focus:text-white transition-all duration-300 cursor-pointer active:scale-95 mt-1"
+                                >
+                                    <div className="p-2.5 bg-blue-500/10 rounded-xl group-focus:bg-white/20 transition-colors">
+                                        <Pencil size={18} className="text-blue-600 group-focus:text-white" />
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                        <span className="font-bold text-[13px] tracking-tight">{tran("admin.user_mng.edit_user")}</span>
+                                        <span className="text-[10px] opacity-70 font-medium group-focus:text-white/80">{tran("admin.user_mng.edit_desc")}</span>
+                                    </div>
+                                </DropdownMenuItem>
+
                                 <DropdownMenuItem
                                     onClick={() => {
                                         setSelectedUserForStatus(user);
@@ -256,30 +282,18 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
 
                                 {/* Role Management */}
                                 <DropdownMenuItem
-                                    onClick={() => setRole(user.id, user.role === UserRole.admin ? UserRole.user : UserRole.admin)}
-                                    className="group rounded-2xl gap-3 p-2.5 focus:bg-indigo-600 focus:text-white transition-all duration-300 cursor-pointer active:scale-95"
+                                    onClick={() => setSelectedUserForRole(user)}
+                                    className="group rounded-2xl gap-3 p-2.5 focus:bg-indigo-600 focus:text-white transition-all duration-300 cursor-pointer active:scale-95 mt-1"
                                 >
-                                    {user.role === UserRole.admin ? (
-                                        <>
-                                            <div className="p-2.5 rounded-xl group-focus:bg-white/20 transition-colors">
-                                                <UserMinus size={18} className="group-focus:text-white" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-[13px] tracking-tight">{tran("admin.user_mng.demote_to_user")}</span>
-                                                <span className="text-[10px] opacity-70 font-medium group-focus:text-white/80">{tran("admin.user_mng.demote_desc")}</span>
-                                            </div>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <div className="p-2.5 bg-indigo-500/10 rounded-xl transition-colors">
-                                                <Shield size={18} className="group-focus:text-white" />
-                                            </div>
-                                            <div className="flex flex-col">
-                                                <span className="font-bold text-[13px] tracking-tight">{tran("admin.user_mng.promote_to_admin")}</span>
-                                                <span className="text-[10px] opacity-70 font-medium group-focus:text-white/80">{tran("admin.user_mng.promote_desc")}</span>
-                                            </div>
-                                        </>
-                                    )}
+                                    <div className="p-2.5 bg-indigo-500/10 rounded-xl group-focus:bg-white/20 transition-colors">
+                                        <Shield size={18} className="text-indigo-600 group-focus:text-white" />
+                                    </div>
+                                    <div className="flex flex-col text-left">
+                                        <span className="font-bold text-[13px] tracking-tight">Manage Roles</span>
+                                        <span className="text-[10px] opacity-70 font-medium group-focus:text-white/80 capitalize">
+                                            {parseRoles(user.role).join(", ")}
+                                        </span>
+                                    </div>
                                 </DropdownMenuItem>
 
                                 {/* Impersonation */}
@@ -363,6 +377,12 @@ export function UserCard({ user, refetch }: { user: User, refetch: () => void })
             <UserStatusModal
                 user={selectedUserForStatus}
                 onClose={() => setSelectedUserForStatus(null)}
+                onSuccess={refetch}
+            />
+
+            <UserRoleModal
+                user={selectedUserForRole}
+                onClose={() => setSelectedUserForRole(null)}
                 onSuccess={refetch}
             />
         </>

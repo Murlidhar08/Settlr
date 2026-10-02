@@ -3,8 +3,6 @@ import { isToday, isYesterday } from "date-fns";
 import { BadgeCheck, Lock } from "lucide-react";
 import { Suspense } from "react";
 
-// Components
-import { BackHeader } from "@/components/back-header";
 import { TransactionItem } from "@/components/transaction/transaction-item";
 import { Card } from "@/components/ui/card";
 import { prisma } from "@/lib/prisma/prisma";
@@ -84,8 +82,6 @@ async function StatementContent({ partyId, filters }: { partyId: string, filters
 
   return (
     <div className="w-full bg-background pb-32">
-      <BackHeader title="Public Statement" />
-
       <div className="mx-auto mt-6 max-w-4xl space-y-8 px-6">
         {/* Profile Section */}
         <motion.section

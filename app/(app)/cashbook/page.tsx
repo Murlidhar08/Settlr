@@ -1,4 +1,3 @@
-import { AppHeader } from "@/components/app-header";
 import { FooterButtons } from "@/components/footer-buttons";
 import MobileNav from "@/components/tab/mobile-tab";
 import { AddTransactionModal } from "@/components/transaction/add-transaction-modal";
@@ -34,8 +33,6 @@ export default async function CashbookPage({ searchParams }: CashbookPageProps) 
 
   return (
     <div className="w-full flex-1 bg-background pb-34">
-      <AppHeader title={"cashbook.title"} />
-
       <div className="mx-auto w-full max-w-4xl px-6">
         <CashFilters effectiveStartDate={effectiveStartDate} effectiveEndDate={effectiveEndDate} />
 

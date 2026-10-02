@@ -3,16 +3,29 @@
 import { FooterButtons } from "@/components/footer-buttons";
 import AppTabs from "@/components/tab/app-tabs";
 import { Button } from "@/components/ui/button";
-import { UserRole } from "@/lib/generated/prisma/enums";
+import { hasRole } from "@/lib/auth/permissions";
 import { tran } from "@/lib/languages/i18n";
 import { useAdminUsers } from "@/tanstacks/admin";
 import { Database, Plus, Settings as SettingsIcon, Users } from "lucide-react";
+import dynamic from "next/dynamic";
 import { redirect } from "next/navigation";
 import { AdminSkeleton } from "./admin-skeleton";
 import { AdminStats } from "./admin-stats";
-import { AppSettingsTab } from "./app-settings-tab";
-import { AdminStorageManager } from "./storage-manager";
 import { UserList } from "./user-list";
+
+const AppSettingsTab = dynamic(
+    () => import("./app-settings-tab").then((mod) => mod.AppSettingsTab),
+    {
+        loading: () => <AdminSkeleton />,
+    }
+);
+
+const AdminStorageManager = dynamic(
+    () => import("./storage-manager").then((mod) => mod.AdminStorageManager),
+    {
+        loading: () => <AdminSkeleton />,
+    }
+);
 
 export function AdminContent() {
     const { data: users, isLoading } = useAdminUsers();
@@ -24,7 +37,7 @@ export function AdminContent() {
     if (!users) return null;
 
     const totalUsers = users.length;
-    const adminUsers = users.filter((u: any) => u.role === UserRole.admin).length;
+    const adminUsers = users.filter((u: any) => hasRole(u.role, "admin")).length;
     const bannedUsers = users.filter((u: any) => u.banned).length;
     const activeUsers = totalUsers - bannedUsers;
 

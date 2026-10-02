@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-    ArrowLeft,
     Building2,
     Calendar,
     Filter,
@@ -37,6 +36,7 @@ import {
     TooltipProvider,
     TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useSetHeaderConfig } from "@/components/providers/header-provider";
 
 export default function RecycleBinPage() {
     const router = useRouter();
@@ -152,47 +152,33 @@ export default function RecycleBinPage() {
         }
     };
 
+    useSetHeaderConfig({
+        rightAction: items.length > 0 ? (
+            <Tooltip>
+                <TooltipTrigger
+                    render={
+                        <Button
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-2xl gap-2 font-black text-[10px] uppercase tracking-widest text-rose-600 hover:bg-rose-50 hover:text-rose-700"
+                            onClick={handleEmptyBin}
+                            disabled={loading}
+                        >
+                            <Trash2 size={14} />
+                            Empty Bin
+                        </Button>
+                    }
+                />
+                <TooltipContent className="rounded-xl font-bold text-[10px] uppercase tracking-widest border-none text-white">
+                    Delete all items permanently
+                </TooltipContent>
+            </Tooltip>
+        ) : undefined,
+    });
+
     return (
         <TooltipProvider>
             <div className="min-h-screen bg-background pb-32">
-                {/* Header */}
-                <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-md border-b">
-                    <div className="mx-auto max-w-4xl px-6 h-16 flex items-center justify-between">
-                        <div className="flex items-center gap-4">
-                            <Button
-                                variant="ghost"
-                                size="icon"
-                                className="rounded-full h-10 w-10"
-                                onClick={() => router.back()}
-                            >
-                                <ArrowLeft size={22} strokeWidth={2.5} />
-                            </Button>
-                            <h1 className="text-xl font-black tracking-tighter text-indigo-950">RECYCLE BIN</h1>
-                        </div>
-                        {items.length > 0 && (
-                            <Tooltip>
-                                <TooltipTrigger
-                                    render={
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            className="rounded-2xl gap-2 font-black text-[10px] uppercase tracking-widest text-rose-600 hover:bg-rose-50 hover:text-rose-700"
-                                            onClick={handleEmptyBin}
-                                            disabled={loading}
-                                        >
-                                            <Trash2 size={14} />
-                                            Empty Bin
-                                        </Button>
-                                    }
-                                />
-                                <TooltipContent className="rounded-xl font-bold text-[10px] uppercase tracking-widest border-none text-white">
-                                    Delete all items permanently
-                                </TooltipContent>
-                            </Tooltip>
-                        )}
-                    </div>
-                </div>
-
                 <div className="mx-auto max-w-4xl px-6 pt-6 space-y-6">
                     {/* Search & Filter */}
                     <div className="p-4 sm:p-5 rounded-[2rem] bg-card border shadow-xl shadow-primary/5 flex flex-col sm:flex-row gap-4">

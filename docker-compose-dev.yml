@@ -46,18 +46,18 @@ services:
       - "3000:3000"
     networks:
       - prisma-network
-    restart: always
+    restart: unless-stopped
     volumes:
       - settlr_uploads:/app/uploads
+    depends_on:
+      postgres_db:
+        condition: service_healthy
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1" ]
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 15s
-    depends_on:
-      postgres_db:
-        condition: service_healthy
+      start_period: 30s
 
   prisma-studio:
     image: chavda2772/prisma-studio:latest

@@ -19,19 +19,29 @@ import {
 export function ActionButton({
   action,
   requireAreYouSure = false,
+  areYouSureTitle = "Are you sure?",
   areYouSureDescription = "This action cannot be undone.",
+  areYouSureConfirmText = "Yes",
+  areYouSureCancelText = "Cancel",
   ...props
 }: ComponentProps<typeof Button> & {
   action: () => Promise<{ error: boolean; message?: string }>
   requireAreYouSure?: boolean
+  areYouSureTitle?: ReactNode
   areYouSureDescription?: ReactNode
+  areYouSureConfirmText?: ReactNode
+  areYouSureCancelText?: ReactNode
 }) {
   const [isLoading, startTransition] = useTransition()
 
   function performAction() {
     startTransition(async () => {
       const data = await action()
-      if (data.error) toast.error(data.message ?? "Error")
+      if (data.error) {
+        toast.error(data.message ?? "Error")
+      } else if (data.message) {
+        toast.success(data.message)
+      }
     })
   }
 
@@ -41,15 +51,15 @@ export function ActionButton({
         <AlertDialogTrigger render={<Button {...props} />}></AlertDialogTrigger>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogTitle>{areYouSureTitle}</AlertDialogTitle>
             <AlertDialogDescription>
               {areYouSureDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogCancel>{areYouSureCancelText}</AlertDialogCancel>
             <AlertDialogAction disabled={isLoading} onClick={performAction}>
-              <LoadingSwap isLoading={isLoading}>Yes</LoadingSwap>
+              <LoadingSwap isLoading={isLoading}>{areYouSureConfirmText}</LoadingSwap>
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

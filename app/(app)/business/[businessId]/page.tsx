@@ -1,6 +1,6 @@
 "use client"
 
-import { BackHeader } from "@/components/back-header"
+import { BackHeader } from "@/components/header/back-header"
 import { useConfirm } from "@/components/providers/confirm-provider"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -38,7 +38,7 @@ export default function BusinessDetailPage() {
     const { data: session, refetch: refetchSession } = useSession()
 
     const confirm = useConfirm()
-    
+
     const businessId = params.businessId as string
     const activeId = session?.user?.activeBusinessId || null
 
@@ -56,7 +56,6 @@ export default function BusinessDetailPage() {
     if (isLoading) {
         return (
             <div className="w-full bg-background min-h-screen pb-34">
-                <BackHeader title={tran("business.label")} />
                 <div className="flex flex-col items-center justify-center py-32 space-y-4">
                     <Loader2 className="animate-spin text-primary" size={40} />
                     <p className="text-muted-foreground font-medium">{tran("common.loading")}</p>
@@ -68,7 +67,6 @@ export default function BusinessDetailPage() {
     if (!data) {
         return (
             <div className="w-full bg-background min-h-screen pb-34">
-                <BackHeader title={tran("business.label")} />
                 <div className="text-center py-20 space-y-4">
                     <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center text-2xl">⚠️</div>
                     <p className="text-muted-foreground font-medium">Business not found</p>

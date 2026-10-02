@@ -1,5 +1,4 @@
 import { AccountsSkeleton } from "@/components/account/accounts-skeleton";
-import { AppHeader } from "@/components/app-header";
 import MobileNav from "@/components/tab/mobile-tab";
 import { getUserConfig } from "@/lib/user-config";
 import { Suspense } from "react";
@@ -17,8 +16,6 @@ export default async function AccountsPage({ searchParams }: PageProps) {
 
     return (
         <div className="flex-1 w-full bg-background pb-34">
-            <AppHeader title={"accounts.title"} />
-
             <Suspense fallback={<AccountsSkeleton />}>
                 <AccountsContent
                     currency={currency}

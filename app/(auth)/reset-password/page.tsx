@@ -7,6 +7,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
@@ -22,6 +23,7 @@ function ResetPasswordForm() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
+  const [revokeSessions, setRevokeSessions] = useState(false);
 
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -63,14 +65,33 @@ function ResetPasswordForm() {
     setLoading(true);
 
     try {
-      const result = await authClient.resetPassword({
-        token,
-        newPassword: password,
-      });
+      const result = await authClient.resetPassword(
+        {
+          token,
+          newPassword: password,
+        },
+        revokeSessions
+          ? {
+            headers: {
+              "x-revoke-all-sessions": "true",
+            },
+            query: {
+              revokeSessions: "true",
+            },
+          }
+          : undefined
+      );
 
       if (result.error) {
         setError(result.error.message || "Failed to reset password.");
       } else {
+        if (revokeSessions) {
+          try {
+            await authClient.signOut();
+          } catch {
+            // ignore if not logged in
+          }
+        }
         setSuccessMsg("Password successfully reset! Redirecting...");
         setTimeout(() => {
           router.push("/login");
@@ -185,6 +206,28 @@ function ResetPasswordForm() {
                     {showConfirm ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* End All Sessions Checkbox */}
+            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/40 transition-colors">
+              <Checkbox
+                id="revoke-sessions"
+                checked={revokeSessions}
+                onCheckedChange={(checked) => setRevokeSessions(Boolean(checked))}
+                disabled={!token || loading}
+                className="mt-0.5 size-5 rounded-lg border-2"
+              />
+              <div className="flex flex-col gap-0.5 select-none">
+                <label
+                  htmlFor="revoke-sessions"
+                  className="text-sm font-semibold text-foreground/80 hover:text-foreground cursor-pointer transition-colors"
+                >
+                  End all active sessions
+                </label>
+                <p className="text-xs text-muted-foreground font-medium">
+                  Log out of all devices and active sessions after resetting password
+                </p>
               </div>
             </div>
 

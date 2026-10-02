@@ -1,14 +1,19 @@
 # .dockerignore
-.next
-.git
+# Files
 .env*
-.agents
-.vscode
-resources
-!resources/scripts/docker-bootstrap.sh
-node_modules
 Dockerfile
 docker-compose*.yml
 npm-debug.log
 yarn-error.log
+
+# Folders
+.next
+.git
+.agents
+.vscode
+resources
+node_modules
 uploads
+
+# Exclude items
+!resources/scripts/docker-bootstrap.sh

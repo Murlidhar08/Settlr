@@ -19,7 +19,7 @@ import { createContext, ReactNode, useContext, useState } from "react"
 
 type ConfirmOptions = {
   title?: string
-  description?: string
+  description?: ReactNode
   confirmText?: string
   cancelText?: string
   destructive?: boolean
@@ -27,6 +27,63 @@ type ConfirmOptions = {
 
 type ConfirmContextType = {
   confirm: (options?: ConfirmOptions) => Promise<boolean>
+}
+
+/**
+ * Safely parses basic inline formatting tags (strong, b, em, i) into React elements
+ */
+function parseFormattedText(text: string): ReactNode {
+  const tokens = text.split(/(<\/?(?:strong|b|i|em)(?:\s[^>]*)?>)/gi);
+  if (tokens.length === 1) {
+    return text;
+  }
+
+  let isBold = false;
+  let isItalic = false;
+
+  return tokens.map((token, index) => {
+    const isOpeningTag = /^<(strong|b|i|em)(?:\s[^>]*)?>$/i.test(token);
+    const isClosingTag = /^<\/(strong|b|i|em)>$/i.test(token);
+
+    if (isOpeningTag) {
+      const tag = token.replace(/<([a-z]+)[\s\S]*>/i, "$1").toLowerCase();
+      if (tag === "strong" || tag === "b") isBold = true;
+      if (tag === "i" || tag === "em") isItalic = true;
+      return null;
+    }
+
+    if (isClosingTag) {
+      const tag = token.replace(/<\/([a-z]+)>/i, "$1").toLowerCase();
+      if (tag === "strong" || tag === "b") isBold = false;
+      if (tag === "i" || tag === "em") isItalic = false;
+      return null;
+    }
+
+    if (!token) return null;
+
+    if (isBold && isItalic) {
+      return (
+        <strong key={index} className="font-bold text-foreground italic">
+          {token}
+        </strong>
+      );
+    }
+    if (isBold) {
+      return (
+        <strong key={index} className="font-bold text-foreground">
+          {token}
+        </strong>
+      );
+    }
+    if (isItalic) {
+      return (
+        <em key={index} className="italic text-foreground/90">
+          {token}
+        </em>
+      );
+    }
+    return token;
+  });
 }
 
 /* ========================================================= */
@@ -85,7 +142,9 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
 
                 {options.description && (
                   <AlertDialogDescription className="text-sm font-medium text-muted-foreground leading-relaxed px-2">
-                    {options.description}
+                    {typeof options.description === "string"
+                      ? parseFormattedText(options.description)
+                      : options.description}
                   </AlertDialogDescription>
                 )}
               </AlertDialogHeader>
@@ -108,7 +167,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
                 )}
               >
-                {options.confirmText ?? "Confirm"}
+                {options.confirmText ?? options.destructive ? "Delete" : "Confirm"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>

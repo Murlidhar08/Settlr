@@ -38,6 +38,11 @@ export const userStatusList = [
     { label: "Banned", value: UserStatus.banned },
 ];
 
+export const emailVerifiedOptions = [
+    { label: "Yes", value: "true" },
+    { label: "No", value: "false" },
+];
+
 export const userDocumentTypeItems = [
     { label: "Aadhar Card", value: UserDocumentType.aadhar_card },
     { label: "PAN Card", value: UserDocumentType.pan_card },
