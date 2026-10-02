@@ -359,6 +359,9 @@ export default {
                 smtp_required_for_test: "Please fill in Host, Port, and User before testing",
             },
         },
+        storage_mng: {
+            title: "Storage Manager",
+        }
     },
 
     // Dashboard Page
