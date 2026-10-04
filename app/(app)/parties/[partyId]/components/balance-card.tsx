@@ -1,16 +1,20 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import { PartyType } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
+import { Briefcase, CircleDot, Truck, Users } from "lucide-react";
 
 interface BalanceCardProps {
   totalReceived: number;
   totalPaid: number;
   currency?: string;
   isInactive?: boolean;
+  partyType?: PartyType | null;
 }
 
 const formatAmount = (amount: number) =>
@@ -19,11 +23,47 @@ const formatAmount = (amount: number) =>
     maximumFractionDigits: 2,
   });
 
+const getPartyTypeConfig = (type: PartyType) => {
+  switch (type) {
+    case PartyType.CUSTOMER:
+      return {
+        label: tran("parties.customers"),
+        icon: Users,
+        className: "border-sky-500/20 bg-sky-500/10 text-sky-700 dark:text-sky-300 dark:border-sky-400/20",
+      };
+    case PartyType.SUPPLIER:
+      return {
+        label: tran("parties.suppliers"),
+        icon: Truck,
+        className: "border-amber-500/20 bg-amber-500/10 text-amber-700 dark:text-amber-300 dark:border-amber-400/20",
+      };
+    case PartyType.EMPLOYEE:
+      return {
+        label: tran("parties.employees"),
+        icon: Briefcase,
+        className: "border-purple-500/20 bg-purple-500/10 text-purple-700 dark:text-purple-300 dark:border-purple-400/20",
+      };
+    case PartyType.OTHER:
+      return {
+        label: tran("parties.other"),
+        icon: CircleDot,
+        className: "border-muted-foreground/20 bg-muted text-muted-foreground",
+      };
+    default:
+      return {
+        label: String(type),
+        icon: CircleDot,
+        className: "border-border bg-muted/50 text-muted-foreground",
+      };
+  }
+};
+
 export function BalanceCard({
   totalReceived,
   totalPaid,
   currency,
-  isInactive
+  isInactive,
+  partyType
 }: BalanceCardProps) {
   const netBalance = totalReceived - totalPaid;
 
@@ -36,6 +76,9 @@ export function BalanceCard({
     : isToReceive
       ? tran("parties.to_receive")
       : tran("parties.to_pay");
+
+  const partyConfig = partyType ? getPartyTypeConfig(partyType) : null;
+  const PartyIcon = partyConfig?.icon;
 
   return (
     <Card className={cn(
@@ -54,6 +97,22 @@ export function BalanceCard({
               : "bg-muted"
         )}
       />
+
+      {/* Top right corner party type */}
+      {partyConfig && PartyIcon && (
+        <div className="absolute top-6 right-6 sm:top-8 sm:right-8 z-20">
+          <Badge
+            variant="outline"
+            className={cn(
+              "h-7 gap-1.5 px-3 rounded-full text-[11px] font-bold tracking-wide backdrop-blur-xs shadow-2xs transition-colors",
+              partyConfig.className
+            )}
+          >
+            <PartyIcon className="size-3.5" />
+            <span>{partyConfig.label}</span>
+          </Badge>
+        </div>
+      )}
 
       <div className="grid gap-6 px-8 py-10 lg:grid-cols-3 lg:gap-8 relative z-10">
         {/* Left content */}

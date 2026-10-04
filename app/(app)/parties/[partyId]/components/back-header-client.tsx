@@ -47,8 +47,8 @@ export default function BackHeaderClient({ party }: { party: any }) {
     <>
       <BackHeader
         title={party?.name}
-        description={party?.type}
         backUrl='/parties'
+        showProfile={false}
         menuItems={[
           {
             icon: <Pencil size={18} />,
