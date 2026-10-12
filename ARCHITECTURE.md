@@ -65,7 +65,7 @@ The project follows a clean, modular layer-based architecture designed for scala
 │   ├── utils/                # Reusable pure utility functions (formatters, file, cn, user)
 │   └── nodemailer.ts         # Transporter and transactional email dispatcher
 │
-├── middleware.ts             # Edge Middleware (CSRF defense, OWASP security headers)
+├── proxy.ts                  # Edge Proxy (Next.js 16 convention: CSRF defense, OWASP security headers)
 ├── types/                    # TypeScript Type Definitions & API Contracts
 │   ├── api.ts                # API envelopes and pagination interfaces
 │   ├── storage.ts            # Storage metadata interfaces
@@ -107,7 +107,8 @@ Enterprise-grade security controls are implemented at both the network edge and 
 - In `lib/auth/auth.ts`, `disableOriginCheck` is strictly disabled.
 - Better Auth validates incoming requests against `BETTER_AUTH_URL` and `BETTER_AUTH_TRUSTED_ORIGINS`.
 
-### 2. Next.js Middleware Protection (`middleware.ts`)
+### 2. Next.js Edge Proxy Protection (`proxy.ts`)
+- Modern Next.js 16 file convention (replaces deprecated `middleware.ts`).
 - **CSRF Origin/Referer Validation**: All state-changing HTTP requests (`POST`, `PUT`, `PATCH`, `DELETE`) to `/api/*` are validated against allowed hostnames.
 - **OWASP Security Headers**:
   - `X-Frame-Options: SAMEORIGIN` (prevents UI redressing / clickjacking)
@@ -202,3 +203,50 @@ Constructed using:
 - **Constants**: `UPPER_SNAKE_CASE` (e.g., `DEFAULT_USER_SETTINGS`, `QUERY_KEYS`).
 - **Functions & Methods**: `camelCase` (e.g., `formatUserCurrency`, `getErrorMessage`).
 - **Hooks**: `use` prefix (e.g., `useUserManagement`, `useStorageItem`).
+
+---
+
+## 9. PostgreSQL Database Architecture & Recommended Naming Standards
+
+The project utilizes PostgreSQL with Prisma ORM 7 (`@prisma/client`, `@prisma/adapter-pg`). All database tables, columns, indexes, and constraints must follow strict relational naming standards. In Prisma, models use idiomatic TypeScript `camelCase` and map explicitly to PostgreSQL `snake_case` using `@map` and `@@map`.
+
+### Recommended Naming Standards Table
+
+| Database Object | Recommended Style | Example | Notes |
+|---|---|---|---|
+| **Tables** | `snake_case` | `app_config` | Lowercase snake_case, singular domain name mapped via `@@map("app_config")`. |
+| **Columns** | `snake_case` | `created_at` | Map TypeScript camelCase fields to snake_case column names via `@map("created_at")`. |
+| **Primary keys** | `id` | `id` | Standard primary key column identifier (`@id`). |
+| **Foreign keys** | `{referenced_table}_id` | `user_id` | Refers to referenced table singular name + `_id` suffix (`@map("user_id")`). |
+| **Boolean columns** | `is_` / `has_` prefix | `is_active` | Prefix with `is_` or `has_` for semantic clarity (`is_verified`, `has_2fa`). |
+| **Timestamps** | `_at` suffix | `updated_at` | Denotes a specific point in time (`created_at`, `deleted_at`, `expires_at`). |
+| **Date-only columns** | `_date` suffix | `birth_date` | Use for date-only columns without time component (`due_date`, `start_date`). |
+| **Indexes** | `idx_{table}_{columns}` | `idx_users_email` | Explicitly named in Prisma schema via `map: "idx_users_email"`. |
+| **Unique constraints** | `uq_{table}_{columns}` | `uq_users_email` | Explicitly named unique constraint via `map: "uq_users_email"`. |
+| **Foreign key constraints** | `fk_{table}_{column}` | `fk_transactions_user_id` | Explicit foreign key constraint name via `@relation(..., map: "fk_...")`. |
+
+### Prisma Schema Best Practice Pattern
+
+```prisma
+model Order {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  amount       Decimal   @db.Decimal(12, 2)
+  isCompleted  Boolean   @default(false) @map("is_completed")
+  orderDate    DateTime  @db.Date @map("order_date")
+  createdAt    DateTime  @default(now()) @map("created_at")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade, map: "fk_orders_user_id")
+
+  @@index([userId], map: "idx_orders_user_id")
+  @@unique([userId, orderDate], map: "uq_orders_user_id_order_date")
+  @@map("order")
+}
+```
+
+### Migration Guidelines
+- Generate database migrations with descriptive names: `npx prisma migrate dev --name create_orders_table`.
+- Keep schema updates synchronized with client types: `npm run db:generate`.
+- Never bypass PostgreSQL constraints (foreign keys, cascading rules, and check constraints) at the application layer.
+

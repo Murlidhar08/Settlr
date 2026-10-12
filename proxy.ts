@@ -64,7 +64,10 @@ function isValidOrigin(request: NextRequest): boolean {
   return true;
 }
 
-export function middleware(request: NextRequest) {
+/**
+ * Next.js 16 proxy convention (replaces deprecated middleware convention).
+ */
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const method = request.method.toUpperCase();
 
@@ -75,9 +78,16 @@ export function middleware(request: NextRequest) {
 
   if (isApiRoute && !isAuthRoute && isMutatingMethod) {
     if (!isValidOrigin(request)) {
-      console.warn(`[Security] Blocked potential CSRF request from origin: ${request.headers.get("origin") || request.headers.get("referer")} on ${pathname}`);
+      console.warn(
+        `[Security] Blocked potential CSRF request from origin: ${
+          request.headers.get("origin") || request.headers.get("referer")
+        } on ${pathname}`
+      );
       return new NextResponse(
-        JSON.stringify({ success: false, error: "Forbidden: Invalid or missing cross-origin request header" }),
+        JSON.stringify({
+          success: false,
+          error: "Forbidden: Invalid or missing cross-origin request header",
+        }),
         { status: 403, headers: { "Content-Type": "application/json" } }
       );
     }
@@ -100,6 +110,10 @@ export function middleware(request: NextRequest) {
 
   return response;
 }
+
+// Backwards-compatibility alias
+export const middleware = proxy;
+export default proxy;
 
 export const config = {
   matcher: [

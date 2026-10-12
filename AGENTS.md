@@ -33,7 +33,7 @@ Welcome, AI Agent! This file is your canonical reference manual for this reposit
 | `lib/prisma/` | Database client singleton. | `prisma.ts`. | Transient state. |
 | `lib/utils/` | Modular reusable pure utility functions. | `formatters.ts`, `user.ts`, `file.ts`, `cn.ts`. | Functions with side-effects or React hooks. |
 | `types/` | TypeScript type declarations and contracts. | DTOs, interface models, API response types. | Runtime JavaScript logic. |
-| `middleware.ts` | Edge Middleware for security & routing. | CSRF origin validation, OWASP security headers, pathname forwarding. | Heavy database queries or long-running tasks. |
+| `proxy.ts` | Next.js 16 edge proxy convention (formerly middleware) for security & routing. | CSRF origin validation, OWASP security headers, pathname forwarding. | Heavy database queries or long-running tasks. |
 
 ---
 
@@ -83,7 +83,49 @@ Welcome, AI Agent! This file is your canonical reference manual for this reposit
 
 ---
 
-## 4. Feature Implementation Blueprint (Step-by-Step Recipe)
+## 4. PostgreSQL Database Standards & Prisma Guidelines
+
+All database models, schema extensions, and queries in PostgreSQL must strictly conform to relational database conventions. Prisma models use idiomatic TypeScript `camelCase` mapped explicitly to PostgreSQL `snake_case` using `@map` and `@@map`.
+
+### Recommended Naming Standards Table
+
+| Database Object | Recommended Style | Example | Notes |
+|---|---|---|---|
+| **Tables** | `snake_case` | `app_config` | Lowercase snake_case, singular domain (`@@map("app_config")`). |
+| **Columns** | `snake_case` | `created_at` | Map TypeScript camelCase fields to snake_case (`@map("created_at")`). |
+| **Primary keys** | `id` | `id` | Standard primary key column name (`@id`). |
+| **Foreign keys** | `{referenced_table}_id` | `user_id` | Refers to target table singular name + `_id` suffix (`@map("user_id")`). |
+| **Boolean columns** | `is_` / `has_` prefix | `is_active` | Always prefix booleans for semantic clarity (`is_verified`, `has_2fa`). |
+| **Timestamps** | `_at` suffix | `updated_at` | Point-in-time timestamp (`created_at`, `deleted_at`, `expires_at`). |
+| **Date-only columns** | `_date` suffix | `birth_date` | Use for date-only columns without time (`start_date`, `due_date`). |
+| **Indexes** | `idx_{table}_{columns}` | `idx_users_email` | Explicit index name (`@@index([email], map: "idx_users_email")`). |
+| **Unique constraints** | `uq_{table}_{columns}` | `uq_users_email` | Explicit unique constraint name (`@@unique([email], map: "uq_users_email")`). |
+| **Foreign key constraints** | `fk_{table}_{column}` | `fk_transactions_user_id` | Explicit foreign key constraint name (`map: "fk_transactions_user_id"`). |
+
+### Canonical Prisma Model Example
+
+```prisma
+model Post {
+  id            String    @id @default(cuid())
+  authorId      String    @map("author_id")
+  title         String
+  content       String?   @db.Text
+  isActive      Boolean   @default(true) @map("is_active")
+  publishedDate DateTime? @db.Date @map("published_date")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  author User @relation(fields: [authorId], references: [id], onDelete: Cascade, map: "fk_posts_author_id")
+
+  @@index([authorId], map: "idx_posts_author_id")
+  @@unique([authorId, title], map: "uq_posts_author_id_title")
+  @@map("post")
+}
+```
+
+---
+
+## 5. Feature Implementation Blueprint (Step-by-Step Recipe)
 
 When asked to build a new feature (e.g., "Post Management", "Organization Invoices"), follow this 5-step sequence:
 
@@ -219,7 +261,7 @@ export function PostList() {
 
 ---
 
-## 5. Quick Import Reference Cheat Sheet
+## 6. Quick Import Reference Cheat Sheet
 
 ```ts
 // Database
@@ -255,7 +297,7 @@ import { useCurrentUser, useAdminUsers, useStorageItems } from "@/hooks/queries"
 
 ---
 
-## 6. Verification Checklist Before Finishing Any Task
+## 7. Verification Checklist Before Finishing Any Task
 
 Always run these terminal commands before completing work:
 1. `npm run typecheck` - Verify 0 TypeScript compilation errors.
