@@ -93,6 +93,7 @@ export function PartyDetailsContent({ partyId, currency }: PartyDetailsContentPr
                         totalPaid={totalPaid}
                         currency={getCurrencySymbol(currency)}
                         isInactive={party.isActive === false}
+                        partyType={partyType ?? undefined}
                     />
 
                     <div className={cn(party.isActive === false && "grayscale-50 pointer-events-none opacity-80")}>

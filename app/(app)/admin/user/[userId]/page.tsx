@@ -6,9 +6,14 @@ import {
 } from "lucide-react";
 import { notFound } from "next/navigation";
 import { UserProfileHeader } from "../../../../../components/user/user-profile-header";
-import DocumentTab from "../components/document-tab";
+import dynamic from "next/dynamic";
+import { Skeleton } from "@/components/ui/skeleton";
 import GeneralTab from "./components/general-tab";
 import { UserHeader } from "./components/user-header-action";
+
+const DocumentTab = dynamic(() => import("../components/document-tab"), {
+    loading: () => <Skeleton className="h-64 w-full rounded-3xl" />,
+});
 
 export default async function UserDetailsPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;

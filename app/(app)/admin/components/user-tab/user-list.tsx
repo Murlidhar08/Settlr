@@ -75,8 +75,6 @@ export function UserList() {
         setFilterVerified("all");
     };
 
-
-
     return (
         <div className="space-y-6">
             {/* SEARCH & FILTER UI */}
