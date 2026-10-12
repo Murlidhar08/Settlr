@@ -1,11 +1,12 @@
 "use client";
 
+import type { HeaderConfig, HeaderMenuItem } from "@/components/header/header-config";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { motion } from "framer-motion";
-import { ArrowLeft, EllipsisVertical, Menu } from "lucide-react";
+import { ArrowLeft, EllipsisVertical, Menu, X } from "lucide-react";
 import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
@@ -23,13 +24,13 @@ import {
 } from "../ui/dropdown-menu";
 import {
   Sheet,
+  SheetClose,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "../ui/sheet";
 import ProfileAvatar from "../user/profile-avatar";
-import type { HeaderConfig, HeaderMenuItem } from "@/components/header/header-config";
 
 export interface AppHeaderProps {
   title?: string;
@@ -94,10 +95,10 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="sticky top-0 z-40 h-16 w-full shrink-0 flex items-center justify-between bg-background/80 dark:bg-background/60 backdrop-blur-xl px-4 sm:px-6 border-b border-border/40 shadow-xs select-none"
+      className="sticky top-0 z-30 h-14 sm:h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-4 sm:px-6 border-b border-border shadow-sm"
     >
-      {/* Left Section: Back Button or Mobile Logo */}
       <div className="w-1/4 sm:w-1/3 flex items-center gap-2">
+        {/* Left Section: Back Button or Mobile Logo */}
         {config.showBack ? (
           <motion.div whileHover={{ x: -3 }} whileTap={{ scale: 0.92 }}>
             <Button
@@ -110,33 +111,106 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </motion.div>
-        ) : (
-          <Link href="/dashboard" className="lg:hidden flex items-center">
-            <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-xl bg-accent/10 border border-border/50">
-              <Image
-                src="/images/logo/light_logo.png"
-                alt="Logo"
-                width={22}
-                height={22}
-                className="dark:hidden"
-              />
-              <Image
-                src="/images/logo/dark_logo.png"
-                alt="Logo"
-                width={22}
-                height={22}
-                className="hidden dark:block"
-              />
+        ) :
+          config.showMobileNav ? (
+            <div className="lg:hidden">
+              <Sheet>
+                <SheetTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      aria-label="Open menu"
+                      className="hover:bg-accent hover:text-sidebar-accent-foreground rounded-xl"
+                    >
+                      <Menu size={22} />
+                    </Button>
+                  }
+                />
+                <SheetContent
+                  side="left"
+                  showCloseButton={false}
+                  className="w-full sm:max-w-xs border-r p-4 px-6 flex flex-col overflow-hidden bg-background/95 backdrop-blur-md"
+                >
+                  <SheetHeader className="mb-6 px-0 p-0">
+                    <SheetTitle className="flex items-center justify-between gap-3 text-sidebar-foreground font-black tracking-tighter text-2xl">
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 shrink-0 flex items-center justify-center relative rounded-xl bg-sidebar-accent/10">
+                          <Image src="/images/logo/light_logo.png" alt="Logo" width={28} height={28} className="dark:hidden" />
+                          <Image src="/images/logo/dark_logo.png" alt="Logo" width={28} height={28} className="hidden dark:block" />
+                        </div>
+                        <span>{envClient.NEXT_PUBLIC_APP_NAME}</span>
+                      </div>
+                      <SheetClose
+                        render={
+                          <Button variant="ghost" size="icon" className="hover:bg-accent hover:text-sidebar-accent-foreground rounded-xl h-9 w-9 shrink-0">
+                            <X size={20} />
+                            <span className="sr-only">Close</span>
+                          </Button>
+                        }
+                      />
+                    </SheetTitle>
+                  </SheetHeader>
+
+                  <nav className="space-y-1">
+                    {navItems.map((item) => {
+                      const active =
+                        pathname === item.href ||
+                        pathname?.startsWith(`${item.href}/`);
+                      return (
+                        <SheetClose
+                          key={item.href}
+                          render={
+                            <Link
+                              key={item.href}
+                              href={item.href as any}
+                              className={clsx(
+                                "group flex items-center gap-4 rounded-xl px-4 py-3 font-semibold transition-all duration-200",
+                                active
+                                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-lg shadow-indigo-500/10"
+                                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
+                              )}
+                            >
+                              <span>{item.icon}</span>
+                              <span className="text-sm tracking-wide">{item.label}</span>
+                            </Link>
+                          }
+                        />
+                      );
+                    })}
+                  </nav>
+                </SheetContent>
+              </Sheet>
             </div>
-          </Link>
-        )}
+          ) : (
+            <Link href="/dashboard" className="lg:hidden flex items-center">
+              <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-xl bg-accent/10 border border-border/50">
+                <Image
+                  src="/images/logo/light_logo.png"
+                  alt="Logo"
+                  width={22}
+                  height={22}
+                  className="dark:hidden"
+                />
+                <Image
+                  src="/images/logo/dark_logo.png"
+                  alt="Logo"
+                  width={22}
+                  height={22}
+                  className="hidden dark:block"
+                />
+              </div>
+            </Link>
+          )}
       </div>
 
       {/* Center Section: Gradient Title & Subtitle Badge */}
       <div className="flex-1 flex flex-col items-center justify-center min-w-0 mx-2 sm:mx-4">
-        <h1 className="text-lg sm:text-xl lg:text-2xl font-black tracking-tight truncate w-full text-center bg-linear-to-br from-foreground to-primary/80 bg-clip-text text-transparent">
-          {config.title ? tran(config.title) : ""}
-        </h1>
+        <div className="flex-1 flex justify-center overflow-hidden">
+          <h1 className="text-xl font-black tracking-normal sm:text-2xl lg:text-3xl bg-linear-to-br from-foreground to-primary/80 bg-clip-text text-transparent">
+            {config.title ? tran(config.title) : ""}
+          </h1>
+        </div>
 
         {config.description && (
           <motion.div
@@ -207,76 +281,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
 
         {/* Profile Avatar */}
         {config.showProfile !== false && <ProfileAvatar />}
-
-        {/* Mobile Navigation Drawer for root pages on mobile */}
-        {config.showMobileNav && (
-          <div className="lg:hidden">
-            <Sheet>
-              <SheetTrigger
-                render={
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Open menu"
-                    className="hover:bg-accent rounded-xl h-9 w-9"
-                  >
-                    <Menu size={22} />
-                  </Button>
-                }
-              />
-              <SheetContent
-                side="right"
-                className="w-full! h-full! sm:max-w-[70vw]! lg:max-w-[35vw]! border-l-0 sm:border-l p-2 px-6 flex flex-col overflow-hidden bg-background/90! backdrop-blur-md!"
-              >
-                <SheetHeader className="mb-6 px-2">
-                  <SheetTitle className="flex items-center gap-3 text-sidebar-foreground text-left font-black tracking-tighter text-2xl">
-                    <div className="h-10 w-10 shrink-0 flex items-center justify-center relative rounded-xl bg-sidebar-accent/10">
-                      <Image
-                        src="/images/logo/light_logo.png"
-                        alt="Logo"
-                        width={28}
-                        height={28}
-                        className="dark:hidden"
-                      />
-                      <Image
-                        src="/images/logo/dark_logo.png"
-                        alt="Logo"
-                        width={28}
-                        height={28}
-                        className="hidden dark:block"
-                      />
-                    </div>
-                    {envClient.NEXT_PUBLIC_APP_NAME}
-                  </SheetTitle>
-                </SheetHeader>
-
-                <nav className="space-y-1">
-                  {navItems.map((item) => {
-                    const active =
-                      pathname === item.href ||
-                      pathname?.startsWith(`${item.href}/`);
-                    return (
-                      <Link
-                        key={item.href}
-                        href={item.href as any}
-                        className={clsx(
-                          "group flex items-center gap-4 rounded-xl px-4 py-3 font-semibold transition-all duration-200",
-                          active
-                            ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-lg shadow-indigo-500/10"
-                            : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                        )}
-                      >
-                        <span>{item.icon}</span>
-                        <span className="text-sm tracking-wide">{item.label}</span>
-                      </Link>
-                    );
-                  })}
-                </nav>
-              </SheetContent>
-            </Sheet>
-          </div>
-        )}
       </div>
-    </motion.header>
+    </motion.header >
   );
 }

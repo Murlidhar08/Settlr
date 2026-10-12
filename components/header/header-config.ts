@@ -24,7 +24,9 @@ export interface HeaderRouteRule extends HeaderConfig {
 }
 
 export const headerRoutesConfig: HeaderRouteRule[] = [
-  // Dashboard
+  // *********************
+  //  Application Header
+  // *********************
   {
     pattern: "/dashboard",
     title: "dashboard.title",
@@ -121,13 +123,6 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     title: "User Details",
     showBack: true,
     backUrl: "/admin",
-  },
-  // Settings root
-  {
-    pattern: "/settings",
-    title: "settings.title",
-    showBack: false,
-    showMobileNav: true,
   },
   // Settings Profile
   {

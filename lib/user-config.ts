@@ -1,24 +1,25 @@
-import { getUserSession } from "./auth/auth";
-import { Currency, ThemeMode } from "./generated/prisma/enums";
+import { getServerSession } from "./auth/auth";
+import { DEFAULT_USER_SETTINGS } from "./config/constants";
 
 export const getUserConfig = async () => {
-  const session = await getUserSession()
-  if (!session?.session?.userSettings)
+  const session = await getServerSession();
+  if (!session?.session?.userSettings) {
     return getDefaultConfig();
+  }
 
   return session.session.userSettings;
 };
 
 export function getDefaultConfig() {
   return {
-    currency: Currency.INR,
-    locale: "en-IN",
-    dateFormat: "dd MMM, yyyy",
-    timeFormat: "hh:mm a",
-    language: "en",
-    theme: ThemeMode.LIGHT,
+    currency: DEFAULT_USER_SETTINGS.currency,
+    locale: DEFAULT_USER_SETTINGS.locale,
+    dateFormat: DEFAULT_USER_SETTINGS.dateFormat,
+    timeFormat: DEFAULT_USER_SETTINGS.timeFormat,
+    language: DEFAULT_USER_SETTINGS.language,
+    theme: DEFAULT_USER_SETTINGS.theme,
     defAccId: null as string | null,
     defIncomeAccId: null as string | null,
     defExpenseAccId: null as string | null,
-  }
+  };
 }
