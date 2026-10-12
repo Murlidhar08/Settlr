@@ -30,9 +30,7 @@ export const auth = betterAuth({
     envServer.BETTER_AUTH_URL,
     ...(envServer.BETTER_AUTH_TRUSTED_ORIGINS ? envServer.BETTER_AUTH_TRUSTED_ORIGINS.split(",") : []),
   ],
-  advanced: {
-    disableOriginCheck: true
-  },
+
   database: prismaAdapter(prisma, {
     provider: "postgresql",
   }),
@@ -338,10 +336,27 @@ export const auth = betterAuth({
 });
 
 export type Auth = typeof auth;
+
+/**
+ * Retrieves the current session safely without redirecting.
+ * Recommended for API routes, handlers, and Server Actions.
+ */
+export const getServerSession = async () => {
+  try {
+    return await auth.api.getSession({
+      headers: await headers()
+    });
+  } catch {
+    return null;
+  }
+};
+
+/**
+ * Retrieves the current session and redirects to /login if unauthenticated.
+ * Recommended for Server Components and protected pages.
+ */
 export const getUserSession = async () => {
-  const session = await auth.api.getSession({
-    headers: await headers()
-  });
+  const session = await getServerSession();
 
   if (session == null) {
     redirect("/login" as any);
@@ -349,3 +364,4 @@ export const getUserSession = async () => {
 
   return session;
 };
+

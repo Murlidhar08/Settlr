@@ -16,64 +16,28 @@ import {
     Shield,
     UserX
 } from "lucide-react";
-import { useState } from "react";
 
-import { hasRole } from "@/lib/auth/permissions";
-import { UserStatus } from "@/lib/generated/prisma/enums";
+import { useUserManagement } from "@/hooks/use-user-management";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
-import { useAdminUsers } from "@/tanstacks/admin";
 import { getRoleLabel, USER_ROLE_OPTIONS } from "@/utility/users-fn";
 import { UserCard } from "./user-card";
 
-interface User {
-    id: string;
-    email: string;
-    name: string;
-    role?: string | null;
-    roles: string[];
-    status?: UserStatus | null;
-    banned?: boolean | null;
-    image?: string | null;
-    createdAt: Date;
-    contactNo?: string | null;
-    businessCount?: number;
-    transactionCount?: number;
-    emailVerified?: boolean;
-}
-
 export function UserList() {
-    const { data: usersData, isLoading, refetch } = useAdminUsers();
-
-    const [search, setSearch] = useState("");
-    const [filterRole, setFilterRole] = useState<string>("all");
-    const [filterStatus, setFilterStatus] = useState<string>("all");
-    const [filterVerified, setFilterVerified] = useState<string>("all");
-
-    const users = usersData || [];
-
-    const filteredUsers = users.filter(user => {
-        const matchesSearch = user.name.toLowerCase().includes(search.toLowerCase()) ||
-            user.email?.toLowerCase().includes(search.toLowerCase());
-
-        const matchesRole = filterRole === "all" || hasRole(user.role, filterRole as any);
-        const matchesStatus = filterStatus === "all" ||
-            (filterStatus === "banned" ? user.banned : !user.banned);
-
-        const matchesVerified = filterVerified === "all" ||
-            (filterVerified === "verified" ? user.emailVerified : !user.emailVerified);
-
-        return matchesSearch && matchesRole && matchesStatus && matchesVerified;
-    });
-
-    const isFilterApplied = search.trim() !== "" || filterRole !== "all" || filterStatus !== "all" || filterVerified !== "all";
-
-    const handleResetFilters = () => {
-        setSearch("");
-        setFilterRole("all");
-        setFilterStatus("all");
-        setFilterVerified("all");
-    };
+    const {
+        filteredUsers,
+        search,
+        setSearch,
+        filterRole,
+        setFilterRole,
+        filterStatus,
+        setFilterStatus,
+        filterVerified,
+        setFilterVerified,
+        isFilterApplied,
+        resetFilters: handleResetFilters,
+        refetch,
+    } = useUserManagement();
 
     return (
         <div className="space-y-6">

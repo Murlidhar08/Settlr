@@ -1,7 +1,6 @@
 "use client";
 
 import { DocumentPreview } from "@/components/document-preview";
-import { useConfirm } from "@/components/providers/confirm-provider";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -11,11 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { cn, getFileUrl } from "@/lib/utils";
-import {
-    useDeleteStorageItem,
-    useRenameStorageItem,
-    useStorageItems
-} from "@/tanstacks/storage";
+import { useStorageItem } from "@/hooks/use-storage-item";
+import { useStorageItems } from "@/hooks/queries/storage";
 import {
     ChevronDown,
     ChevronRight,
@@ -30,7 +26,8 @@ import {
     RefreshCw,
     Trash2
 } from "lucide-react";
-import { useEffect, useState } from "react";
+
+import { useEffect } from "react";
 import { toast } from "sonner";
 
 interface StorageItemProps {
@@ -47,84 +44,26 @@ interface StorageItemProps {
 }
 
 const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
-    const [isExpanded, setIsExpanded] = useState(false);
-    const [isPreviewOpen, setIsPreviewOpen] = useState(false);
-    const [isRenameOpen, setIsRenameOpen] = useState(false);
-    const [newName, setNewName] = useState(item.name);
-    const confirm = useConfirm();
-
-    const { data: children, isLoading, refetch, error: childrenError } = useStorageItems(item.path, item.isDir && isExpanded);
-    const renameMutation = useRenameStorageItem();
-    const deleteMutation = useDeleteStorageItem();
-
-    useEffect(() => {
-        if (childrenError) {
-            const message = childrenError.message === "FORBIDDEN"
-                ? `Permission denied to view contents of ${item.name}`
-                : childrenError.message || `Failed to load ${item.name}`;
-            toast.error(message);
-        }
-    }, [childrenError, item.name]);
+    const {
+        isExpanded,
+        setIsExpanded,
+        toggleExpanded,
+        isPreviewOpen,
+        setIsPreviewOpen,
+        isRenameOpen,
+        setIsRenameOpen,
+        newName,
+        setNewName,
+        children,
+        isLoading,
+        refetch,
+        handleRename,
+        handleDelete,
+        renameMutation,
+    } = useStorageItem({ item, onRefresh });
 
     const isImage = item.extension.match(/(jpg|jpeg|png|gif|webp)$/i);
     const isPDF = item.extension === ".pdf";
-
-    const handleRename = () => {
-        const trimmed = newName.trim();
-        if (!trimmed) {
-            toast.error("Name cannot be empty");
-            return;
-        }
-        if (trimmed === item.name) {
-            setIsRenameOpen(false);
-            return;
-        }
-
-        renameMutation.mutate(
-            { oldPath: item.path, newName: trimmed },
-            {
-                onSuccess: () => {
-                    toast.success("Item renamed successfully");
-                    setIsRenameOpen(false);
-                    onRefresh();
-                },
-                onError: (err: any) => {
-                    const message = err?.message === "FORBIDDEN"
-                        ? "Permission denied: you cannot rename this item"
-                        : err?.message || "Failed to rename item";
-                    toast.error(message);
-                },
-            }
-        );
-    };
-
-    const handleDelete = async (e: React.MouseEvent) => {
-        e.stopPropagation();
-
-        const isConfirmed = await confirm({
-            title: `Delete ${item.isDir ? "folder" : "file"}`,
-            description: `Are you sure you want to delete ${item.isDir ? `folder <strong>${item.name}</strong>` : `file <strong>${item.name}</strong>`}?`,
-            confirmText: `Delete ${item.isDir ? "folder" : "file"}`,
-            destructive: true
-        });
-        if (!isConfirmed) return;
-
-        deleteMutation.mutate(
-            { relativePath: item.path, isDir: item.isDir },
-            {
-                onSuccess: () => {
-                    toast.success(`${item.isDir ? "Folder" : "File"} deleted successfully`);
-                    onRefresh();
-                },
-                onError: (err: any) => {
-                    const message = err?.message === "FORBIDDEN"
-                        ? "Permission denied: you cannot delete this item"
-                        : err?.message || "Failed to delete item";
-                    toast.error(message);
-                },
-            }
-        );
-    };
 
     return (
         <div className="flex flex-col w-full">
