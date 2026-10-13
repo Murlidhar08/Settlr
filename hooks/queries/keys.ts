@@ -28,6 +28,7 @@ export const QUERY_KEYS = {
   },
   business: {
     all: ["business-list"] as const,
+    list: (period?: string) => ["business-list", period ?? "month"] as const,
     detail: (businessId: string) => ["business-details", businessId] as const,
   },
   cashbook: {

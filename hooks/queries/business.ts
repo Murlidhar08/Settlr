@@ -11,10 +11,12 @@ import {
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { QUERY_KEYS } from "./keys";
 
-export const useBusinessList = () => {
+import type { PeriodFilter } from "@/types";
+
+export const useBusinessList = (period: PeriodFilter = "month") => {
   return useQuery({
-    queryKey: QUERY_KEYS.business.all,
-    queryFn: () => getBusinessList(),
+    queryKey: QUERY_KEYS.business.list(period),
+    queryFn: () => getBusinessList(period),
   });
 };
 
