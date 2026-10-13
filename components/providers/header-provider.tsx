@@ -40,6 +40,7 @@ function areConfigsEqual(a: HeaderConfig | null, b: HeaderConfig | null) {
     a.showProfile === b.showProfile &&
     a.showMobileNav === b.showMobileNav &&
     a.rightAction === b.rightAction &&
+    a.hidden === b.hidden &&
     areMenuItemsEqual(a.menuItems, b.menuItems)
   );
 }
@@ -112,6 +113,7 @@ export function useSetHeaderConfig(props: Partial<HeaderConfig>) {
       prev.showProfile !== props.showProfile ||
       prev.showMobileNav !== props.showMobileNav ||
       prev.rightAction !== props.rightAction ||
+      prev.hidden !== props.hidden ||
       !areMenuItemsEqual(prev.menuItems, props.menuItems);
 
     if (hasChanged) {
@@ -130,6 +132,7 @@ export function useSetHeaderConfig(props: Partial<HeaderConfig>) {
     props.showProfile,
     props.showMobileNav,
     props.rightAction,
+    props.hidden,
     props.menuItems,
   ]);
 }

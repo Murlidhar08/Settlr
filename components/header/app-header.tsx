@@ -41,6 +41,7 @@ export interface AppHeaderProps {
   showMobileNav?: boolean;
   menuItems?: HeaderMenuItem[];
   rightAction?: ReactNode;
+  hidden?: boolean;
 }
 
 /**
@@ -61,17 +62,18 @@ export function AppHeader(props: AppHeaderProps) {
     props.showProfile !== undefined ||
     props.showMobileNav !== undefined ||
     props.menuItems !== undefined ||
-    props.rightAction !== undefined;
+    props.rightAction !== undefined ||
+    props.hidden !== undefined;
 
   // When used inside a child page/component to set custom configuration
   useSetHeaderConfig(isOverrideCall ? props : {});
 
-  // If inside HeaderProvider and used as an override caller from a page, don't duplicate header in DOM
-  if (ctx && isOverrideCall) {
+  // If inside HeaderProvider and used as an override caller from a page, don't duplicate header in DOM unless layout header is hidden
+  if (ctx && isOverrideCall && !ctx.headerConfig?.hidden) {
     return null;
   }
 
-  return <AppHeaderContent standaloneProps={!ctx ? props : undefined} />;
+  return <AppHeaderContent standaloneProps={!ctx || ctx.headerConfig?.hidden ? props : undefined} />;
 }
 
 function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProps }) {
@@ -81,6 +83,10 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
   const navItems = useNavItems();
 
   const config: HeaderConfig = standaloneProps || ctx?.headerConfig || {};
+
+  if (config.hidden) {
+    return null;
+  }
 
   const handleBack = () => {
     if (config.backUrl) {

@@ -16,11 +16,15 @@ interface HeaderProps {
   title: string
   isProfile?: boolean
   isMobileList?: boolean
+  hidden?: boolean
 }
 
-const Header = ({ title, isProfile = true, isMobileList = false }: HeaderProps) => {
+const Header = ({ title, isProfile = true, isMobileList = false, hidden = false }: HeaderProps) => {
   const pathname = usePathname()
   const navItems = useNavItems()
+
+  if (hidden)
+    return null
 
   return (
     <motion.header

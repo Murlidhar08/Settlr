@@ -10,6 +10,7 @@ export interface HeaderProps {
   description?: string;
   menuItems?: HeaderMenuItem[];
   showProfile?: boolean
+  hidden?: boolean
 }
 
 /**
@@ -22,6 +23,7 @@ export function BackHeader({
   backUrl,
   menuItems,
   showProfile,
+  hidden
 }: HeaderProps) {
   return (
     <AppHeader
@@ -31,6 +33,7 @@ export function BackHeader({
       showBack={true}
       menuItems={menuItems}
       showProfile={showProfile}
+      hidden={hidden}
     />
   );
 }

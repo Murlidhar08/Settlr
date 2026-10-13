@@ -17,6 +17,7 @@ export interface HeaderConfig {
   showMobileNav?: boolean;
   menuItems?: HeaderMenuItem[];
   rightAction?: ReactNode;
+  hidden?: boolean;
 }
 
 export interface HeaderRouteRule extends HeaderConfig {
@@ -53,12 +54,13 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     title: "Public Statement",
     showBack: true,
   },
-  // Party Details
+  // Party Details (handled by BackHeader in party-details-content.tsx)
   {
     pattern: /^\/parties\/[^/]+$/,
     title: "parties.title",
     showBack: true,
     backUrl: "/parties",
+    hidden: true,
   },
   // Accounts root
   {
@@ -67,12 +69,13 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     showBack: false,
     showMobileNav: true,
   },
-  // Account Details
+  // Account Details (handled by BackHeader in back-account-header-client.tsx)
   {
     pattern: /^\/accounts\/[^/]+$/,
     title: "accounts.title",
     showBack: true,
     backUrl: "/accounts",
+    hidden: true,
   },
   // Business root
   {
@@ -82,19 +85,21 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     backUrl: "/dashboard",
     showMobileNav: true,
   },
-  // Business Details
+  // Business Details (handled by BackHeader in business/[businessId]/page.tsx)
   {
     pattern: /^\/business\/[^/]+$/,
     title: "business.label",
     showBack: true,
     backUrl: "/business",
+    hidden: true,
   },
-  // Transactions Details
+  // Transactions Details (handled by BackHeader in transaction-detail-view.tsx)
   {
     pattern: /^\/transactions\/[^/]+$/,
     title: "transactions.details",
     showBack: true,
     backUrl: "/cashbook",
+    hidden: true,
   },
   // Admin root
   {
@@ -117,12 +122,20 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     showBack: true,
     backUrl: "/admin",
   },
-  // Admin User Details
+  // Admin User Details (handled by BackHeader in user-header-action.tsx)
   {
     pattern: /^\/admin\/user\/[^/]+$/,
     title: "User Details",
     showBack: true,
     backUrl: "/admin",
+    hidden: true,
+  },
+  // Settings root
+  {
+    pattern: "/settings",
+    title: "settings.title",
+    showBack: false,
+    showMobileNav: true,
   },
   // Settings Profile
   {
