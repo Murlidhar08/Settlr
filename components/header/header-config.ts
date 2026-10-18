@@ -32,21 +32,21 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     pattern: "/dashboard",
     title: "dashboard.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Cashbook root
   {
     pattern: "/cashbook",
     title: "cashbook.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Parties root
   {
     pattern: "/parties",
     title: "parties.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Party Public Statement
   {
@@ -67,7 +67,7 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     pattern: "/accounts",
     title: "accounts.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Account Details (handled by BackHeader in back-account-header-client.tsx)
   {
@@ -83,7 +83,7 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     title: "business.manage_businesses",
     showBack: true,
     backUrl: "/dashboard",
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Business Details (handled by BackHeader in business/[businessId]/page.tsx)
   {
@@ -106,7 +106,7 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     pattern: "/admin",
     title: "admin.title",
     showBack: true,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Admin User Add
   {
@@ -135,7 +135,7 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     pattern: "/settings",
     title: "settings.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Settings Profile
   {
