@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client"
   output   = "../lib/generated/prisma"
@@ -142,7 +141,7 @@ model TwoFactor {
 
   @@index([secret])
   @@index([userId])
-  @@map("twoFactor")
+  @@map("two_factor")
 }
 
 model Passkey {
@@ -176,7 +175,7 @@ model UserSettings {
   theme      ThemeMode @default(AUTO)
   user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
-  @@map("userSettings")
+  @@map("user_settings")
 }
 
 model AppConfig {
@@ -192,7 +191,7 @@ model AppConfig {
   discordClientId     String?
   discordClientSecret String?
 
-  @@map("appConfig")
+  @@map("app_config")
 }
 
 model UserDocument {
@@ -208,5 +207,5 @@ model UserDocument {
   updatedAt            DateTime         @updatedAt
 
   @@index([userId])
-  @@map("userDocument")
+  @@map("user_document")
 }
