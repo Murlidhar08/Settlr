@@ -14,15 +14,30 @@ export const ensureDir = (dirPath: string) => {
 
 /**
  * Gets the absolute path for a given relative path within the upload root.
+ * Enforces strict boundary verification to prevent directory traversal attacks.
  */
-export const getAbsolutePath = (relativePath: string) => {
-    // Remove leading slashes and prevent path traversal
-    let safePath = relativePath.replace(/^(\.\.\/)+/, "").replace(/^\/+/, "");
-    if (safePath.startsWith("uploads/")) {
-        safePath = safePath.replace(/^uploads\//, "");
+export const getAbsolutePath = (relativePath: string): string => {
+    // 1. Normalize and strip leading slashes/backslashes
+    const normalized = path.normalize(relativePath).replace(/^[/\\]+/, "");
+
+    // 2. Strip leading 'uploads' prefix if present
+    let safePath = normalized;
+    if (safePath.toLowerCase().startsWith("uploads")) {
+        safePath = safePath.slice(7).replace(/^[/\\]+/, "");
     }
-    return path.join(UPLOAD_ROOT, safePath);
+
+    // 3. Resolve against UPLOAD_ROOT
+    const resolvedPath = path.resolve(UPLOAD_ROOT, safePath);
+
+    // 4. Strict check: path MUST remain inside UPLOAD_ROOT
+    const rootWithSep = UPLOAD_ROOT.endsWith(path.sep) ? UPLOAD_ROOT : `${UPLOAD_ROOT}${path.sep}`;
+    if (resolvedPath !== UPLOAD_ROOT && !resolvedPath.startsWith(rootWithSep)) {
+        throw new Error("Access denied: Invalid file path traversal attempt");
+    }
+
+    return resolvedPath;
 };
+
 
 /**
  * Gets the relative path (from upload root) for a given absolute path.
@@ -114,14 +129,24 @@ export const listDirectoryContents = async (relativePath: string = "") => {
 };
 
 /**
- * Renames a file or directory.
+ * Renames a file or directory safely within its parent directory.
  */
 export const renameItem = async (oldRelativePath: string, newName: string) => {
+    // Disallow path separators or directory traversal symbols in newName
+    if (newName.includes("/") || newName.includes("\\") || newName.includes("..")) {
+        throw new Error("Invalid name: cannot contain path separators or parent directory references");
+    }
+
     const oldAbsPath = getAbsolutePath(oldRelativePath);
     if (!fs.existsSync(oldAbsPath)) throw new Error("Item not found");
 
     const parentDir = path.dirname(oldAbsPath);
     const newAbsPath = path.join(parentDir, newName);
+
+    // Verify destination remains in parent directory and within upload root
+    if (path.dirname(newAbsPath) !== parentDir) {
+        throw new Error("Invalid destination path");
+    }
 
     fs.renameSync(oldAbsPath, newAbsPath);
     return getRelativePath(newAbsPath);

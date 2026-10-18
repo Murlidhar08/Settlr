@@ -17,6 +17,7 @@ export interface HeaderConfig {
   showMobileNav?: boolean;
   menuItems?: HeaderMenuItem[];
   rightAction?: ReactNode;
+  hidden?: boolean;
 }
 
 export interface HeaderRouteRule extends HeaderConfig {
@@ -24,26 +25,28 @@ export interface HeaderRouteRule extends HeaderConfig {
 }
 
 export const headerRoutesConfig: HeaderRouteRule[] = [
-  // Dashboard
+  // *********************
+  //  Application Header
+  // *********************
   {
     pattern: "/dashboard",
     title: "dashboard.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Cashbook root
   {
     pattern: "/cashbook",
     title: "cashbook.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Parties root
   {
     pattern: "/parties",
     title: "parties.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Party Public Statement
   {
@@ -51,26 +54,28 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     title: "Public Statement",
     showBack: true,
   },
-  // Party Details
+  // Party Details (handled by BackHeader in party-details-content.tsx)
   {
     pattern: /^\/parties\/[^/]+$/,
     title: "parties.title",
     showBack: true,
     backUrl: "/parties",
+    hidden: true,
   },
   // Accounts root
   {
     pattern: "/accounts",
     title: "accounts.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
-  // Account Details
+  // Account Details (handled by BackHeader in back-account-header-client.tsx)
   {
     pattern: /^\/accounts\/[^/]+$/,
     title: "accounts.title",
     showBack: true,
     backUrl: "/accounts",
+    hidden: true,
   },
   // Business root
   {
@@ -78,28 +83,30 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     title: "business.manage_businesses",
     showBack: true,
     backUrl: "/dashboard",
-    showMobileNav: true,
+    showMobileNav: false,
   },
-  // Business Details
+  // Business Details (handled by BackHeader in business/[businessId]/page.tsx)
   {
     pattern: /^\/business\/[^/]+$/,
     title: "business.label",
     showBack: true,
     backUrl: "/business",
+    hidden: true,
   },
-  // Transactions Details
+  // Transactions Details (handled by BackHeader in transaction-detail-view.tsx)
   {
     pattern: /^\/transactions\/[^/]+$/,
     title: "transactions.details",
     showBack: true,
     backUrl: "/cashbook",
+    hidden: true,
   },
   // Admin root
   {
     pattern: "/admin",
     title: "admin.title",
     showBack: true,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Admin User Add
   {
@@ -115,19 +122,20 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     showBack: true,
     backUrl: "/admin",
   },
-  // Admin User Details
+  // Admin User Details (handled by BackHeader in user-header-action.tsx)
   {
     pattern: /^\/admin\/user\/[^/]+$/,
     title: "User Details",
     showBack: true,
     backUrl: "/admin",
+    hidden: true,
   },
   // Settings root
   {
     pattern: "/settings",
     title: "settings.title",
     showBack: false,
-    showMobileNav: true,
+    showMobileNav: false,
   },
   // Settings Profile
   {

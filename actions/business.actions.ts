@@ -140,20 +140,145 @@ export async function deleteBusiness(id: string) {
   return { success: true };
 }
 
-export async function getBusinessList() {
+import type { BusinessListItem, PeriodFilter } from "@/types";
+
+export async function getBusinessList(
+  period: PeriodFilter = "month"
+): Promise<BusinessListItem[]> {
   const session = await getUserSession();
 
   if (!session) {
-    console.error("User is not logged in.")
+    console.error("User is not logged in.");
     return [];
   }
 
-  return await prisma.business?.findMany({
+  // 1. Fetch user businesses and their category accounts
+  const businesses = await prisma.business.findMany({
+    where: { ownerId: session.user.id, isDelete: false },
     select: {
       id: true,
-      name: true
+      name: true,
+      financialAccounts: {
+        where: {
+          type: FinancialAccountType.CATEGORY,
+          isDelete: false,
+        },
+        select: {
+          id: true,
+          categoryType: true,
+        },
+      },
     },
-    where: { ownerId: session?.user.id, isDelete: false }
+    orderBy: { createdAt: "desc" },
+  });
+
+  if (businesses.length === 0) {
+    return [];
+  }
+
+  // 2. Date filtering based on period
+  const now = new Date();
+  let dateFilter: any = {};
+  if (period === "month") {
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    dateFilter = { date: { gte: startOfMonth } };
+  } else if (period === "year") {
+    const startOfYear = new Date(now.getFullYear(), 0, 1, 0, 0, 0, 0);
+    dateFilter = { date: { gte: startOfYear } };
+  }
+
+  // 3. Fetch all active transactions for these businesses in the specified period
+  const businessIds = businesses.map((b) => b.id);
+  const transactions = await prisma.transaction.findMany({
+    where: {
+      businessId: { in: businessIds },
+      isDelete: false,
+      ...dateFilter,
+    },
+    select: {
+      businessId: true,
+      amount: true,
+      fromAccountId: true,
+      toAccountId: true,
+    },
+  });
+
+  // 4. Group transactions by businessId
+  const txsByBusiness = new Map<string, typeof transactions>();
+  for (const tx of transactions) {
+    const list = txsByBusiness.get(tx.businessId);
+    if (list) {
+      list.push(tx);
+    } else {
+      txsByBusiness.set(tx.businessId, [tx]);
+    }
+  }
+
+  // 5. Aggregate category amounts per business
+  return businesses.map((business) => {
+    const categoryMap = new Map<string, CategoryType>();
+    for (const acc of business.financialAccounts) {
+      if (acc.categoryType) {
+        categoryMap.set(acc.id, acc.categoryType);
+      }
+    }
+
+    let income = 0;
+    let expense = 0;
+    let asset = 0;
+    let equity = 0;
+    let adjustment = 0;
+
+    const bTxs = txsByBusiness.get(business.id) || [];
+    for (const tx of bTxs) {
+      const amount = Number(tx.amount) || 0;
+      const fromCat = categoryMap.get(tx.fromAccountId);
+      const toCat = categoryMap.get(tx.toAccountId);
+
+      // Income: funds flowing FROM Income account (subtracted if reversed into Income account)
+      if (fromCat === CategoryType.INCOME) income += amount;
+      if (toCat === CategoryType.INCOME) income -= amount;
+
+      // Expense: funds flowing INTO Expense account (subtracted if refunded out of Expense account)
+      if (toCat === CategoryType.EXPENSE) expense += amount;
+      if (fromCat === CategoryType.EXPENSE) expense -= amount;
+
+      // Asset: funds flowing INTO Asset account
+      if (toCat === CategoryType.ASSET) asset += amount;
+      if (fromCat === CategoryType.ASSET) asset -= amount;
+
+      // Equity: funds contributed from Equity into business
+      if (fromCat === CategoryType.EQUITY) equity += amount;
+      if (toCat === CategoryType.EQUITY) equity -= amount;
+
+      // Adjustment
+      if (toCat === CategoryType.ADJUSTMENT || fromCat === CategoryType.ADJUSTMENT) {
+        adjustment += amount;
+      }
+    }
+
+    const safeIncome = Math.max(0, income);
+    const safeExpense = Math.max(0, expense);
+
+    return {
+      id: business.id,
+      name: business.name,
+      categoryStats: {
+        income: safeIncome,
+        expense: safeExpense,
+        net: safeIncome - safeExpense,
+        asset: Math.max(0, asset),
+        equity: Math.max(0, equity),
+        adjustment: Math.max(0, adjustment),
+        breakdown: {
+          [CategoryType.INCOME]: safeIncome,
+          [CategoryType.EXPENSE]: safeExpense,
+          [CategoryType.ASSET]: Math.max(0, asset),
+          [CategoryType.EQUITY]: Math.max(0, equity),
+          [CategoryType.ADJUSTMENT]: Math.max(0, adjustment),
+        },
+      },
+    };
   });
 }
 
