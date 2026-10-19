@@ -19,6 +19,7 @@
     "db:studio": "prisma studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
     "typecheck": "tsc --noEmit",
+    "reset-password": "tsx scripts/reset-password.ts",
     "sync-template": "git fetch upstream && git merge upstream/main"
   },
   "dependencies": {
