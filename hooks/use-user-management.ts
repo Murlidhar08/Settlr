@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from "react";
 import { useAdminUsers } from "@/hooks/queries/admin";
 import { hasRole } from "@/lib/auth/permissions";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 import type { UserListItem, UserStats } from "@/types/user";
 
 export interface UseUserManagementReturn {
@@ -48,7 +49,9 @@ export function useUserManagement(): UseUserManagementReturn {
   const stats: UserStats = useMemo(() => {
     const totalUsers = users.length;
     const adminUsers = users.filter((u) => hasRole(u.role, "admin")).length;
-    const bannedUsers = users.filter((u) => Boolean(u.banned)).length;
+    const bannedUsers = users.filter(
+      (u) => Boolean(u.banned) || u.status === UserStatus.banned
+    ).length;
     const activeUsers = totalUsers - bannedUsers;
 
     return {
@@ -67,14 +70,22 @@ export function useUserManagement(): UseUserManagementReturn {
       const matchesSearch =
         !normalizedSearch ||
         user.name?.toLowerCase().includes(normalizedSearch) ||
-        user.email?.toLowerCase().includes(normalizedSearch);
+        user.email?.toLowerCase().includes(normalizedSearch) ||
+        user.contactNo?.toLowerCase().includes(normalizedSearch);
 
       const matchesRole =
         filterRole === "all" || hasRole(user.role, filterRole as any);
 
+      const userStatus =
+        user.status ?? (user.banned ? UserStatus.banned : UserStatus.approved);
+
       const matchesStatus =
         filterStatus === "all" ||
-        (filterStatus === "banned" ? Boolean(user.banned) : !user.banned);
+        (filterStatus === UserStatus.banned
+          ? Boolean(user.banned) || userStatus === UserStatus.banned
+          : filterStatus === UserStatus.approved
+            ? userStatus === UserStatus.approved && !user.banned
+            : userStatus === filterStatus && !user.banned);
 
       const matchesVerified =
         filterVerified === "all" ||

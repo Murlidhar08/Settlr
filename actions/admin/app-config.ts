@@ -48,6 +48,8 @@ export async function updateAppConfig(data: z.infer<typeof appConfigSchema>) {
   });
 
   revalidatePath("/admin");
+  revalidatePath("/admin/settings");
+  revalidatePath("/admin/dashboard");
   return { success: true };
 }
 

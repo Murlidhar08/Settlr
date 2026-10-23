@@ -12,7 +12,9 @@ export const QUERY_KEYS = {
     documents: (userId: string) => ["user-documents", userId] as const,
   },
   admin: {
+    dashboard: ["admin-dashboard"] as const,
     users: ["admin-users"] as const,
+    sessions: ["admin-sessions"] as const,
     appConfig: ["admin-app-config"] as const,
     storage: {
       all: ["storage"] as const,

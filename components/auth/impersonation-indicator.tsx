@@ -2,12 +2,10 @@
 
 import { authClient } from "@/lib/auth/auth-client"
 import { ShieldAlert, UserX } from "lucide-react"
-import { useRouter } from "next/navigation"
 import { BetterAuthActionButton } from "./better-auth-action-button"
 
 export function ImpersonationIndicator() {
-    const router = useRouter()
-    const { data: session, refetch } = authClient.useSession()
+    const { data: session } = authClient.useSession()
 
     if (session?.session.impersonatedBy == null) return null
 

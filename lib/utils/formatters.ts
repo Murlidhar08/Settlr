@@ -35,6 +35,32 @@ export function formatDateDifferenceToNow(date: Date | string | number): string 
 }
 
 /**
+ * Formats a date difference relative to now in compact notation (e.g. "17m", "2h", "6d", "3mo", "1y").
+ */
+export function formatCompactTimeAgo(date: Date | string | number): string {
+  try {
+    const d = new Date(date);
+    if (isNaN(d.getTime())) return "";
+    const diffMs = Date.now() - d.getTime();
+    if (diffMs < 0) return "just now";
+    const seconds = Math.floor(diffMs / 1000);
+    if (seconds < 60) return "just now";
+    const minutes = Math.floor(seconds / 60);
+    if (minutes < 60) return `${minutes}m`;
+    const hours = Math.floor(minutes / 60);
+    if (hours < 24) return `${hours}h`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d`;
+    const months = Math.floor(days / 30);
+    if (months < 12) return `${months}mo`;
+    const years = Math.floor(days / 365);
+    return `${years}y`;
+  } catch {
+    return "";
+  }
+}
+
+/**
  * Formats a date using a custom pattern or the user's preferred date format.
  */
 export function formatUserDate(
