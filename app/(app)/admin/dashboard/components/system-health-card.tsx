@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { SystemHealth } from "@/types/admin-dashboard";
-import { CheckCircle2, Cpu, Database, Mail, Server, ShieldCheck, Wrench, XCircle } from "lucide-react";
+import { Cpu, Database, Mail, Server, ShieldCheck } from "lucide-react";
 import type { Route } from "next";
 import Link from "next/link";
 

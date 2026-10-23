@@ -2,7 +2,9 @@
 
 import { cn } from "@/lib/utils";
 import type { SecurityMetrics, StorageMetrics, UserMetrics } from "@/types/admin-dashboard";
-import { Activity, ArrowDownRight, ArrowUpRight, FileText, KeyRound, Users } from "lucide-react";
+import { Activity, FileText, KeyRound, Users } from "lucide-react";
+import type { Route } from "next";
+import { useRouter } from "next/navigation";
 
 interface KpiCardsProps {
   userMetrics: UserMetrics;
@@ -10,15 +12,26 @@ interface KpiCardsProps {
   storageMetrics: StorageMetrics;
 }
 
-export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCardsProps) {
-  const isPositiveGrowth = userMetrics.growthPercentage >= 0;
+interface KpiCardItem {
+  title: string;
+  value: string;
+  icon: React.ReactNode;
+  redirectUrl?: Route;
+  subtext: React.ReactNode;
+  gradient: string;
+  borderGlow: string;
+  iconBg: string;
+}
 
-  const cards = [
+export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCardsProps) {
+  const router = useRouter();
+
+  const cards: KpiCardItem[] = [
     {
       title: "Total Registered Users",
       value: userMetrics.totalUsers.toLocaleString(),
-      subtitle: `${userMetrics.newUsersThisMonth} new this month`,
       icon: <Users className="h-5 w-5 text-indigo-400" />,
+      redirectUrl: "/admin/user" as Route,
       subtext: (
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="font-semibold text-emerald-500">{userMetrics.activeUsers}</span> active •{" "}
@@ -32,8 +45,8 @@ export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCa
     {
       title: "2FA & Identity Security",
       value: `${securityMetrics.twoFactorAdoptionRate}%`,
-      subtitle: `${securityMetrics.twoFactorUsersCount} users with 2FA enabled`,
       icon: <KeyRound className="h-5 w-5 text-emerald-400" />,
+      redirectUrl: "/admin/user" as Route,
       subtext: (
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{userMetrics.verifiedEmailsCount}</span> verified emails
@@ -46,8 +59,8 @@ export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCa
     {
       title: "Active Device Sessions",
       value: securityMetrics.activeSessionsCount.toLocaleString(),
-      subtitle: "Concurrent authenticated devices",
       icon: <Activity className="h-5 w-5 text-sky-400" />,
+      redirectUrl: "/admin/user" as Route,
       subtext: (
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           <span className="font-semibold text-foreground">{userMetrics.adminCount}</span> admin sessions active
@@ -60,8 +73,8 @@ export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCa
     {
       title: "Documents & User Assets",
       value: storageMetrics.totalDocuments.toLocaleString(),
-      subtitle: "Uploaded verification documents",
       icon: <FileText className="h-5 w-5 text-amber-400" />,
+      redirectUrl: "/admin/storage" as Route,
       subtext: (
         <span className="flex items-center gap-1.5 text-xs text-muted-foreground">
           Encrypted physical & cloud records
@@ -78,8 +91,18 @@ export function KpiCards({ userMetrics, securityMetrics, storageMetrics }: KpiCa
       {cards.map((card, idx) => (
         <div
           key={idx}
+          role={card.redirectUrl ? "button" : undefined}
+          tabIndex={card.redirectUrl ? 0 : undefined}
+          onClick={() => card.redirectUrl && router.push(card.redirectUrl)}
+          onKeyDown={(e) => {
+            if (card.redirectUrl && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              router.push(card.redirectUrl);
+            }
+          }}
           className={cn(
             "group relative overflow-hidden rounded-2xl border border-border/60 bg-card p-5 shadow-xs transition-all duration-300 hover:shadow-md hover:-translate-y-0.5",
+            card.redirectUrl ? "cursor-pointer select-none active:scale-[0.99] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" : "",
             card.borderGlow
           )}
         >
