@@ -1,5 +1,6 @@
 export {
   formatDateDifferenceToNow,
+  formatCompactTimeAgo,
   formatUserDate,
   formatUserTime,
   formatUserDateTime,

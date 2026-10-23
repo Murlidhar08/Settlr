@@ -22,6 +22,7 @@ export async function getAdminUsers() {
         select: {
             id: true,
             contactNo: true,
+            status: true,
         }
     });
 
@@ -30,6 +31,7 @@ export async function getAdminUsers() {
         return {
             ...u,
             contactNo: counts?.contactNo,
+            status: counts?.status ?? u.status,
         };
     });
 

@@ -308,16 +308,18 @@ function LoginFormContent({ providers }: LoginFormProps) {
         </div>
 
         {/* SIGN UP */}
-        {!isAddAccount && (
-          <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
-            <p className="text-center text-muted-foreground">
-              Don&apos;t have an account?{" "}
-              <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                Get Started
-              </Link>
-            </p>
-          </motion.div>
-        )}
+        <div>
+          {!isAddAccount && (
+            <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
+              <p className="text-center text-muted-foreground">
+                Don&apos;t have an account?{" "}
+                <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
+                  Get Started
+                </Link>
+              </p>
+            </motion.div>
+          )}
+        </div>
       </motion.div >
 
       {/* RIGHT SIDE: ILLUSTRATION & FEATURES */}

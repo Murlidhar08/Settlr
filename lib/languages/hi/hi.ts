@@ -210,6 +210,9 @@ export default {
     },
     admin: {
         title: "एडमिन पैनल",
+        dashboard: {
+            title: "एडमिन डैशबोर्ड",
+        },
         access_restricted: "पहुंच प्रतिबंधित है",
         restricted_description: "आपके पास इस प्रशासनिक संसाधन तक पहुँचने के लिए आवश्यक अनुमति नहीं है।",
         return_to_dashboard: "डैशबोर्ड पर वापस जाएं",

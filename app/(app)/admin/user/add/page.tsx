@@ -9,7 +9,7 @@ export default function UserAddPage() {
                     <UserProfileHeader user={null} isEditing={false} />
 
                     {/* Form Section */}
-                    <UserForm backUrl="/admin" />
+                    <UserForm backUrl="/admin/user" />
                 </div>
             </div>
     );

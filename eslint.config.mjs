@@ -1,23 +1,19 @@
 import { defineConfig, globalIgnores } from "eslint/config";
-import { FlatCompat } from "@eslint/compat";
 import js from "@eslint/js";
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-});
+import nextPlugin from "@next/eslint-plugin-next";
 
 export default defineConfig([
   js.configs.recommended,
-
-  ...compat.extends(
-    "next/core-web-vitals",
-    "next/typescript"
-  ),
-
+  nextPlugin.configs.recommended,
+  nextPlugin.configs["core-web-vitals"],
   globalIgnores([
     ".next/**",
     "out/**",
     "build/**",
     "next-env.d.ts",
+    "node_modules/**",
+    "resources/**",
+    "uploads/**",
+    "public/**",
   ]),
 ]);
