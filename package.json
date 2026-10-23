@@ -80,11 +80,11 @@
     "typescript": "^7.0.2"
   },
   "allowScripts": {
-    "core-js@3.50.0": true,
     "sharp@0.34.5": true,
     "unrs-resolver@1.12.2": true,
     "esbuild@0.28.2": true,
     "prisma@7.10.1": true,
-    "@prisma/engines@7.10.1": true
+    "@prisma/engines@7.10.1": true,
+    "core-js@3.51.0": true
   }
 }
