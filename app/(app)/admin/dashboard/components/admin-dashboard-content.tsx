@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { useAdminDashboardState } from "@/hooks/use-admin-dashboard";
+import { useSession } from "@/lib/auth/auth-client";
 import { AlertCircle, RefreshCw } from "lucide-react";
 import { ActiveSessionsCard } from "./active-sessions-card";
 import { AdminDashboardSkeleton } from "./admin-dashboard-skeleton";
@@ -9,9 +10,9 @@ import { GrowthChart } from "./growth-chart";
 import { KpiCards } from "./kpi-cards";
 import { PendingApprovalsAlert } from "./pending-approvals-alert";
 import { QuickNavigationGrid } from "./quick-navigation-grid";
-import { SystemHealthCard } from "./system-health-card";
-import { useSession } from "@/lib/auth/auth-client";
 import { RecentSignupsCard } from "./recent-signups-card";
+import { SystemHealthCard } from "./system-health-card";
+import { SystemUpdateCard } from "./system-update-card";
 
 export function AdminDashboardContent() {
   const {
@@ -108,6 +109,10 @@ export function AdminDashboardContent() {
 
       {/* Infrastructure Diagnostics */}
       <SystemHealthCard health={data.systemHealth} />
+
+
+      {/* Application Version & Update Center */}
+      <SystemUpdateCard />
     </div>
   );
 }

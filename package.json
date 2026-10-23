@@ -20,7 +20,10 @@
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
     "typecheck": "tsc --noEmit",
     "reset-password": "tsx scripts/reset-password.ts",
-    "sync-template": "git fetch upstream && git merge upstream/main"
+    "sync-template": "git fetch upstream && git merge upstream/main",
+    "update": "tsx scripts/auto-update.ts",
+    "update:check": "tsx scripts/auto-update.ts --check",
+    "update:apply": "tsx scripts/auto-update.ts --apply"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

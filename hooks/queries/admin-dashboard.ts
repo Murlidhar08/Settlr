@@ -1,5 +1,7 @@
 import {
   adminRevokeSession,
+  applySystemUpdateAction,
+  checkSystemUpdateAction,
   getAdminDashboardSummary,
 } from "@/actions/admin-dashboard.actions";
 import { updateUserStatus } from "@/actions/admin.actions";
@@ -57,3 +59,38 @@ export const useAdminDashboardUpdateStatus = () => {
     },
   });
 };
+
+export const useSystemUpdateStatus = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.admin.systemUpdate,
+    queryFn: async () => {
+      const result = await checkSystemUpdateAction();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to check for system updates");
+      }
+      return result.data;
+    },
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
+  });
+};
+
+export const useApplySystemUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await applySystemUpdateAction();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to apply system update");
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.systemUpdate });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.dashboard });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings.appVersion });
+    },
+  });
+};
+

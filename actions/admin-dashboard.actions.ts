@@ -5,13 +5,15 @@ import { requirePermission } from "@/lib/auth/guard";
 import { envServer } from "@/lib/env.server";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
+import { applyAppUpdate, checkForUpdates } from "@/lib/system/app-updater";
 import type {
   AdminDashboardSummary,
-  DistributionItem,
+  ApplyUpdateResult,
   GrowthDataPoint,
   RecentSession,
   RecentUser,
   SystemHealth,
+  SystemUpdateStatus,
 } from "@/types/admin-dashboard";
 
 export async function getAdminDashboardSummary() {
@@ -358,3 +360,36 @@ export async function adminRevokeSession(sessionId: string) {
     return { success: true };
   });
 }
+
+/**
+ * Checks for available system updates on GitHub.
+ */
+export async function checkSystemUpdateAction(): Promise<{
+  success: boolean;
+  data?: SystemUpdateStatus;
+  error?: string;
+}> {
+  return safeAction(async () => {
+    await requirePermission("config", "read");
+    return checkForUpdates();
+  });
+}
+
+/**
+ * Applies the system update directly from the application.
+ */
+export async function applySystemUpdateAction(): Promise<{
+  success: boolean;
+  data?: ApplyUpdateResult;
+  error?: string;
+}> {
+  return safeAction(async () => {
+    await requirePermission("config", "update");
+    const result = await applyAppUpdate();
+    if (!result.success) {
+      throw new Error(result.message || "Failed to complete update process.");
+    }
+    return result;
+  });
+}
+

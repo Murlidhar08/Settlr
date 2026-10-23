@@ -96,5 +96,32 @@ export interface AdminDashboardSummary {
   growthTrends: {
     daily14d: GrowthDataPoint[];
     monthly6m: GrowthDataPoint[];
-  }
+  };
 }
+
+export interface SystemUpdateStatus {
+  repo: string;
+  branch: string;
+  currentVersion: string;
+  latestVersion: string;
+  currentCommit: string;
+  latestCommit: string;
+  hasVersionUpdate: boolean;
+  hasCommitUpdate: boolean;
+  hasUpdate: boolean;
+  releaseTitle?: string;
+  releaseNotes?: string;
+  publishedAt?: string;
+  lastCheckedAt: string;
+}
+
+export interface ApplyUpdateResult {
+  success: boolean;
+  previousVersion: string;
+  updatedVersion: string;
+  previousCommit: string;
+  updatedCommit: string;
+  logs: string[];
+  message: string;
+}
+
