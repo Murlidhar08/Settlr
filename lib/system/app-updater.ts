@@ -1,5 +1,5 @@
 import type { ApplyUpdateResult, SystemUpdateStatus } from "@/types/admin-dashboard";
-import { execSync } from "node:child_process";
+import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -27,6 +27,23 @@ export function compareSemver(current: string, latest: string): number {
 }
 
 /**
+ * Normalizes any GitHub repo string (full URL, git@ URL, or owner/repo) to 'owner/repo'.
+ */
+export function normalizeRepo(rawInput?: string | null): string {
+  if (!rawInput) return "Murlidhar08/next-template";
+  const trimmed = rawInput.trim().replace(/^['"]|['"]$/g, "");
+  const match = trimmed.match(/github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/i);
+  if (match) {
+    return `${match[1]}/${match[2]}`;
+  }
+  const simpleMatch = trimmed.match(/^([^/]+)\/([^/.]+)$/);
+  if (simpleMatch) {
+    return `${simpleMatch[1]}/${simpleMatch[2]}`;
+  }
+  return trimmed.replace(/\.git$/, "");
+}
+
+/**
  * Extracts GitHub owner/repo from git remote origin URL.
  */
 export function getGitRemoteRepo(): string | null {
@@ -36,10 +53,7 @@ export function getGitRemoteRepo(): string | null {
       stdio: ["pipe", "pipe", "ignore"],
     }).trim();
 
-    const match = remoteUrl.match(/github\.com[:/]([^/]+)\/([^/.]+)(?:\.git)?$/);
-    if (match) {
-      return `${match[1]}/${match[2]}`;
-    }
+    return normalizeRepo(remoteUrl);
   } catch {
     // Non-git or no origin remote
   }
@@ -97,11 +111,12 @@ export async function checkForUpdates(options?: {
   repo?: string;
   branch?: string;
 }): Promise<SystemUpdateStatus> {
-  const repo =
+  const rawRepo =
     options?.repo ||
-    process.env.GITHUB_REPOSITORY ||
     getGitRemoteRepo() ||
+    process.env.GITHUB_REPOSITORY ||
     "Murlidhar08/next-template";
+  const repo = normalizeRepo(rawRepo);
   const branch = options?.branch || getCurrentBranch();
   const currentVersion = getLocalPackageVersion();
   const currentCommit = getCurrentCommit();
@@ -125,7 +140,7 @@ export async function checkForUpdates(options?: {
   try {
     const releaseRes = await fetch(
       `https://api.github.com/repos/${repo}/releases/latest`,
-      { headers, next: { revalidate: 60 } }
+      { headers, cache: "no-store" }
     );
     if (releaseRes.ok) {
       const releaseData = await releaseRes.json();
@@ -145,7 +160,7 @@ export async function checkForUpdates(options?: {
     try {
       const rawPkgRes = await fetch(
         `https://raw.githubusercontent.com/${repo}/${branch}/package.json`,
-        { headers: { "User-Agent": headers["User-Agent"] }, next: { revalidate: 60 } }
+        { headers: { "User-Agent": headers["User-Agent"] }, cache: "no-store" }
       );
       if (rawPkgRes.ok) {
         const rawPkg = await rawPkgRes.json();
@@ -162,7 +177,7 @@ export async function checkForUpdates(options?: {
   try {
     const commitRes = await fetch(
       `https://api.github.com/repos/${repo}/commits/${branch}`,
-      { headers, next: { revalidate: 60 } }
+      { headers, cache: "no-store" }
     );
     if (commitRes.ok) {
       const commitData = await commitRes.json();
@@ -223,6 +238,59 @@ function runStep(cmd: string, stepName: string, logs: string[]): string {
 }
 
 /**
+ * Schedules a graceful server restart.
+ * Waits for the current HTTP response to finish before triggering restart/exit.
+ */
+export function scheduleServerRestart(delayMs = 2000): void {
+  setTimeout(() => {
+    console.log("[App Updater] Executing graceful server restart...");
+
+    // 1. PM2 environment
+    if (process.env.pm_id !== undefined) {
+      console.log("[App Updater] PM2 process detected. Exiting process for PM2 manager restart...");
+      process.exit(0);
+    }
+
+    // 2. Docker / Container environment (PID 1 or container env)
+    if (existsSync("/.dockerenv")) {
+      console.log("[App Updater] Docker container detected. Exiting process for container restart...");
+      process.exit(0);
+    }
+
+    // 3. Systemd / Kubernetes / Cloud Run / PaaS
+    if (process.env.KUBERNETES_SERVICE_HOST || process.env.SYSTEMD_EXEC_PID) {
+      console.log("[App Updater] Container/Systemd environment detected. Exiting for service restart...");
+      process.exit(0);
+    }
+
+    // 4. Standalone / Development Node process
+    try {
+      const isWindows = process.platform === "win32";
+      const cmd = process.env.npm_lifecycle_event
+        ? (isWindows ? "npm.cmd" : "npm")
+        : process.argv[0];
+      const args = process.env.npm_lifecycle_event
+        ? ["run", process.env.npm_lifecycle_event]
+        : process.argv.slice(1);
+
+      console.log(`[App Updater] Spawning new process: ${cmd} ${args.join(" ")}`);
+      const child = spawn(cmd, args, {
+        detached: true,
+        stdio: "inherit",
+        shell: isWindows,
+        cwd: process.cwd(),
+        env: process.env,
+      });
+      child.unref();
+      process.exit(0);
+    } catch (spawnErr) {
+      console.warn("[App Updater] Could not spawn new process, exiting cleanly:", spawnErr);
+      process.exit(0);
+    }
+  }, delayMs);
+}
+
+/**
  * Applies the application update directly on the server.
  */
 export async function applyAppUpdate(options?: {
@@ -230,6 +298,7 @@ export async function applyAppUpdate(options?: {
   stash?: boolean;
   skipInstall?: boolean;
   skipPrisma?: boolean;
+  restart?: boolean;
 }): Promise<ApplyUpdateResult> {
   const previousVersion = getLocalPackageVersion();
   const previousCommit = getCurrentCommit();
@@ -301,6 +370,12 @@ export async function applyAppUpdate(options?: {
 
     logs.push(`✔ Application update finalized: v${updatedVersion} (${updatedCommit})`);
 
+    const shouldRestart = options?.restart !== false;
+    if (shouldRestart) {
+      logs.push("► Application restart scheduled in 2 seconds...");
+      scheduleServerRestart(2000);
+    }
+
     return {
       success: true,
       previousVersion,
@@ -309,6 +384,7 @@ export async function applyAppUpdate(options?: {
       updatedCommit,
       logs,
       message: `Updated successfully from v${previousVersion} (${previousCommit}) to v${updatedVersion} (${updatedCommit})`,
+      restarting: shouldRestart,
     };
   } catch (err) {
     if (hasStashed) {

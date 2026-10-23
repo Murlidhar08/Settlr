@@ -31,12 +31,14 @@ export function SystemUpdateCard() {
     isLoading,
     isChecking,
     isUpdating,
+    isRestarting,
     isUpToDate,
     hasUpdate,
     updateResult,
     checkError,
     handleCheckUpdates,
     handleApplyUpdate,
+    handleManualRestart,
     isConfirmOpen,
     setIsConfirmOpen,
     isLogsOpen,
@@ -126,7 +128,30 @@ export function SystemUpdateCard() {
         </div>
 
         {/* Content body based on status */}
-        {isLoading ? (
+        {isRestarting ? (
+          <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 dark:bg-primary/10 flex items-center justify-between gap-3 animate-pulse">
+            <div className="flex items-center gap-3">
+              <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
+              <div>
+                <div className="text-xs font-bold text-foreground">
+                  Restarting Application Server...
+                </div>
+                <div className="text-[11px] text-muted-foreground">
+                  Waiting for the server to finish rebooting. The page will reconnect and reload automatically.
+                </div>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => window.location.reload()}
+              className="text-xs h-8 rounded-xl shrink-0 cursor-pointer"
+            >
+              <RotateCcw className="h-3 w-3 mr-1" />
+              Reload Page
+            </Button>
+          </div>
+        ) : isLoading ? (
           <div className="h-16 rounded-xl bg-muted/20 animate-pulse border border-border/40 flex items-center justify-center">
             <span className="text-xs text-muted-foreground">Checking update status...</span>
           </div>
@@ -147,7 +172,7 @@ export function SystemUpdateCard() {
 
             <Button
               onClick={() => setIsConfirmOpen(true)}
-              disabled={isUpdating}
+              disabled={isUpdating || isRestarting}
               className="rounded-xl px-4 py-2 text-xs font-bold bg-primary text-primary-foreground shadow-sm shrink-0 cursor-pointer self-start md:self-auto"
             >
               {isUpdating ? (
@@ -158,7 +183,7 @@ export function SystemUpdateCard() {
               ) : (
                 <>
                   <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  Apply Update Now
+                  Apply Update & Restart
                 </>
               )}
             </Button>
@@ -205,11 +230,11 @@ export function SystemUpdateCard() {
               <Sparkles className="h-5 w-5" />
             </div>
             <DialogTitle className="text-base font-bold">
-              Confirm Application Update
+              Confirm Application Update & Restart
             </DialogTitle>
             <DialogDescription className="text-xs text-muted-foreground space-y-2 pt-1 text-left">
               <span>
-                You are about to update this application directly from the repository.
+                You are about to update and restart this application directly from the repository.
               </span>
               <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-[11px] font-mono space-y-1">
                 <div>Repo: {status?.repo}</div>
@@ -222,11 +247,12 @@ export function SystemUpdateCard() {
                 </div>
               </div>
               <span className="block pt-1 text-muted-foreground">
-                This will execute:
+                This will automatically:
                 <ul className="list-disc list-inside mt-1 space-y-0.5">
                   <li>Pull latest commits from origin</li>
                   <li>Install dependencies (`npm install`)</li>
                   <li>Regenerate Prisma client and apply migrations</li>
+                  <li>Restart the application server and auto-reconnect</li>
                 </ul>
               </span>
             </DialogDescription>
@@ -237,7 +263,7 @@ export function SystemUpdateCard() {
               variant="outline"
               size="sm"
               onClick={() => setIsConfirmOpen(false)}
-              disabled={isUpdating}
+              disabled={isUpdating || isRestarting}
               className="rounded-xl text-xs cursor-pointer"
             >
               Cancel
@@ -245,16 +271,16 @@ export function SystemUpdateCard() {
             <Button
               size="sm"
               onClick={handleApplyUpdate}
-              disabled={isUpdating}
+              disabled={isUpdating || isRestarting}
               className="rounded-xl text-xs font-bold bg-primary text-primary-foreground cursor-pointer"
             >
               {isUpdating ? (
                 <>
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Applying Update...
+                  Updating...
                 </>
               ) : (
-                "Yes, Apply Update"
+                "Yes, Update & Restart"
               )}
             </Button>
           </DialogFooter>
@@ -322,6 +348,16 @@ export function SystemUpdateCard() {
           </div>
 
           <DialogFooter className="mt-4 gap-2 flex-wrap sm:flex-nowrap">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleManualRestart}
+              disabled={isRestarting}
+              className="rounded-xl text-xs font-semibold cursor-pointer"
+            >
+              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+              {isRestarting ? "Restarting..." : "Restart Server"}
+            </Button>
             {updateResult?.success && (
               <Button
                 variant="outline"
@@ -329,8 +365,7 @@ export function SystemUpdateCard() {
                 onClick={() => window.location.reload()}
                 className="rounded-xl text-xs font-semibold cursor-pointer"
               >
-                <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-                Reload Application
+                Reload Page
               </Button>
             )}
             <Button
