@@ -2,14 +2,14 @@
 
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAppConfig } from "@/tanstacks/admin";
-import { AppSettingsForm } from "./app-settings-form";
+import { AppSettingsForm } from "./components/app-settings-form";
 
-export function AppSettingsTab() {
+export default function AdminSettingsPage() {
     const { data: config, isLoading } = useAppConfig();
 
     if (isLoading) {
         return (
-            <div className="space-y-6 animate-in fade-in duration-500">
+            <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
                 <Skeleton className="h-125 w-full rounded-2xl" />
             </div>
         );
@@ -18,7 +18,7 @@ export function AppSettingsTab() {
     if (!config) return null;
 
     return (
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
+        <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full">
             <AppSettingsForm initialData={config} />
         </div>
     );

@@ -7,7 +7,7 @@ import { tran } from "@/lib/languages/i18n";
 import { cn, getFileUrl } from "@/lib/utils";
 import { useDeviceSessions, useSetActiveSession } from "@/tanstacks/user";
 import { getInitials } from "@/utility/common-function";
-import { LogOut, User as UserIcon, UserPlus, UserRoundCog } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, UserPlus, UserRoundCog } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
@@ -142,10 +142,12 @@ export default function ProfileAvatar() {
                 </DropdownMenuItem>
 
                 {canAccessAdmin ? (
-                    <DropdownMenuItem onClick={() => router.push("/admin")} className="cursor-pointer py-2">
-                        <UserRoundCog className="h-4 w-4 mr-2" />
-                        <span>{tran("admin.title")}</span>
-                    </DropdownMenuItem>
+                    <>
+                        <DropdownMenuItem onClick={() => router.push("/admin/dashboard" as any)} className="cursor-pointer py-2">
+                            <LayoutDashboard className="h-4 w-4 mr-2" />
+                            <span>{tran("admin.dashboard.title")}</span>
+                        </DropdownMenuItem>
+                    </>
                 ) : null}
 
                 <DropdownMenuItem onClick={handleLogout} className="cursor-pointer focus:text-destructive py-2">

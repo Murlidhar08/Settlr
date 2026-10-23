@@ -106,36 +106,57 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
     pattern: "/admin",
     title: "admin.title",
     showBack: true,
+    backUrl: "/dashboard",
     showMobileNav: false,
+  },
+  // Admin Dashboard
+  {
+    pattern: "/admin/dashboard",
+    title: "admin.dashboard.title",
+    showBack: true,
+    backUrl: "/dashboard",
+  },
+  // Admin User Management
+  {
+    pattern: "/admin/user",
+    title: "admin.user_mng.title",
+    showBack: true,
+    backUrl: "/admin/dashboard",
+  },
+  // Admin Application Settings
+  {
+    pattern: "/admin/settings",
+    title: "admin.app_config.title",
+    showBack: true,
+    backUrl: "/admin/dashboard",
+  },
+  // Admin Storage Manager
+  {
+    pattern: "/admin/storage",
+    title: "admin.storage_mng.title",
+    showBack: true,
+    backUrl: "/admin/dashboard",
   },
   // Admin User Add
   {
     pattern: "/admin/user/add",
     title: "Add New User",
     showBack: true,
-    backUrl: "/admin",
+    backUrl: "/admin/user",
   },
   // Admin User Edit
   {
     pattern: /^\/admin\/user\/[^/]+\/edit$/,
     title: "Edit User (Admin)",
     showBack: true,
-    backUrl: "/admin",
+    backUrl: "/admin/user",
   },
   // Admin User Details (handled by BackHeader in user-header-action.tsx)
   {
     pattern: /^\/admin\/user\/[^/]+$/,
     title: "User Details",
     showBack: true,
-    backUrl: "/admin",
-    hidden: true,
-  },
-  // Settings root
-  {
-    pattern: "/settings",
-    title: "settings.title",
-    showBack: false,
-    showMobileNav: false,
+    backUrl: "/admin/user",
   },
   // Settings Profile
   {

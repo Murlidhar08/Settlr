@@ -254,6 +254,9 @@ export default {
     // Admin Page
     admin: {
         title: "Admin",
+        dashboard: {
+            title: "Admin Dashboard",
+        },
         access_restricted: "Access Restricted",
         restricted_description: "You do not have the necessary permissions to access this administrative resource.",
         return_to_dashboard: "Return to Dashboard",

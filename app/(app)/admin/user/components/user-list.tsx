@@ -22,6 +22,38 @@ import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import { getRoleLabel, USER_ROLE_OPTIONS } from "@/utility/users-fn";
 import { UserCard } from "./user-card";
+import { UserStatus } from "@/lib/generated/prisma/enums";
+import { getLabelFromValue, userStatusList } from "@/lib/constants/common";
+
+const getStatusTextColor = (statusValue: string) => {
+    switch (statusValue) {
+        case UserStatus.approved:
+            return "text-emerald-600 dark:text-emerald-400";
+        case UserStatus.pendingapproval:
+            return "text-amber-600 dark:text-amber-400";
+        case UserStatus.suspended:
+            return "text-rose-600 dark:text-rose-400";
+        case UserStatus.banned:
+            return "text-destructive";
+        default:
+            return "";
+    }
+};
+
+const getStatusDotColor = (statusValue: string) => {
+    switch (statusValue) {
+        case UserStatus.approved:
+            return "bg-emerald-500";
+        case UserStatus.pendingapproval:
+            return "bg-amber-500";
+        case UserStatus.suspended:
+            return "bg-rose-500";
+        case UserStatus.banned:
+            return "bg-destructive";
+        default:
+            return "bg-muted-foreground";
+    }
+};
 
 export function UserList() {
     const {
@@ -84,14 +116,31 @@ export function UserList() {
                             render={
                                 <Button variant="outline" className="flex-1 sm:flex-none h-11 rounded-2xl gap-2 px-5 border-2 border-emerald-500/10 bg-background hover:bg-emerald-500/5 hover:border-emerald-500/20 shadow-sm text-[11px] font-black uppercase tracking-widest text-emerald-600/80 transition-all">
                                     <Filter className="h-4 w-4" />
-                                    {filterStatus === "all" ? tran("admin.user_mng.all_status") : filterStatus === "active" ? tran("admin.user_mng.active") : tran("admin.user_mng.banned")}
+                                    {filterStatus === "all" ? tran("admin.user_mng.all_status") : getLabelFromValue(filterStatus, userStatusList)}
                                 </Button>
                             }
                         />
-                        <DropdownMenuContent className="rounded-2xl w-48 p-2 border-2 border-emerald-500/5">
-                            <DropdownMenuItem onClick={() => setFilterStatus("all")} className="rounded-xl font-bold">{tran("admin.user_mng.all_status")}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setFilterStatus("active")} className="rounded-xl font-bold text-emerald-600">{tran("admin.user_mng.active")}</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => setFilterStatus("banned")} className="rounded-xl font-bold text-rose-600">{tran("admin.user_mng.banned")}</DropdownMenuItem>
+                        <DropdownMenuContent className="rounded-2xl w-52 p-2 border-2 border-emerald-500/5">
+                            <DropdownMenuItem
+                                onClick={() => setFilterStatus("all")}
+                                className="rounded-xl font-bold flex items-center justify-between cursor-pointer"
+                            >
+                                <span>{tran("admin.user_mng.all_status")}</span>
+                                {filterStatus === "all" && <Check className="h-3.5 w-3.5 text-emerald-600" />}
+                            </DropdownMenuItem>
+                            {userStatusList.map((status) => (
+                                <DropdownMenuItem
+                                    key={status.value}
+                                    onClick={() => setFilterStatus(status.value as string)}
+                                    className={cn("rounded-xl font-bold flex items-center justify-between cursor-pointer", getStatusTextColor(status.value))}
+                                >
+                                    <div className="flex items-center gap-2">
+                                        <span className={cn("h-2 w-2 rounded-full shrink-0", getStatusDotColor(status.value))} />
+                                        <span>{status.label}</span>
+                                    </div>
+                                    {filterStatus === status.value && <Check className="h-3.5 w-3.5" />}
+                                </DropdownMenuItem>
+                            ))}
                         </DropdownMenuContent>
                     </DropdownMenu>
 
