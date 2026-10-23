@@ -28,6 +28,8 @@ const colors = {
   blue: "\x1b[34m",
 };
 
+const appName = "Next-Template"
+
 import {
   checkForUpdates,
   compareSemver,
@@ -100,7 +102,7 @@ async function main() {
 
   if (values.help) {
     console.log(`
-${colors.bold}GitHub Auto-Updater for Next-Template${colors.reset}
+${colors.bold}GitHub Auto-Updater for ${appName}${colors.reset}
 
 Checks GitHub for newer releases, versions in package.json, or commits, and automates pulling, installing dependencies, and running migrations.
 
@@ -130,7 +132,7 @@ ${colors.bold}EXAMPLES:${colors.reset}
   }
 
   console.log(`\n${colors.bold}${colors.cyan}==================================================${colors.reset}`);
-  console.log(`${colors.bold}${colors.cyan}         Next-Template GitHub Auto-Updater        ${colors.reset}`);
+  console.log(`${colors.bold}${colors.cyan}         ${appName} GitHub Auto-Updater        ${colors.reset}`);
   console.log(`${colors.bold}${colors.cyan}==================================================${colors.reset}\n`);
 
   console.log(`${colors.dim}Checking for updates on GitHub...${colors.reset}`);
