@@ -15,5 +15,6 @@ export default defineConfig([
     "resources/**",
     "uploads/**",
     "public/**",
+    "scripts/**",
   ]),
 ]);
