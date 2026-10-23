@@ -1,5 +1,4 @@
-export * from "./admin";
-export * from "./keys";
-export * from "./settings";
-export * from "./storage";
-export * from "./user";
+/**
+ * Re-exported from @/hooks/queries for backward compatibility.
+ */
+export * from "@/hooks/queries";

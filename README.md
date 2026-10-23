@@ -6,6 +6,8 @@
   <p>
     <a href="#-using-this-template-to-create-a-new-project"><strong>Quick Start</strong></a> •
     <a href="#-key-features"><strong>Features</strong></a> •
+    <a href="ARCHITECTURE.md"><strong>Architecture</strong></a> •
+    <a href="AGENTS.md"><strong>AI Guidelines</strong></a> •
     <a href="#-tech-stack"><strong>Tech Stack</strong></a> •
     <a href="#-docker-setup"><strong>Docker</strong></a> •
     <a href="#-staying-in-sync-with-the-template"><strong>Sync Updates</strong></a>
