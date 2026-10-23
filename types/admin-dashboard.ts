@@ -123,5 +123,6 @@ export interface ApplyUpdateResult {
   updatedCommit: string;
   logs: string[];
   message: string;
+  restarting?: boolean;
 }
 

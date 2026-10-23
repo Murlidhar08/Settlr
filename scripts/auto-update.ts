@@ -36,6 +36,7 @@ import {
   getGitRemoteRepo,
   getLocalPackageVersion,
   parseSemver,
+  scheduleServerRestart,
 } from "../lib/system/app-updater";
 import type { SystemUpdateStatus } from "../types/admin-dashboard";
 
@@ -91,6 +92,7 @@ async function main() {
       "skip-prisma": { type: "boolean", default: false },
       "skip-typecheck": { type: "boolean", default: false },
       force: { type: "boolean", short: "f", default: false },
+      restart: { type: "boolean", short: "r", default: false },
       help: { type: "boolean", short: "h", default: false },
     },
     allowPositionals: false,
@@ -116,12 +118,12 @@ ${colors.bold}OPTIONS:${colors.reset}
       --skip-install            Skip running 'npm install'
       --skip-prisma             Skip running prisma generate / migrate
       --skip-typecheck          Skip running 'npm run typecheck'
+  -r, --restart                 Automatically restart server when update is complete
   -f, --force                   Force update even if version appears up to date
   -h, --help                    Show this help message
 
 ${colors.bold}EXAMPLES:${colors.reset}
   tsx scripts/auto-update.ts --check
-  tsx scripts/auto-update.ts --apply --stash
   tsx scripts/auto-update.ts --branch main
 `);
     process.exit(0);
@@ -252,6 +254,10 @@ ${colors.bold}EXAMPLES:${colors.reset}
     console.log(`${colors.bold}Current Version:${colors.reset}  v${updatedVersion}`);
     console.log(`${colors.bold}Current Commit:${colors.reset}   ${updatedCommit}\n`);
 
+    if (values.restart) {
+      console.log(`${colors.cyan}► Restarting application server...${colors.reset}`);
+      scheduleServerRestart(500);
+    }
   } catch (updateErr: any) {
     console.error(`\n${colors.bold}${colors.red}✖ Update failed during execution:${colors.reset}`, updateErr.message);
 

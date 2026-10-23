@@ -3,6 +3,7 @@ import {
   applySystemUpdateAction,
   checkSystemUpdateAction,
   getAdminDashboardSummary,
+  restartApplicationAction,
 } from "@/actions/admin-dashboard.actions";
 import { updateUserStatus } from "@/actions/admin.actions";
 import { UserStatus } from "@/lib/generated/prisma/enums";
@@ -70,7 +71,7 @@ export const useSystemUpdateStatus = () => {
       }
       return result.data;
     },
-    staleTime: 5 * 60 * 1000,
+    staleTime: 0,
     refetchOnWindowFocus: false,
   });
 };
@@ -79,8 +80,8 @@ export const useApplySystemUpdate = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async () => {
-      const result = await applySystemUpdateAction();
+    mutationFn: async (options?: { restart?: boolean }) => {
+      const result = await applySystemUpdateAction(options);
       if (!result.success || !result.data) {
         throw new Error(result.error || "Failed to apply system update");
       }
@@ -93,4 +94,17 @@ export const useApplySystemUpdate = () => {
     },
   });
 };
+
+export const useRestartApplication = () => {
+  return useMutation({
+    mutationFn: async () => {
+      const result = await restartApplicationAction();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to restart application");
+      }
+      return result.data;
+    },
+  });
+};
+
 
