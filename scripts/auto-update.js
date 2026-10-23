@@ -1,17 +1,19 @@
 #!/usr/bin/env node
-import dotenv from "dotenv";
-import { execSync } from "node:child_process";
-import { existsSync } from "node:fs";
-import { resolve } from "node:path";
-import readline from "node:readline";
-import { parseArgs } from "node:util";
+/* eslint-env node */
+/* global process, console, require */
+const fs = require("node:fs");
+const path = require("node:path");
+const { execSync, spawn } = require("node:child_process");
+const readline = require("node:readline");
+const { parseArgs } = require("node:util");
+const dotenv = require("dotenv");
 
-// Load environment variables (.env.local, .env)
-const envFiles = [".env.local", ".env"];
-for (const envFileName of envFiles) {
-  const envPath = resolve(process.cwd(), envFileName);
-  if (existsSync(envPath)) {
-    dotenv.config({ path: envPath, override: envFileName === ".env.local" });
+// 1. Load environment variables (.env.local, .env.production, .env)
+const envFiles = [".env.local", ".env.production", ".env"];
+for (const file of envFiles) {
+  const fullPath = path.resolve(process.cwd(), file);
+  if (fs.existsSync(fullPath)) {
+    dotenv.config({ path: fullPath, override: file === ".env.local" });
   }
 }
 
@@ -28,36 +30,257 @@ const colors = {
   blue: "\x1b[34m",
 };
 
-const appName = "Next-Template"
+const appName = "Property Hub";
 
-import {
-  checkForUpdates,
-  compareSemver,
-  getCurrentBranch,
-  getCurrentCommit,
-  getGitRemoteRepo,
-  getLocalPackageVersion,
-  parseSemver,
-  scheduleServerRestart,
-} from "../lib/system/app-updater";
-import type { SystemUpdateStatus } from "../types/admin-dashboard";
+/**
+ * Parses semver string into [major, minor, patch] numbers.
+ */
+function parseSemver(v) {
+  const clean = String(v || "").replace(/^v/, "").trim();
+  const parts = clean.split(".").map((n) => parseInt(n, 10) || 0);
+  return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+}
 
-export type UpdateInfo = SystemUpdateStatus;
-export {
-  checkForUpdates,
-  compareSemver,
-  getCurrentBranch,
-  getCurrentCommit,
-  getGitRemoteRepo,
-  getLocalPackageVersion,
-  parseSemver
-};
+/**
+ * Compares two semver strings.
+ * Returns: 1 if latest > current, -1 if latest < current, 0 if equal.
+ */
+function compareSemver(current, latest) {
+  const [cMajor, cMinor, cPatch] = parseSemver(current);
+  const [lMajor, lMinor, lPatch] = parseSemver(latest);
 
+  if (lMajor !== cMajor) return lMajor > cMajor ? 1 : -1;
+  if (lMinor !== cMinor) return lMinor > cMinor ? 1 : -1;
+  if (lPatch !== cPatch) return lPatch > cPatch ? 1 : -1;
+  return 0;
+}
+
+/**
+ * Normalizes any GitHub repo string (full URL, git@ URL, or owner/repo) to 'owner/repo'.
+ */
+function normalizeRepo(rawInput) {
+  if (!rawInput) return "Murlidhar08/Property-Hub";
+  const trimmed = rawInput.trim().replace(/^['"]|['"]$/g, "");
+  const match = trimmed.match(/github\.com[:/]([^/]+)\/([^/.]+?)(?:\.git)?$/i);
+  if (match) {
+    return `${match[1]}/${match[2]}`;
+  }
+  const simpleMatch = trimmed.match(/^([^/]+)\/([^/.]+)$/);
+  if (simpleMatch) {
+    return `${simpleMatch[1]}/${simpleMatch[2]}`;
+  }
+  return trimmed.replace(/\.git$/, "");
+}
+
+/**
+ * Extracts GitHub owner/repo from git remote origin URL.
+ */
+function getGitRemoteRepo() {
+  try {
+    const remoteUrl = execSync("git remote get-url origin", {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
+
+    return normalizeRepo(remoteUrl);
+  } catch {
+    // Non-git or no origin remote
+  }
+  return null;
+}
+
+/**
+ * Gets the current active git branch name.
+ */
+function getCurrentBranch() {
+  try {
+    return execSync("git rev-parse --abbrev-ref HEAD", {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "main";
+  }
+}
+
+/**
+ * Gets the current commit short hash.
+ */
+function getCurrentCommit() {
+  try {
+    return execSync("git rev-parse --short HEAD", {
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "ignore"],
+    }).trim();
+  } catch {
+    return "unknown";
+  }
+}
+
+/**
+ * Reads local package.json version.
+ */
+function getLocalPackageVersion() {
+  try {
+    const pkgPath = path.resolve(process.cwd(), "package.json");
+    if (fs.existsSync(pkgPath)) {
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, "utf8"));
+      return pkg.version || "0.0.0";
+    }
+  } catch {
+    // fallback
+  }
+  return "0.0.0";
+}
+
+/**
+ * Checks GitHub for latest releases, tags, raw package.json version, and latest commit.
+ */
+async function checkForUpdates(options = {}) {
+  const rawRepo =
+    options.repo ||
+    getGitRemoteRepo() ||
+    process.env.GITHUB_REPOSITORY ||
+    "Murlidhar08/Property-Hub";
+  const repo = normalizeRepo(rawRepo);
+  const branch = options.branch || getCurrentBranch();
+  const currentVersion = getLocalPackageVersion();
+  const currentCommit = getCurrentCommit();
+
+  const headers = {
+    "User-Agent": "Property-Hub-AutoUpdate/1.0",
+    Accept: "application/vnd.github.v3+json",
+  };
+
+  if (process.env.GITHUB_TOKEN) {
+    headers.Authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  }
+
+  let latestVersion = currentVersion;
+  let releaseTitle;
+  let releaseNotes;
+  let publishedAt;
+  let latestCommit = "";
+
+  // 1. Check GitHub latest release first
+  try {
+    const releaseRes = await fetch(
+      `https://api.github.com/repos/${repo}/releases/latest`,
+      { headers }
+    );
+    if (releaseRes.ok) {
+      const releaseData = await releaseRes.json();
+      if (releaseData.tag_name) {
+        latestVersion = releaseData.tag_name.replace(/^v/, "");
+        releaseTitle = releaseData.name || releaseData.tag_name;
+        releaseNotes = releaseData.body;
+        publishedAt = releaseData.published_at;
+      }
+    }
+  } catch {
+    // Ignore and fallback
+  }
+
+  // 2. If no release found, fetch remote package.json from raw GitHub
+  if (latestVersion === currentVersion) {
+    try {
+      const rawPkgRes = await fetch(
+        `https://raw.githubusercontent.com/${repo}/${branch}/package.json`,
+        { headers: { "User-Agent": headers["User-Agent"] } }
+      );
+      if (rawPkgRes.ok) {
+        const rawPkg = await rawPkgRes.json();
+        if (rawPkg.version) {
+          latestVersion = rawPkg.version;
+        }
+      }
+    } catch {
+      // Ignore
+    }
+  }
+
+  // 3. Fetch latest commit SHA on the target branch
+  try {
+    const commitRes = await fetch(
+      `https://api.github.com/repos/${repo}/commits/${branch}`,
+      { headers }
+    );
+    if (commitRes.ok) {
+      const commitData = await commitRes.json();
+      if (commitData.sha) {
+        latestCommit = commitData.sha.slice(0, 7);
+        if (!releaseTitle && commitData.commit?.message) {
+          releaseTitle = commitData.commit.message.split("\n")[0];
+        }
+      }
+    }
+  } catch {
+    // Ignore
+  }
+
+  const hasVersionUpdate = compareSemver(currentVersion, latestVersion) > 0;
+  const hasCommitUpdate = Boolean(latestCommit && latestCommit !== currentCommit);
+  const hasUpdate = hasVersionUpdate || hasCommitUpdate;
+
+  return {
+    repo,
+    branch,
+    currentVersion,
+    latestVersion,
+    currentCommit,
+    latestCommit: latestCommit || currentCommit,
+    hasVersionUpdate,
+    hasCommitUpdate,
+    hasUpdate,
+    releaseTitle,
+    releaseNotes,
+    publishedAt,
+    lastCheckedAt: new Date().toISOString(),
+  };
+}
+
+/**
+ * Schedules a graceful server restart.
+ */
+function scheduleServerRestart(delayMs = 2000) {
+  setTimeout(() => {
+    console.log("[App Updater] Executing graceful server restart...");
+
+    if (process.env.pm_id !== undefined || fs.existsSync("/.dockerenv") || process.env.KUBERNETES_SERVICE_HOST || process.env.SYSTEMD_EXEC_PID) {
+      console.log("[App Updater] Container / process manager detected. Exiting process for restart...");
+      process.exit(0);
+    }
+
+    try {
+      const isWindows = process.platform === "win32";
+      const cmd = process.env.npm_lifecycle_event
+        ? (isWindows ? "npm.cmd" : "npm")
+        : process.argv[0];
+      const args = process.env.npm_lifecycle_event
+        ? ["run", process.env.npm_lifecycle_event]
+        : process.argv.slice(1);
+
+      console.log(`[App Updater] Spawning new process: ${cmd} ${args.join(" ")}`);
+      const child = spawn(cmd, args, {
+        detached: true,
+        stdio: "inherit",
+        shell: isWindows,
+        cwd: process.cwd(),
+        env: process.env,
+      });
+      child.unref();
+      process.exit(0);
+    } catch (spawnErr) {
+      console.warn("[App Updater] Could not spawn new process, exiting cleanly:", spawnErr);
+      process.exit(0);
+    }
+  }, delayMs);
+}
 
 /**
  * Prompt question in terminal.
  */
-function promptQuestion(query: string): Promise<string> {
+function promptQuestion(query) {
   const rl = readline.createInterface({
     input: process.stdin,
     output: process.stdout,
@@ -73,7 +296,7 @@ function promptQuestion(query: string): Promise<string> {
 /**
  * Executes a shell command with real-time log output.
  */
-function runCommand(cmd: string, description: string): void {
+function runCommand(cmd, description) {
   console.log(`\n${colors.cyan}► ${description}${colors.reset}`);
   console.log(`${colors.dim}$ ${cmd}${colors.reset}`);
   execSync(cmd, { stdio: "inherit" });
@@ -107,9 +330,9 @@ ${colors.bold}GitHub Auto-Updater for ${appName}${colors.reset}
 Checks GitHub for newer releases, versions in package.json, or commits, and automates pulling, installing dependencies, and running migrations.
 
 ${colors.bold}USAGE:${colors.reset}
-  npm run update                Interactive update check and apply
-  npm run update:check          Check only (no changes made)
-  npm run update:apply          Auto-apply update non-interactively
+  node scripts/auto-update.js               Interactive update check and apply
+  node scripts/auto-update.js --check       Check only (no changes made)
+  node scripts/auto-update.js --apply       Auto-apply update non-interactively
 
 ${colors.bold}OPTIONS:${colors.reset}
   -c, --check                   Only check if update is available without applying
@@ -125,8 +348,8 @@ ${colors.bold}OPTIONS:${colors.reset}
   -h, --help                    Show this help message
 
 ${colors.bold}EXAMPLES:${colors.reset}
-  tsx scripts/auto-update.ts --check
-  tsx scripts/auto-update.ts --branch main
+  node scripts/auto-update.js --check
+  node scripts/auto-update.js --branch develop
 `);
     process.exit(0);
   }
@@ -137,13 +360,13 @@ ${colors.bold}EXAMPLES:${colors.reset}
 
   console.log(`${colors.dim}Checking for updates on GitHub...${colors.reset}`);
 
-  let info: UpdateInfo;
+  let info;
   try {
     info = await checkForUpdates({
       repo: values.repo,
       branch: values.branch,
     });
-  } catch (err: any) {
+  } catch (err) {
     console.error(`${colors.red}Failed to check for updates:${colors.reset}`, err.message);
     process.exit(1);
   }
@@ -227,7 +450,7 @@ ${colors.bold}EXAMPLES:${colors.reset}
       runCommand("npx prisma generate", "Generating Prisma client");
       try {
         runCommand("npx prisma migrate deploy", "Applying pending database migrations");
-      } catch (prismaErr: any) {
+      } catch (prismaErr) {
         console.warn(`${colors.yellow}Notice: Migration deploy returned non-zero (may not have new migrations). Continuing...${colors.reset}`);
       }
     }
@@ -237,7 +460,7 @@ ${colors.bold}EXAMPLES:${colors.reset}
       console.log(`\n${colors.cyan}► Restoring previously stashed local changes...${colors.reset}`);
       try {
         execSync("git stash pop", { stdio: "inherit" });
-      } catch (stashErr) {
+      } catch {
         console.warn(`${colors.yellow}Warning: Merge conflict occurred while popping stash. Your changes remain in 'git stash list'.${colors.reset}`);
       }
     }
@@ -260,7 +483,7 @@ ${colors.bold}EXAMPLES:${colors.reset}
       console.log(`${colors.cyan}► Restarting application server...${colors.reset}`);
       scheduleServerRestart(500);
     }
-  } catch (updateErr: any) {
+  } catch (updateErr) {
     console.error(`\n${colors.bold}${colors.red}✖ Update failed during execution:${colors.reset}`, updateErr.message);
 
     if (hasStashed) {
@@ -271,9 +494,7 @@ ${colors.bold}EXAMPLES:${colors.reset}
   }
 }
 
-if (process.argv[1] && process.argv[1].includes("auto-update")) {
-  main().catch((err) => {
-    console.error("Fatal error:", err);
-    process.exit(1);
-  });
-}
+main().catch((err) => {
+  console.error("Fatal error:", err);
+  process.exit(1);
+});
