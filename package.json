@@ -19,11 +19,11 @@
     "db:studio": "prisma studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
     "typecheck": "eslint && tsc --noEmit",
-    "reset-password": "tsx scripts/reset-password.ts",
+    "reset-password": "node scripts/reset-password.js",
     "sync-template": "git fetch upstream && git merge upstream/main",
-    "update": "tsx scripts/auto-update.ts",
-    "update:check": "tsx scripts/auto-update.ts --check",
-    "update:apply": "tsx scripts/auto-update.ts --apply"
+    "update": "node scripts/auto-update.js",
+    "update:check": "node scripts/auto-update.js --check",
+    "update:apply": "node scripts/auto-update.js --apply"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

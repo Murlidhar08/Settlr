@@ -23,7 +23,7 @@
 
 # Build with env file
 `docker compose --env-file .env.production up --build -d`
-`docker compose --file docker-compose-with-db.yml --env-file .env.production up --build -d`
+`docker compose --file docker-compose-dev.yml --env-file .env.production up --build -d`
 
 # Docker Release
 `sh ./resources/scripts/docker-release.sh <version> [env_file]`

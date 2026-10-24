@@ -16,7 +16,7 @@ interface UserTabProps {
     adminUsers?: number;
 }
 
-export function UserTab({
+function UserTab({
     totalUsers: propTotal,
     activeUsers: propActive,
     bannedUsers: propBanned,

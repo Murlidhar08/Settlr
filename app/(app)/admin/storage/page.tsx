@@ -184,7 +184,7 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
     );
 };
 
-export const AdminStorageManager = () => {
+const AdminStorageManager = () => {
     const { data: items, isLoading, refetch, error } = useStorageItems("/");
 
     useEffect(() => {
