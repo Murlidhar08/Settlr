@@ -1,6 +1,7 @@
 "use client";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
@@ -60,12 +61,12 @@ export default function TwoFactorClient() {
         <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
           <motion.div variants={itemVariants} className="mb-8">
             <h2 className="text-4xl font-bold tracking-tight mb-3">
-              {showBackup ? "Backup Access" : "Security Check"}
+              {showBackup ? AUTH_PAGES_COPY.twoFactor.backup.title : AUTH_PAGES_COPY.twoFactor.totp.title}
             </h2>
             <p className="text-muted-foreground text-lg font-medium leading-relaxed">
               {showBackup
-                ? "Enter one of your emergency recovery codes to sign in."
-                : "Your account is protected with two-factor authentication."}
+                ? AUTH_PAGES_COPY.twoFactor.backup.subtitle
+                : AUTH_PAGES_COPY.twoFactor.totp.subtitle}
             </p>
           </motion.div>
 
@@ -94,7 +95,7 @@ export default function TwoFactorClient() {
                         onClick={() => setShowBackup(true)}
                         className="bg-background px-4 py-2 rounded-full text-muted-foreground font-bold tracking-widest border border-border/50 shadow-xs hover:bg-muted transition-colors"
                       >
-                        Use backup code
+                        {AUTH_PAGES_COPY.twoFactor.totp.useBackupButton}
                       </button>
                     </div>
                   </div>
@@ -115,7 +116,7 @@ export default function TwoFactorClient() {
                       onClick={() => setShowBackup(false)}
                       className="text-primary font-bold hover:text-primary/80 transition-colors"
                     >
-                      Back to Security Code
+                      {AUTH_PAGES_COPY.twoFactor.backup.backToTotpButton}
                     </button>
                   </div>
                 </motion.div>
@@ -127,7 +128,10 @@ export default function TwoFactorClient() {
         {/* BOTTOM DECORATION / FOOTER */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50 text-center">
           <p className="text-muted-foreground text-sm font-medium">
-            Need help? <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">Contact Support</a>
+            {AUTH_PAGES_COPY.twoFactor.footer.needHelp}{" "}
+            <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
+              {AUTH_PAGES_COPY.twoFactor.footer.contactSupport}
+            </a>
           </p>
         </motion.div>
       </motion.div>
@@ -171,8 +175,10 @@ export default function TwoFactorClient() {
               transition={{ delay: 0.3 }}
               className="text-4xl font-black tracking-tight leading-tight"
             >
-              Extra Layer of <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Protection.</span>
+              {AUTH_PAGES_COPY.twoFactor.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                {AUTH_PAGES_COPY.twoFactor.hero.titleLine2}
+              </span>
             </motion.h2>
 
             <motion.p
@@ -181,7 +187,7 @@ export default function TwoFactorClient() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              By enabling 2FA, you ensure that only you can access your account, even if someone else knows your password.
+              {AUTH_PAGES_COPY.twoFactor.hero.description}
             </motion.p>
           </div>
         </div>

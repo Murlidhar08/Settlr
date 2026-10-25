@@ -5,6 +5,7 @@ import { setupAdmin } from "@/actions/auth/setup";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { AnimatePresence, motion } from "framer-motion";
 import { AtSign, Eye, EyeOff, Mail, ShieldCheck, User } from "lucide-react";
@@ -33,22 +34,22 @@ export default function SetupPage() {
     setError("");
 
     if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
-      setError("Username can only contain letters, numbers, underscores, and hyphens");
+      setError(AUTH_PAGES_COPY.setup.messages.usernameValidation);
       return;
     }
 
     if (username.length < 3) {
-      setError("Username must be at least 3 characters long");
+      setError(AUTH_PAGES_COPY.setup.messages.usernameMinLength);
       return;
     }
 
     if (password !== confirmPassword) {
-      setError("Passwords do not match");
+      setError(AUTH_PAGES_COPY.setup.messages.passwordMismatch);
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long");
+      setError(AUTH_PAGES_COPY.setup.messages.passwordMinLength);
       return;
     }
 
@@ -62,10 +63,10 @@ export default function SetupPage() {
       formData.append("password", password);
 
       await setupAdmin(formData);
-      toast.success("Setup completed successfully! Please login with your new credentials.");
+      toast.success(AUTH_PAGES_COPY.setup.messages.successToast);
       router.push("/login");
     } catch (err: any) {
-      setError(err.message || "Setup failed");
+      setError(err.message || AUTH_PAGES_COPY.setup.messages.failedError);
       console.error(err);
     } finally {
       setLoading(false);
@@ -120,13 +121,13 @@ export default function SetupPage() {
           <motion.div variants={itemVariants} className="mb-8">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider mb-4 border border-primary/20">
               <ShieldCheck className="w-3.5 h-3.5" />
-              Instance Configuration
+              {AUTH_PAGES_COPY.setup.badge}
             </div>
             <h2 className="text-3xl font-bold tracking-tight mb-3">
-              Configure Administrator
+              {AUTH_PAGES_COPY.setup.title}
             </h2>
             <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-              Create the primary root account to secure your {envClient.NEXT_PUBLIC_APP_NAME} instance.
+              {formatCopy(AUTH_PAGES_COPY.setup.subtitle, { appName: envClient.NEXT_PUBLIC_APP_NAME })}
             </p>
           </motion.div>
 
@@ -148,11 +149,13 @@ export default function SetupPage() {
             <div className="space-y-4">
               {/* Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Full Name</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">
+                  {AUTH_PAGES_COPY.setup.fields.nameLabel}
+                </label>
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="Administrator Name"
+                    placeholder={AUTH_PAGES_COPY.setup.fields.namePlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -164,11 +167,13 @@ export default function SetupPage() {
 
               {/* Username */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Username</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">
+                  {AUTH_PAGES_COPY.setup.fields.usernameLabel}
+                </label>
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="admin"
+                    placeholder={AUTH_PAGES_COPY.setup.fields.usernamePlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
@@ -180,11 +185,13 @@ export default function SetupPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Email</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">
+                  {AUTH_PAGES_COPY.setup.fields.emailLabel}
+                </label>
                 <div className="relative group">
                   <Input
                     type="email"
-                    placeholder="admin@company.com"
+                    placeholder={AUTH_PAGES_COPY.setup.fields.emailPlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -197,11 +204,13 @@ export default function SetupPage() {
               {/* Password */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold ml-1 text-foreground/70">Password</label>
+                  <label className="text-sm font-semibold ml-1 text-foreground/70">
+                    {AUTH_PAGES_COPY.setup.fields.passwordLabel}
+                  </label>
                   <div className="relative group">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
+                      placeholder={AUTH_PAGES_COPY.setup.fields.passwordPlaceholder}
                       className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -218,11 +227,13 @@ export default function SetupPage() {
                 </div>
 
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold ml-1 text-foreground/70">Confirm</label>
+                  <label className="text-sm font-semibold ml-1 text-foreground/70">
+                    {AUTH_PAGES_COPY.setup.fields.confirmPasswordLabel}
+                  </label>
                   <div className="relative group">
                     <Input
                       type={showConfirm ? "text" : "password"}
-                      placeholder="••••••••"
+                      placeholder={AUTH_PAGES_COPY.setup.fields.confirmPasswordPlaceholder}
                       className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -248,9 +259,9 @@ export default function SetupPage() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Initializing...
+                  {AUTH_PAGES_COPY.setup.buttons.loading}
                 </div>
-              ) : "Complete Setup"}
+              ) : AUTH_PAGES_COPY.setup.buttons.submit}
             </Button>
           </motion.form>
         </div>
@@ -258,7 +269,7 @@ export default function SetupPage() {
         {/* BOTTOM DECORATION */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
           <p className="text-center text-muted-foreground text-sm font-medium">
-            Self-hosted instance of {envClient.NEXT_PUBLIC_APP_NAME}
+            {formatCopy(AUTH_PAGES_COPY.setup.footer, { appName: envClient.NEXT_PUBLIC_APP_NAME })}
           </p>
         </motion.div>
       </motion.div>
@@ -302,8 +313,10 @@ export default function SetupPage() {
               transition={{ delay: 0.3 }}
               className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight"
             >
-              Deployment <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Successful.</span>
+              {AUTH_PAGES_COPY.setup.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                {AUTH_PAGES_COPY.setup.hero.titleLine2}
+              </span>
             </motion.h2>
 
             <motion.p
@@ -312,7 +325,7 @@ export default function SetupPage() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              You are just one step away from launching your private financial architect platform.
+              {AUTH_PAGES_COPY.setup.hero.description}
             </motion.p>
           </div>
         </div>

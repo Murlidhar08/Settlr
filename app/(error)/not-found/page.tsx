@@ -7,10 +7,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 
 export default function NotFoundPage() {
     const router = useRouter();
+    const copy = ERROR_PAGES_COPY.notFound;
 
     return (
         <div className="h-screen w-full flex flex-col lg:flex-row select-none bg-background overflow-hidden relative">
@@ -62,10 +64,10 @@ export default function NotFoundPage() {
                             <Compass className="w-8 h-8 text-primary animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Page Not Found
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Oops! The page you are looking for does not exist, has been removed, or has had its name changed. Let's get you back on track.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -76,7 +78,7 @@ export default function NotFoundPage() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5"
                             >
                                 <ArrowLeft size={16} />
-                                Back to Home
+                                {copy.buttons.backToHome}
                             </Link>
                         </div>
                     </motion.div>
@@ -85,7 +87,7 @@ export default function NotFoundPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        404 Error - Resource Finder
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -117,12 +119,12 @@ export default function NotFoundPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            Lost in <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Space?</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            It seems you've wandered off the grid. Let's guide you back.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>

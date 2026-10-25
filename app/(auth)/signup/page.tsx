@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { AnimatePresence, motion } from "framer-motion";
@@ -33,6 +34,7 @@ export default function SignupPage() {
 
   const router = useRouter();
   const turnstileRef = useRef<TurnstileInstance>(null);
+  const copy = AUTH_PAGES_COPY.signup;
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
 
   useEffect(() => {
@@ -147,13 +149,13 @@ export default function SignupPage() {
         setCaptchaToken(null);
         setError(result.error.message || "Signup failed");
       } else {
-        toast.success("Registration successful! Please check your email for a link to confirm your account.")
+        toast.success(formatCopy(copy.messages.successToast));
         router.push("/login");
       }
     } catch (err) {
       turnstileRef.current?.reset();
       setCaptchaToken(null);
-      setError("An error occurred during signup");
+      setError(copy.messages.genericError);
       console.error(err);
     } finally {
       setLoading(false);
@@ -207,10 +209,10 @@ export default function SignupPage() {
         <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
           <motion.div variants={itemVariants} className="mb-8">
             <h2 className="text-4xl font-bold tracking-tight mb-3">
-              Create account
+              {copy.title}
             </h2>
             <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-              Start your financial journey with {envClient.NEXT_PUBLIC_APP_NAME} today.
+              {formatCopy(copy.subtitle)}
             </p>
           </motion.div>
 
@@ -232,11 +234,11 @@ export default function SignupPage() {
             <div className="space-y-4">
               {/* Name */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Full Name</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.nameLabel}</label>
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="John Doe"
+                    placeholder={copy.fields.namePlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
@@ -248,11 +250,11 @@ export default function SignupPage() {
 
               {/* Username */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Username</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.usernameLabel}</label>
                 <div className="relative group">
                   <Input
                     type="text"
-                    placeholder="johndoe"
+                    placeholder={copy.fields.usernamePlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={username}
                     onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
@@ -286,11 +288,11 @@ export default function SignupPage() {
 
               {/* Email */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Email</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.emailLabel}</label>
                 <div className="relative group">
                   <Input
                     type="email"
-                    placeholder="name@company.com"
+                    placeholder={copy.fields.emailPlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -303,11 +305,11 @@ export default function SignupPage() {
               {/* Password */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
-                  <label className="text-sm font-semibold ml-1 text-foreground/70">Password</label>
+                  <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.passwordLabel}</label>
                   <div className="relative group">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
+                      placeholder={copy.fields.passwordPlaceholder}
                       className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -328,7 +330,7 @@ export default function SignupPage() {
                   <div className="relative group">
                     <Input
                       type={showConfirm ? "text" : "password"}
-                      placeholder="••••••••"
+                      placeholder={copy.fields.passwordPlaceholder}
                       className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
@@ -361,9 +363,9 @@ export default function SignupPage() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Creating account...
+                  {copy.buttons.loading}
                 </div>
-              ) : "Create Account"}
+              ) : copy.buttons.submit}
             </Button>
           </motion.form>
         </div>
@@ -371,9 +373,9 @@ export default function SignupPage() {
         {/* BOTTOM LINK */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
           <p className="text-center text-muted-foreground">
-            Already have an account?{" "}
+            {copy.footer.alreadyHaveAccountPrompt}{" "}
             <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              Sign In
+              {copy.footer.signInLink}
             </Link>
           </p>
         </motion.div>
@@ -418,8 +420,8 @@ export default function SignupPage() {
               transition={{ delay: 0.3 }}
               className="text-5xl font-black tracking-tight leading-tight"
             >
-              The future of <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">wealth management.</span>
+              {copy.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
             </motion.h2>
 
             <motion.p
@@ -428,7 +430,7 @@ export default function SignupPage() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              Join thousands of professionals using {envClient.NEXT_PUBLIC_APP_NAME} to streamline their financial operations.
+              {formatCopy(copy.hero.description)}
             </motion.p>
           </div>
         </div>

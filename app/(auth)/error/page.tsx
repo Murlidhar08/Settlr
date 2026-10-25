@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Home } from "lucide-react";
@@ -13,8 +14,9 @@ import { Suspense } from "react";
 function ErrorContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const title = searchParams.get("title") || "Error";
-  const description = searchParams.get("description") || "Something went wrong.";
+  const copy = AUTH_PAGES_COPY.error;
+  const title = searchParams.get("title") || copy.defaultTitle;
+  const description = searchParams.get("description") || copy.defaultDescription;
 
   return (
     <div className="h-screen w-full flex flex-col lg:flex-row select-none bg-background overflow-hidden relative">
@@ -70,7 +72,7 @@ function ErrorContent() {
                 {title}
               </h2>
               <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-                An unexpected condition was encountered.
+                {copy.defaultSubtitle}
               </p>
             </div>
           </motion.div>
@@ -79,7 +81,7 @@ function ErrorContent() {
             <div className="bg-muted/40 border border-border/50 p-6 rounded-3xl relative overflow-hidden group hover:bg-muted/60 transition-all duration-500">
               <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
-                Detailed Information
+                {copy.detailBadge}
               </h3>
               <p className="text-foreground text-lg font-medium leading-relaxed">
                 {description}
@@ -92,7 +94,7 @@ function ErrorContent() {
               >
                 <Link className="flex" href="/dashboard">
                   <Home className="mr-2 h-5 w-5" />
-                  Return Home
+                  {copy.buttons.returnHome}
                 </Link>
               </Button>
               <Button
@@ -101,7 +103,7 @@ function ErrorContent() {
               >
                 <Link className="flex" href="/login">
                   <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
-                  Back to Sign In
+                  {copy.buttons.backToSignIn}
                 </Link>
               </Button>
             </div>
@@ -111,7 +113,7 @@ function ErrorContent() {
         {/* FOOTER */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50 flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
-            System Reliability Unit
+            {copy.footerUnit}
           </p>
           <p className="text-muted-foreground text-xs font-medium">
             &copy; {new Date().getFullYear()} {envClient.NEXT_PUBLIC_APP_NAME}
@@ -158,8 +160,10 @@ function ErrorContent() {
               transition={{ delay: 0.3 }}
               className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight"
             >
-              Excellence in <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Digital Finance.</span>
+              {copy.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                {copy.hero.titleLine2}
+              </span>
             </motion.h2>
 
             <motion.p
@@ -168,7 +172,7 @@ function ErrorContent() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              Our infrastructure is built for ultimate resilience, ensuring your data stays protected and accessible.
+              {copy.hero.description}
             </motion.p>
           </div>
         </div>

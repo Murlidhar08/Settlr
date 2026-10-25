@@ -10,6 +10,7 @@ import { Suspense, useEffect, useRef, useState } from "react";
 
 // Lib
 import { authClient, signIn } from "@/lib/auth/auth-client";
+import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 
@@ -44,6 +45,7 @@ function LoginFormContent({ providers }: LoginFormProps) {
   const turnstileRef = useRef<TurnstileInstance>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
   const [isAddAccount, setIsAddAccount] = useState<boolean>(false);
+  const copy = AUTH_PAGES_COPY.login;
 
   const hasSocialLogin = providers.google || providers.discord || providers.facebook;
 
@@ -174,7 +176,7 @@ function LoginFormContent({ providers }: LoginFormProps) {
         <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
           <motion.div variants={itemVariants} className="mb-6">
             <h2 className="text-3xl font-bold tracking-tight mb-3">
-              Welcome back
+              {copy.title}
             </h2>
           </motion.div>
 
@@ -196,12 +198,12 @@ function LoginFormContent({ providers }: LoginFormProps) {
             <div className="space-y-4">
               {/* Email or Username */}
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Email or Username</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.emailOrUsernameLabel}</label>
                 <div className="relative group">
                   <Input
                     type="text"
                     tabIndex={1}
-                    placeholder="name@company.com or username"
+                    placeholder={copy.fields.emailOrUsernamePlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={emailOrUsername}
                     onChange={(e) => setEmailOrUsername(e.target.value)}
@@ -219,18 +221,18 @@ function LoginFormContent({ providers }: LoginFormProps) {
               {/* Password */}
               <div className="space-y-1.5">
                 <div className="flex justify-between items-center ml-1">
-                  <label className="text-sm font-semibold text-foreground/70">Password</label>
+                  <label className="text-sm font-semibold text-foreground/70">{copy.fields.passwordLabel}</label>
                   <Link
                     href="/forgot-password"
                     className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
                   >
-                    Forgot Password?
+                    {copy.fields.forgotPasswordLink}
                   </Link>
                 </div>
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={copy.fields.passwordPlaceholder}
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -276,7 +278,7 @@ function LoginFormContent({ providers }: LoginFormProps) {
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
                   <span className="bg-background/50 backdrop-blur-sm px-4 text-muted-foreground font-bold tracking-widest">
-                    Or continue with
+                    {copy.socialDivider}
                   </span>
                 </div>
               </motion.div>
@@ -312,9 +314,9 @@ function LoginFormContent({ providers }: LoginFormProps) {
           {!isAddAccount && (
             <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
               <p className="text-center text-muted-foreground">
-                Don&apos;t have an account?{" "}
+                {copy.footer.noAccountPrompt}{" "}
                 <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                  Get Started
+                  {copy.footer.signUpLink}
                 </Link>
               </p>
             </motion.div>
@@ -362,8 +364,8 @@ function LoginFormContent({ providers }: LoginFormProps) {
               transition={{ delay: 0.3 }}
               className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight"
             >
-              Master your <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">financial destiny.</span>
+              {copy.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
             </motion.h2>
 
             <motion.p
@@ -372,7 +374,7 @@ function LoginFormContent({ providers }: LoginFormProps) {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              Experience the next generation of finance management with real-time insights and enterprise security.
+              {formatCopy(copy.hero.description)}
             </motion.p>
           </div>
         </div>

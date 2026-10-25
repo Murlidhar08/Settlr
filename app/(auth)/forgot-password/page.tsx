@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, ShieldAlert, ShieldCheck } from "lucide-react";
@@ -21,6 +22,7 @@ export default function ForgotPasswordPage() {
   const router = useRouter();
   const turnstileRef = useRef<TurnstileInstance>(null);
   const [captchaToken, setCaptchaToken] = useState<string | null>(null);
+  const copy = AUTH_PAGES_COPY.forgotPassword;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -125,20 +127,20 @@ export default function ForgotPasswordPage() {
               >
                 <motion.div variants={itemVariants}>
                   <h2 className="text-4xl font-bold tracking-tight mb-3">
-                    Forgot Password?
+                    {copy.form.title}
                   </h2>
                   <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-                    Enter your email to receive a secure password recovery link.
+                    {formatCopy(copy.form.subtitle)}
                   </p>
                 </motion.div>
 
                 <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-6">
                   <div className="space-y-2">
-                    <label className="text-sm font-semibold ml-1 text-foreground/70">Email Address</label>
+                    <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.form.emailLabel}</label>
                     <div className="relative group">
                       <Input
                         type="email"
-                        placeholder="name@company.com"
+                        placeholder={copy.form.emailPlaceholder}
                         className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
@@ -177,9 +179,9 @@ export default function ForgotPasswordPage() {
                     {loading ? (
                       <div className="flex items-center gap-2">
                         <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                        Sending...
+                        {copy.form.sendingButton}
                       </div>
-                    ) : "Send Reset Link"}
+                    ) : copy.form.submitButton}
                   </Button>
 
                   <div className="text-center">
@@ -187,7 +189,7 @@ export default function ForgotPasswordPage() {
                       href="/login"
                       className="text-primary font-bold hover:text-primary/80 transition-colors"
                     >
-                      Back to Sign In
+                      {copy.form.backToSignIn}
                     </Link>
                   </div>
                 </motion.form>
@@ -212,10 +214,9 @@ export default function ForgotPasswordPage() {
                 </div>
 
                 <div className="space-y-3">
-                  <h2 className="text-3xl font-bold tracking-tight">Check your email</h2>
+                  <h2 className="text-3xl font-bold tracking-tight">{copy.success.title}</h2>
                   <p className="text-muted-foreground text-lg leading-relaxed max-w-sm mx-auto font-medium">
-                    If an account exists with <strong>{email}</strong>, a reset link
-                    has been sent. Follow the instructions to set a new password.
+                    {formatCopy(copy.success.subtitle, { email })}
                   </p>
                 </div>
 
@@ -223,7 +224,7 @@ export default function ForgotPasswordPage() {
                   className="rounded-2xl h-14 w-full font-bold text-lg shadow-lg shadow-primary/20"
                   onClick={() => router.push("/login")}
                 >
-                  Return to Login
+                  {copy.success.returnToLoginButton}
                 </Button>
               </motion.div>
             )}
@@ -233,7 +234,7 @@ export default function ForgotPasswordPage() {
         {/* BOTTOM DECORATION / FOOTER */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
           <p className="text-center text-muted-foreground text-sm">
-            Need help? <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">Contact Support</a>
+            {copy.footer.needHelp} <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">{copy.footer.contactSupport}</a>
           </p>
         </motion.div>
       </motion.div>
@@ -277,8 +278,8 @@ export default function ForgotPasswordPage() {
               transition={{ delay: 0.3 }}
               className="text-5xl font-black tracking-tight leading-tight"
             >
-              Secure Identity <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Protection.</span>
+              {copy.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
             </motion.h2>
 
             <motion.p
@@ -287,7 +288,7 @@ export default function ForgotPasswordPage() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              {envClient.NEXT_PUBLIC_APP_NAME} uses multi-layer encryption to ensure your account remains under your control, always.
+              {formatCopy(copy.hero.description)}
             </motion.p>
           </div>
         </div>

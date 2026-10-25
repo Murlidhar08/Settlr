@@ -15,7 +15,6 @@ import { ImpersonationIndicator } from "@/components/auth/impersonation-indicato
 import { AppProviders } from "@/components/providers";
 import NextTopLoader from 'nextjs-toploader';
 
-
 const nunitoSans = Nunito_Sans({
   variable: '--font-sans',
   subsets: ["latin"],

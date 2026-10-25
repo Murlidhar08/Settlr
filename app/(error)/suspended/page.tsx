@@ -2,6 +2,7 @@
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { motion } from "framer-motion";
@@ -13,6 +14,7 @@ import { useEffect, useState } from "react";
 export default function AccountSuspendedPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const copy = ERROR_PAGES_COPY.suspended;
 
     useEffect(() => {
         authClient.getSession().then((session) => {
@@ -91,12 +93,10 @@ export default function AccountSuspendedPage() {
                             <AlertTriangle className="w-8 h-8 text-amber-500 animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Account Suspended
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Your account access has been temporarily suspended by an administrator.
-                            This is usually due to missing verification, policy updates, or administrative holds.
-                            Please reach out to support for more details.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -107,7 +107,7 @@ export default function AccountSuspendedPage() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                             >
                                 <Mail size={18} className="text-muted-foreground" />
-                                Contact Support
+                                {copy.buttons.support}
                             </a>
 
                             <motion.button
@@ -121,7 +121,7 @@ export default function AccountSuspendedPage() {
                                     }`}
                             >
                                 <LogOut size={16} />
-                                {loading ? "Redirecting..." : "Back to Login"}
+                                {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
                             </motion.button>
                         </div>
                     </motion.div>
@@ -130,7 +130,7 @@ export default function AccountSuspendedPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Administrative Access Control
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -162,12 +162,12 @@ export default function AccountSuspendedPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            Access <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Suspended.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            This account is temporarily suspended. Please contact us to resolve this block.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>

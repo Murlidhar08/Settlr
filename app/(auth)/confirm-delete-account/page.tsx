@@ -3,6 +3,7 @@
 import { confirmDeleteAccountWithToken } from "@/actions/user.actions";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { motion } from "framer-motion";
@@ -96,19 +97,19 @@ function ConfirmDeleteAccountContent() {
 
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                    {tran("danger.account_deleted_title")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.success.title}
                                 </h2>
                                 <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                                    {tran("danger.account_deleted_desc")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.success.description}
                                 </p>
                             </div>
 
                             <div className="rounded-2xl bg-emerald-500/5 p-5 text-sm text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex flex-col gap-1.5 text-left">
                                 <span className="font-black text-[10px] uppercase tracking-widest text-emerald-600/60 dark:text-emerald-400/60">
-                                    Data Erased
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.success.badge}
                                 </span>
                                 <p className="font-semibold leading-relaxed">
-                                    All your profile information, sessions, documents, and database records have been deleted permanently.
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.success.text}
                                 </p>
                             </div>
 
@@ -119,7 +120,7 @@ function ConfirmDeleteAccountContent() {
                                     className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5 cursor-pointer"
                                 >
                                     <Home size={16} />
-                                    {tran("danger.return_to_home")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.success.returnHomeButton}
                                 </motion.button>
                             </div>
                         </motion.div>
@@ -132,7 +133,7 @@ function ConfirmDeleteAccountContent() {
 
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                    {tran("danger.invalid_token_title")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.error.title}
                                 </h2>
                                 <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                                     {error}
@@ -146,7 +147,7 @@ function ConfirmDeleteAccountContent() {
                                     className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5 cursor-pointer"
                                 >
                                     <Home size={16} />
-                                    {tran("danger.return_to_home")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.error.returnHomeButton}
                                 </motion.button>
                             </div>
                         </motion.div>
@@ -159,19 +160,19 @@ function ConfirmDeleteAccountContent() {
 
                             <div className="space-y-2">
                                 <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                    {tran("danger.confirm_delete_page_title")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.title}
                                 </h2>
                                 <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                                    {tran("danger.confirm_delete_page_desc")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.description}
                                 </p>
                             </div>
 
                             <div className="rounded-2xl bg-destructive/5 p-5 text-sm text-destructive border border-destructive/20 flex flex-col gap-1.5 text-left">
                                 <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">
-                                    Permanent Action
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.warningBadge}
                                 </span>
                                 <p className="font-semibold leading-relaxed">
-                                    {tran("danger.delete_account_description")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.warningText}
                                 </p>
                             </div>
 
@@ -188,7 +189,7 @@ function ConfirmDeleteAccountContent() {
                                 >
                                     <LoadingSwap isLoading={isPending} className="flex items-center gap-2">
                                         <Trash2 size={16} />
-                                        {tran("danger.confirm_delete_page_button")}
+                                        {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.deleteButton}
                                     </LoadingSwap>
                                 </motion.button>
 
@@ -198,7 +199,7 @@ function ConfirmDeleteAccountContent() {
                                     disabled={isPending}
                                     className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98 cursor-pointer"
                                 >
-                                    {tran("danger.confirm_delete_cancel")}
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.confirmation.cancelButton}
                                 </button>
                             </div>
                         </motion.div>
@@ -208,7 +209,7 @@ function ConfirmDeleteAccountContent() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Security & Account Privacy Verification
+                        {AUTH_PAGES_COPY.confirmDeleteAccount.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -259,18 +260,24 @@ function ConfirmDeleteAccountContent() {
                         >
                             {deleted ? (
                                 <>
-                                    Account <br />
-                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Deleted.</span>
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.hero.deleted.titleLine1} <br />
+                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                                        {AUTH_PAGES_COPY.confirmDeleteAccount.hero.deleted.titleLine2}
+                                    </span>
                                 </>
                             ) : error ? (
                                 <>
-                                    Link <br />
-                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Expired.</span>
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.hero.expired.titleLine1} <br />
+                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                                        {AUTH_PAGES_COPY.confirmDeleteAccount.hero.expired.titleLine2}
+                                    </span>
                                 </>
                             ) : (
                                 <>
-                                    Permanent <br />
-                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Deletion.</span>
+                                    {AUTH_PAGES_COPY.confirmDeleteAccount.hero.confirm.titleLine1} <br />
+                                    <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                                        {AUTH_PAGES_COPY.confirmDeleteAccount.hero.confirm.titleLine2}
+                                    </span>
                                 </>
                             )}
                         </motion.h2>
@@ -282,10 +289,10 @@ function ConfirmDeleteAccountContent() {
                             className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
                         >
                             {deleted
-                                ? "All your data and active sessions have been safely removed from our platform."
+                                ? AUTH_PAGES_COPY.confirmDeleteAccount.hero.deleted.description
                                 : error
-                                    ? "This deletion link is invalid or has expired."
-                                    : "Confirming this action will permanently remove your account, profile, documents, and data."
+                                    ? AUTH_PAGES_COPY.confirmDeleteAccount.hero.expired.description
+                                    : AUTH_PAGES_COPY.confirmDeleteAccount.hero.confirm.description
                             }
                         </motion.p>
                     </div>

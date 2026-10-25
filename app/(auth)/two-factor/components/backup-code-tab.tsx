@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth/auth-client"
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy"
 import { toast } from "sonner"
 
 type BackupCodeFormValues = {
@@ -27,7 +28,7 @@ export function BackupCodeTab() {
       { code: values.code },
       {
         onSuccess: () => {
-          toast.success("Security bypass successful!")
+          toast.success(AUTH_PAGES_COPY.twoFactor.backup.successToast)
           router.push("/")
         },
         onError: (error) => {
@@ -44,14 +45,14 @@ export function BackupCodeTab() {
     >
       <div className="space-y-3">
         <label className="text-sm font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
-          <ShieldCheck className="w-4 h-4" /> Backup Code
+          <ShieldCheck className="w-4 h-4" /> {AUTH_PAGES_COPY.twoFactor.backup.codeLabel}
         </label>
         <div className="relative group">
           <Input
             {...register("code", {
               required: "Backup code is required",
             })}
-            placeholder="XXXX-XXXX"
+            placeholder={AUTH_PAGES_COPY.twoFactor.backup.codePlaceholder}
             className="h-14 rounded-2xl pl-4 transition-all duration-300 bg-background border-muted-foreground/10 focus:ring-2 focus:ring-primary/20 focus:border-primary text-center font-mono text-lg uppercase"
           />
         </div>
@@ -71,9 +72,9 @@ export function BackupCodeTab() {
         {isSubmitting ? (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-            Verifying...
+            {AUTH_PAGES_COPY.twoFactor.backup.verifyingButton}
           </div>
-        ) : "Verify Backup Code"}
+        ) : AUTH_PAGES_COPY.twoFactor.backup.verifyButton}
       </Button>
     </form>
   )

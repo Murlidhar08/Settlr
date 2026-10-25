@@ -8,6 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 
@@ -16,6 +17,7 @@ function BannedAccountContent() {
     const [loading, setLoading] = useState(false);
     const searchParams = useSearchParams();
     const reason = searchParams.get("reason");
+    const copy = ERROR_PAGES_COPY.banned;
 
     useEffect(() => {
         authClient.getSession().then((session) => {
@@ -94,11 +96,10 @@ function BannedAccountContent() {
                             <ShieldAlert className="w-8 h-8 text-destructive animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Account Banned
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Your account has been permanently banned due to a violation of our platform policies.
-                            If you believe this action was taken in error, please contact our support team.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -111,7 +112,7 @@ function BannedAccountContent() {
                                     exit={{ opacity: 0, y: -10 }}
                                     className="rounded-2xl bg-destructive/5 p-5 text-sm text-destructive border border-destructive/20/20 flex flex-col gap-1.5"
                                 >
-                                    <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">Enforcement Reason</span>
+                                    <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">{copy.reasonLabel}</span>
                                     <p className="font-semibold leading-relaxed">{reason}</p>
                                 </motion.div>
                             )}
@@ -123,7 +124,7 @@ function BannedAccountContent() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                             >
                                 <Mail size={18} className="text-muted-foreground" />
-                                Contact Support
+                                {copy.buttons.support}
                             </a>
 
                             <motion.button
@@ -137,7 +138,7 @@ function BannedAccountContent() {
                                     }`}
                             >
                                 <LogOut size={16} />
-                                {loading ? "Redirecting..." : "Back to Login"}
+                                {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
                             </motion.button>
                         </div>
                     </motion.div>
@@ -146,7 +147,7 @@ function BannedAccountContent() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Security & Terms of Service Enforcement
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -183,8 +184,8 @@ function BannedAccountContent() {
                             transition={{ delay: 0.3 }}
                             className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight"
                         >
-                            Access <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Restricted.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </motion.h2>
 
                         <motion.p
@@ -193,7 +194,7 @@ function BannedAccountContent() {
                             transition={{ delay: 0.5 }}
                             className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
                         >
-                            This account has been flagged and suspended for violating our platform's terms of use.
+                            {formatCopy(copy.hero.description)}
                         </motion.p>
                     </div>
                 </div>

@@ -2,6 +2,7 @@
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { motion } from "framer-motion";
@@ -13,6 +14,7 @@ import { useEffect, useState } from "react";
 export default function PendingApprovalPage() {
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const copy = ERROR_PAGES_COPY.pendingApproval;
 
     useEffect(() => {
         authClient.getSession().then((session) => {
@@ -91,11 +93,10 @@ export default function PendingApprovalPage() {
                             <Clock className="w-8 h-8 text-amber-600 animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Awaiting Approval
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Your account registration is complete, but is currently awaiting administrator review.
-                            An administrator will verify your details and activate your access shortly.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -112,7 +113,7 @@ export default function PendingApprovalPage() {
                                     }`}
                             >
                                 <LogOut size={16} />
-                                {loading ? "Redirecting..." : "Back to Login"}
+                                {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
                             </motion.button>
                         </div>
                     </motion.div>
@@ -121,7 +122,7 @@ export default function PendingApprovalPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Account Activation Pending Review
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -153,12 +154,12 @@ export default function PendingApprovalPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            Verification <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">In Progress.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            We're currently reviewing your credentials to maintain platform security.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>

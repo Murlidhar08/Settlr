@@ -7,6 +7,7 @@ import { useForm } from "react-hook-form"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { authClient } from "@/lib/auth/auth-client"
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy"
 import { toast } from "sonner"
 
 type TotpFormValues = {
@@ -27,7 +28,7 @@ export function TotpForm() {
       { code: values.code },
       {
         onSuccess: () => {
-          toast.success("Identity verified successfully!")
+          toast.success(AUTH_PAGES_COPY.twoFactor.totp.successToast)
           router.push("/")
         },
         onError: (error) => {
@@ -44,7 +45,7 @@ export function TotpForm() {
     >
       <div className="space-y-3">
         <label className="text-sm font-bold flex items-center gap-2 text-muted-foreground uppercase tracking-wider">
-          <KeyRound className="w-4 h-4" /> Authenticator Code
+          <KeyRound className="w-4 h-4" /> {AUTH_PAGES_COPY.twoFactor.totp.codeLabel}
         </label>
         <div className="relative group">
           <Input
@@ -55,7 +56,7 @@ export function TotpForm() {
             })}
             inputMode="numeric"
             autoComplete="one-time-code"
-            placeholder="000 000"
+            placeholder={AUTH_PAGES_COPY.twoFactor.totp.codePlaceholder}
             className="h-14 rounded-2xl text-center text-2xl tracking-[0.5em] font-mono pl-4 pr-4 transition-all duration-300 bg-background border-muted-foreground/10 focus:ring-2 focus:ring-primary/20 focus:border-primary"
           />
         </div>
@@ -74,9 +75,9 @@ export function TotpForm() {
         {isSubmitting ? (
           <div className="flex items-center gap-2">
             <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-            Verifying...
+            {AUTH_PAGES_COPY.twoFactor.totp.verifyingButton}
           </div>
-        ) : "Verify & Continue"}
+        ) : AUTH_PAGES_COPY.twoFactor.totp.verifyButton}
       </Button>
     </form>
   )

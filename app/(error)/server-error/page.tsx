@@ -1,6 +1,7 @@
 "use client";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { motion } from "framer-motion";
 import { ArrowLeft, RefreshCw, ServerCrash } from "lucide-react";
@@ -12,6 +13,7 @@ import { useState } from "react";
 export default function ServerErrorPage() {
     const router = useRouter();
     const [refreshing, setRefreshing] = useState(false);
+    const copy = ERROR_PAGES_COPY.serverError;
 
     const handleRefresh = () => {
         setRefreshing(true);
@@ -68,11 +70,10 @@ export default function ServerErrorPage() {
                             <ServerCrash className="w-8 h-8 text-slate-600 dark:text-slate-400 animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Server Error
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Our servers are experiencing an unexpected issue (500 Internal Server Error).
-                            We are already working to resolve this. Please refresh the page or try again in a few minutes.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -84,7 +85,7 @@ export default function ServerErrorPage() {
                                 className="flex-1 h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5"
                             >
                                 <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-                                {refreshing ? "Refreshing..." : "Refresh Page"}
+                                {refreshing ? copy.buttons.refreshing : copy.buttons.refresh}
                             </button>
 
                             <Link
@@ -92,7 +93,7 @@ export default function ServerErrorPage() {
                                 className="flex-1 h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                             >
                                 <ArrowLeft size={16} className="text-muted-foreground" />
-                                Go Back Home
+                                {copy.buttons.backToHome}
                             </Link>
                         </div>
                     </motion.div>
@@ -101,7 +102,7 @@ export default function ServerErrorPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        System Integrity Protection
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -133,12 +134,12 @@ export default function ServerErrorPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            System <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Interrupted.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            Something went wrong behind the scenes. We're on it.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>

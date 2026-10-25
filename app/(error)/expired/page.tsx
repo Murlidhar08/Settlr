@@ -7,10 +7,12 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 
 export default function ExpiredTokenPage() {
     const router = useRouter();
+    const copy = ERROR_PAGES_COPY.expired;
 
     return (
         <div className="h-screen w-full flex flex-col lg:flex-row select-none bg-background overflow-hidden relative">
@@ -62,10 +64,10 @@ export default function ExpiredTokenPage() {
                             <Link2Off className="w-8 h-8 text-primary animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Link Expired
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            The security token or access link you clicked is no longer valid. This usually happens if the link has already been used, expired due to time limits, or is malformed.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -76,7 +78,7 @@ export default function ExpiredTokenPage() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5"
                             >
                                 <ArrowLeft size={16} />
-                                Back to Login
+                                {copy.buttons.backToLogin}
                             </Link>
                         </div>
                     </motion.div>
@@ -85,7 +87,7 @@ export default function ExpiredTokenPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Link Lifecycle Protection
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -117,12 +119,12 @@ export default function ExpiredTokenPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            Access Link <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Expired.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            For security purposes, verification links are single-use and have short lifespans.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>

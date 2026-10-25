@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import Link from "next/link";
 
@@ -153,10 +154,10 @@ function ResetPasswordForm() {
         <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
           <motion.div variants={itemVariants} className="mb-8">
             <h2 className="text-4xl font-bold tracking-tight mb-3">
-              Reset Password
+              {AUTH_PAGES_COPY.resetPassword.title}
             </h2>
             <p className="text-muted-foreground text-lg font-medium">
-              Create a new secure password for your account
+              {AUTH_PAGES_COPY.resetPassword.subtitle}
             </p>
           </motion.div>
 
@@ -164,11 +165,13 @@ function ResetPasswordForm() {
             <div className="space-y-4">
               {/* New Password */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">New Password</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">
+                  {AUTH_PAGES_COPY.resetPassword.fields.newPasswordLabel}
+                </label>
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={AUTH_PAGES_COPY.resetPassword.fields.newPasswordPlaceholder}
                     className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -187,11 +190,13 @@ function ResetPasswordForm() {
 
               {/* Confirm Password */}
               <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">Confirm Password</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">
+                  {AUTH_PAGES_COPY.resetPassword.fields.confirmPasswordLabel}
+                </label>
                 <div className="relative group">
                   <Input
                     type={showConfirm ? "text" : "password"}
-                    placeholder="••••••••"
+                    placeholder={AUTH_PAGES_COPY.resetPassword.fields.confirmPasswordPlaceholder}
                     className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -223,10 +228,10 @@ function ResetPasswordForm() {
                   htmlFor="revoke-sessions"
                   className="text-sm font-semibold text-foreground/80 hover:text-foreground cursor-pointer transition-colors"
                 >
-                  End all active sessions
+                  {AUTH_PAGES_COPY.resetPassword.fields.revokeSessionsLabel}
                 </label>
                 <p className="text-xs text-muted-foreground font-medium">
-                  Log out of all devices and active sessions after resetting password
+                  {AUTH_PAGES_COPY.resetPassword.fields.revokeSessionsDescription}
                 </p>
               </div>
             </div>
@@ -266,9 +271,9 @@ function ResetPasswordForm() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  Resetting...
+                  {AUTH_PAGES_COPY.resetPassword.buttons.loading}
                 </div>
-              ) : "Reset Password"}
+              ) : AUTH_PAGES_COPY.resetPassword.buttons.submit}
             </Button>
 
             <div className="text-center">
@@ -276,7 +281,7 @@ function ResetPasswordForm() {
                 href="/login"
                 className="text-primary font-bold hover:text-primary/80 transition-colors"
               >
-                Back to Sign In
+                {AUTH_PAGES_COPY.resetPassword.buttons.backToSignIn}
               </Link>
             </div>
           </motion.form>
@@ -285,7 +290,10 @@ function ResetPasswordForm() {
         {/* BOTTOM DECORATION / FOOTER */}
         <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
           <p className="text-center text-muted-foreground text-sm">
-            Need help? <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">Contact Support</a>
+            {AUTH_PAGES_COPY.resetPassword.footer.needHelp}{" "}
+            <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
+              {AUTH_PAGES_COPY.resetPassword.footer.contactSupport}
+            </a>
           </p>
         </motion.div>
       </motion.div>
@@ -329,8 +337,10 @@ function ResetPasswordForm() {
               transition={{ delay: 0.3 }}
               className="text-5xl font-black tracking-tight leading-tight"
             >
-              Account Security <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Restored.</span>
+              {AUTH_PAGES_COPY.resetPassword.hero.titleLine1} <br />
+              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
+                {AUTH_PAGES_COPY.resetPassword.hero.titleLine2}
+              </span>
             </motion.h2>
 
             <motion.p
@@ -339,7 +349,7 @@ function ResetPasswordForm() {
               transition={{ delay: 0.5 }}
               className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
             >
-              Once you reset your password, your sessions will be updated across all devices for maximum protection.
+              {AUTH_PAGES_COPY.resetPassword.hero.description}
             </motion.p>
           </div>
         </div>
@@ -359,8 +369,8 @@ export default function ResetPasswordPage() {
           </div>
         </div>
         <div className="space-y-2 text-center">
-          <h2 className="text-xl font-bold tracking-tight">Securing Connection</h2>
-          <p className="text-sm text-muted-foreground animate-pulse">Initializing reset sequence...</p>
+          <h2 className="text-xl font-bold tracking-tight">{AUTH_PAGES_COPY.resetPassword.loadingFallback.title}</h2>
+          <p className="text-sm text-muted-foreground animate-pulse">{AUTH_PAGES_COPY.resetPassword.loadingFallback.subtitle}</p>
         </div>
       </div>
     }>

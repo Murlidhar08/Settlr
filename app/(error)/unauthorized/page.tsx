@@ -1,6 +1,7 @@
 "use client";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { envClient } from "@/lib/env.client";
 import { motion } from "framer-motion";
 import { ArrowLeft, Lock } from "lucide-react";
@@ -10,6 +11,7 @@ import { useRouter } from "next/navigation";
 
 export default function UnauthorizedPage() {
     const router = useRouter();
+    const copy = ERROR_PAGES_COPY.unauthorized;
 
     return (
         <div className="h-screen w-full flex flex-col lg:flex-row select-none bg-background overflow-hidden relative">
@@ -61,10 +63,10 @@ export default function UnauthorizedPage() {
                             <Lock className="w-8 h-8 text-primary animate-pulse" />
                         </div>
                         <h2 className="text-3xl font-black tracking-tight mb-3">
-                            Access Denied
+                            {copy.title}
                         </h2>
                         <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                            Hold up! You don't have the required administrative role or security permissions (403 Forbidden) to access this directory or resource.
+                            {formatCopy(copy.description)}
                         </p>
                     </motion.div>
 
@@ -75,7 +77,7 @@ export default function UnauthorizedPage() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5"
                             >
                                 <ArrowLeft size={16} />
-                                Back to Safety
+                                {copy.buttons.backToSafety}
                             </Link>
                         </div>
                     </motion.div>
@@ -84,7 +86,7 @@ export default function UnauthorizedPage() {
                 {/* FOOTER */}
                 <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
                     <p className="text-center text-xs text-muted-foreground font-semibold">
-                        Role-Based Access Control Enforcement
+                        {copy.footer}
                     </p>
                 </motion.div>
             </motion.div>
@@ -116,12 +118,12 @@ export default function UnauthorizedPage() {
 
                     <div className="space-y-6">
                         <h2 className="text-[clamp(2rem,5vw,3.5rem)] font-black tracking-tight leading-tight">
-                            Access <br />
-                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">Restricted.</span>
+                            {copy.hero.titleLine1} <br />
+                            <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">{copy.hero.titleLine2}</span>
                         </h2>
 
                         <p className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed">
-                            This resource requires higher security clearance or a different administrative level.
+                            {formatCopy(copy.hero.description)}
                         </p>
                     </div>
                 </div>
