@@ -263,6 +263,7 @@ export const auth = betterAuth({
               timeFormat: true,
               language: true,
               theme: true,
+              debug: true
             },
           },
         },
@@ -284,6 +285,7 @@ export const auth = betterAuth({
             timeFormat: settings?.timeFormat ?? "hh:mm a",
             language: settings?.language ?? "en",
             theme: settings?.theme ?? ThemeMode.LIGHT,
+            debug: settings?.debug ?? false
           },
         },
 

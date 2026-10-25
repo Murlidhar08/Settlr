@@ -13,6 +13,7 @@ export interface UserSettingsContextValue {
   theme: ThemeMode;
   currency: Currency;
   locale: string;
+  debug: boolean;
   setTheme: (theme: ThemeMode) => void;
   updateConfig: (updates: Partial<Omit<UserSettingsContextValue, "setTheme" | "updateConfig">>) => void;
 }

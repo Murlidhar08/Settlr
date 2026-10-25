@@ -18,5 +18,6 @@ export function getDefaultConfig() {
     timeFormat: DEFAULT_USER_SETTINGS.timeFormat,
     language: DEFAULT_USER_SETTINGS.language,
     theme: DEFAULT_USER_SETTINGS.theme,
+    debug: DEFAULT_USER_SETTINGS.debug,
   };
 }
