@@ -1,40 +1,40 @@
-"use client"
+"use client";
 
-import { ShieldCheck } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { ShieldCheck } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { authClient } from "@/lib/auth/auth-client"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth/auth-client";
+import { toast } from "sonner";
 
 type BackupCodeFormValues = {
-  code: string
-}
+  code: string;
+};
 
 export function BackupCodeTab() {
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<BackupCodeFormValues>()
+  } = useForm<BackupCodeFormValues>();
 
   async function onSubmit(values: BackupCodeFormValues) {
     await authClient.twoFactor.verifyBackupCode(
       { code: values.code },
       {
         onSuccess: () => {
-          toast.success("Security bypass successful!")
-          router.push("/")
+          toast.success("Security bypass successful!");
+          router.push("/");
         },
         onError: (error) => {
-          toast.error(error?.error?.message ?? "Invalid backup code")
+          toast.error(error?.error?.message ?? "Invalid backup code");
         },
       }
-    )
+    );
   }
 
   return (
@@ -65,7 +65,7 @@ export function BackupCodeTab() {
       <Button
         type="submit"
         variant="outline"
-        className="rounded-2xl h-14 w-full font-bold border-muted-foreground/10 hover:bg-muted/50 transition-colors"
+        className="rounded-2xl h-14 w-full font-bold border-muted-foreground/10 hover:bg-muted/50 transition-colors cursor-pointer"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -76,7 +76,5 @@ export function BackupCodeTab() {
         ) : "Verify Backup Code"}
       </Button>
     </form>
-  )
+  );
 }
-
-

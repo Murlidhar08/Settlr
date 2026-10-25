@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth/auth";
 import { cookies, headers } from "next/headers";
 import { redirect, RedirectType } from "next/navigation";
-import TwoFactorClient from "./two-factor-client";
+import TwoFactorClient from "./components/two-factor-client";
 
 export default async function TwoFactorPage() {
   const reqHeaders = await headers();

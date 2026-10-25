@@ -1,40 +1,40 @@
-"use client"
+"use client";
 
-import { KeyRound } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { useForm } from "react-hook-form"
+import { KeyRound } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useForm } from "react-hook-form";
 
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { authClient } from "@/lib/auth/auth-client"
-import { toast } from "sonner"
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { authClient } from "@/lib/auth/auth-client";
+import { toast } from "sonner";
 
 type TotpFormValues = {
-  code: string
-}
+  code: string;
+};
 
 export function TotpForm() {
-  const router = useRouter()
+  const router = useRouter();
 
   const {
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
-  } = useForm<TotpFormValues>()
+  } = useForm<TotpFormValues>();
 
   async function onSubmit(values: TotpFormValues) {
     await authClient.twoFactor.verifyTotp(
       { code: values.code },
       {
         onSuccess: () => {
-          toast.success("Identity verified successfully!")
-          router.push("/")
+          toast.success("Identity verified successfully!");
+          router.push("/");
         },
         onError: (error) => {
-          toast.error(error?.error?.message ?? "Invalid code")
+          toast.error(error?.error?.message ?? "Invalid code");
         },
       }
-    )
+    );
   }
 
   return (
@@ -68,7 +68,7 @@ export function TotpForm() {
 
       <Button
         type="submit"
-        className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-xl shadow-primary/10 hover:shadow-primary/25 transition-all duration-300 active:scale-[0.98]"
+        className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-xl shadow-primary/10 hover:shadow-primary/25 transition-all duration-300 active:scale-[0.98] cursor-pointer"
         disabled={isSubmitting}
       >
         {isSubmitting ? (
@@ -79,7 +79,5 @@ export function TotpForm() {
         ) : "Verify & Continue"}
       </Button>
     </form>
-  )
+  );
 }
-
-

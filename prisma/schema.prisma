@@ -173,7 +173,9 @@ model UserSettings {
   timeFormat String    @default("hh:mm a")
   language   String    @default("en")
   theme      ThemeMode @default(AUTO)
-  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  debug      Boolean   @default(false)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_settings")
 }

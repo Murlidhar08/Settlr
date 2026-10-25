@@ -59,19 +59,12 @@ export default function SettingsPage() {
   const [dateFormat, setDateFormat] = useState(userConfig.dateFormat);
   const [timeFormat, setTimeFormat] = useState(userConfig.timeFormat);
   const [language, setLanguage] = useState(userConfig.language);
-  const [isDevMode, setIsDevMode] = useState(false);
+  const [isDevMode, setIsDevMode] = useState(userConfig.debug ?? false);
   const upsertSettingsMutation = useUpsertUserSettings();
 
   const searchParams = useSearchParams();
-  const isDebug = searchParams.get("debug") === "true";
-
+  const isDebug = searchParams.get("debug") === "true" || userConfig.debug || isDevMode;
   const version = versionData || "Pending ...";
-
-  useEffect(() => {
-    // Load dev mode from localStorage
-    const savedDevMode = localStorage.getItem("dev_mode") === "true";
-    setIsDevMode(savedDevMode);
-  }, []);
 
   if (isPending)
     return <SettingsSkeleton />;
@@ -79,8 +72,6 @@ export default function SettingsPage() {
   const handleLogout = () => {
     router.push("/logout");
   };
-
-
 
   return (
     <div className="min-h-screen bg-background pb-34">
@@ -268,10 +259,11 @@ export default function SettingsPage() {
                     "rounded-xl font-bold px-6",
                     isDevMode && "bg-primary text-primary-foreground shadow-lg shadow-primary/20"
                   )}
-                  onClick={() => {
+                  onClick={async () => {
                     const newValue = !isDevMode;
                     setIsDevMode(newValue);
-                    localStorage.setItem("dev_mode", String(newValue));
+                    updateConfig({ debug: newValue });
+                    await upsertSettingsMutation.mutateAsync({ debug: newValue });
                     toast.success(tran(newValue ? "settings.msg.dev_mode_enabled" : "settings.msg.dev_mode_disabled"));
                   }}
                 >

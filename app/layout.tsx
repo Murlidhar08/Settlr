@@ -15,7 +15,6 @@ import { ImpersonationIndicator } from "@/components/auth/impersonation-indicato
 import { AppProviders } from "@/components/providers";
 import NextTopLoader from 'nextjs-toploader';
 
-
 const nunitoSans = Nunito_Sans({
   variable: '--font-sans',
   subsets: ["latin"],
@@ -36,8 +35,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(envServer.BETTER_AUTH_URL),
   title: envClient.NEXT_PUBLIC_APP_NAME,
+  metadataBase: new URL(envServer.BETTER_AUTH_URL),
   description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
   manifest: "/manifest.json",
   appleWebApp: {

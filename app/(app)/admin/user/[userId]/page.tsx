@@ -6,9 +6,9 @@ import {
     User as UserIcon
 } from "lucide-react";
 import { notFound } from "next/navigation";
-import DocumentTab from "../components/document-tab";
 import GeneralTab from "./components/general-tab";
 import { UserHeader } from "./components/user-header-action";
+import dynamic from "next/dynamic";
 
 export default async function UserDetailsPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;
@@ -18,6 +18,7 @@ export default async function UserDetailsPage({ params }: { params: Promise<{ us
 
     // Fetch user documents count
     const documents = await getUserDocuments(userId);
+    const DocumentTab = dynamic(() => import("../components/document-tab"))
 
     const tabs = [
         {

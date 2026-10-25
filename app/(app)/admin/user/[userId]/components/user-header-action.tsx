@@ -1,6 +1,6 @@
 "use client";
 
-import { BackHeader } from "@/components/header/back-header";
+import { PageHeader } from "@/components/header";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -83,7 +83,8 @@ export function UserHeader({ userId, hasImage }: UserHeaderMenuProps) {
 
     return (
         <>
-            <BackHeader
+            <PageHeader
+                showBack={true}
                 title={"User Details"}
                 showProfile={false}
                 menuItems={[
