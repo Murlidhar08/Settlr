@@ -19,12 +19,12 @@ export default function AccountSuspendedPage() {
     useEffect(() => {
         authClient.getSession().then((session) => {
             if (!session.data) {
-                router.push("/login");
+                router.replace("/login");
                 return;
             }
             const user = session.data.user;
             if (!user.banned && user.status === UserStatus.approved) {
-                router.push("/dashboard");
+                router.replace("/dashboard");
             }
         });
     }, [router]);

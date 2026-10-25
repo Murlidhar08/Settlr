@@ -167,12 +167,25 @@ export default function SignupPage() {
     <AuthCenterLayout
       labelsList={copy}
       footer={
-        <p className="text-center text-muted-foreground">
-          {"Already have an account?"}{" "}
-          <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
-            Sign In
-          </Link>
-        </p>
+        <div className="space-y-2 text-center text-sm">
+          <p className="text-muted-foreground">
+            {"Already have an account?"}{" "}
+            <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
+              Sign In
+            </Link>
+          </p>
+          <p className="text-xs text-muted-foreground/75">
+            By creating an account, you agree to our{" "}
+            <Link href={"/terms-and-services" as any} className="underline hover:text-primary transition-colors font-medium">
+              Terms &amp; Services
+            </Link>{" "}
+            and{" "}
+            <Link href={"/privacy-policy" as any} className="underline hover:text-primary transition-colors font-medium">
+              Privacy Policy
+            </Link>
+            .
+          </p>
+        </div>
       }
     >
       {/* CENTER FORM AREA */}
