@@ -6,7 +6,7 @@ import Link from "next/link";
 
 import AuthCenterLayout from "@/components/auth-layout";
 import { itemVariants } from "@/lib/animations";
-import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 
 export default function ExpiredTokenPage() {
     const copy = ERROR_PAGES_COPY.expired;
@@ -16,7 +16,7 @@ export default function ExpiredTokenPage() {
             labelsList={copy}
             colorTheme="primary"
             icon={<Link2Off size={64} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500 stroke-[1.5]" />}
-            footer={copy.footer}
+            footer="Link Lifecycle Protection"
         >
             {/* CENTER AREA */}
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
@@ -25,10 +25,10 @@ export default function ExpiredTokenPage() {
                         <Link2Off className="w-8 h-8 text-primary animate-pulse" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tight mb-3">
-                        {copy.title}
+                        Link Expired
                     </h2>
                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                        {formatCopy(copy.description)}
+                        The security token or access link you clicked is no longer valid. This usually happens if the link has already been used, expired due to time limits, or is malformed.
                     </p>
                 </motion.div>
 
@@ -39,7 +39,7 @@ export default function ExpiredTokenPage() {
                             className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5"
                         >
                             <ArrowLeft size={16} />
-                            {copy.buttons.backToLogin}
+                            Back to Login
                         </Link>
                     </div>
                 </motion.div>

@@ -3,27 +3,25 @@
 // Packages
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, EyeOff, Mail, User } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Suspense, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Lib
 import { authClient, signIn } from "@/lib/auth/auth-client";
-import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
-import { envClient } from "@/lib/env.client";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { tran } from "@/lib/languages/i18n";
 
 // Components
+import AuthCenterLayout from "@/components/auth-layout";
 import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { Input } from "@/components/ui/input";
-import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { itemVariants } from "@/lib/animations";
 import DiscordAuth from "./discord-auth";
 import EmailAuth from "./email-auth";
 import FacebookAuth from "./facebook-auth";
 import GoogleAuth from "./google-auth";
 import PasskeyAuth from "./passkey-auth";
-import AuthCenterLayout from "@/components/auth-layout";
 
 interface LoginFormProps {
   providers: {
@@ -136,7 +134,7 @@ export default function LoginForm({ providers }: LoginFormProps) {
       <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
         <motion.div variants={itemVariants} className="mb-6">
           <h2 className="text-3xl font-bold tracking-tight mb-3">
-            {copy.title}
+            Welcome back
           </h2>
         </motion.div>
 
@@ -158,12 +156,14 @@ export default function LoginForm({ providers }: LoginFormProps) {
           <div className="space-y-4">
             {/* Email or Username */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.emailOrUsernameLabel}</label>
+              <label className="text-sm font-semibold ml-1 text-foreground/70">
+                Email or Username
+              </label>
               <div className="relative group">
                 <Input
                   type="text"
                   tabIndex={1}
-                  placeholder={copy.fields.emailOrUsernamePlaceholder}
+                  placeholder="name@company.com or username"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={emailOrUsername}
                   onChange={(e) => setEmailOrUsername(e.target.value)}
@@ -181,18 +181,18 @@ export default function LoginForm({ providers }: LoginFormProps) {
             {/* Password */}
             <div className="space-y-1.5">
               <div className="flex justify-between items-center ml-1">
-                <label className="text-sm font-semibold text-foreground/70">{copy.fields.passwordLabel}</label>
+                <label className="text-sm font-semibold text-foreground/70">Password</label>
                 <Link
                   href="/forgot-password"
                   className="text-xs font-bold text-primary hover:text-primary/80 transition-colors"
                 >
-                  {copy.fields.forgotPasswordLink}
+                  Forgot Password?
                 </Link>
               </div>
               <div className="relative group">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder={copy.fields.passwordPlaceholder}
+                  placeholder="••••••••"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -238,7 +238,7 @@ export default function LoginForm({ providers }: LoginFormProps) {
               </div>
               <div className="relative flex justify-center text-xs uppercase">
                 <span className="bg-background/50 backdrop-blur-sm px-4 text-muted-foreground font-bold tracking-widest">
-                  {copy.socialDivider}
+                  Or continue with
                 </span>
               </div>
             </motion.div>
@@ -274,9 +274,9 @@ export default function LoginForm({ providers }: LoginFormProps) {
         {!isAddAccount && (
           <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
             <p className="text-center text-muted-foreground">
-              {copy.footer.noAccountPrompt}{" "}
+              {"Don't have an account?"}{" "}
               <Link tabIndex={8} href="/signup" className="font-bold text-primary hover:text-primary/80 transition-colors">
-                {copy.footer.signUpLink}
+                Get Started
               </Link>
             </p>
           </motion.div>

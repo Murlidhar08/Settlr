@@ -8,7 +8,6 @@ import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { usernameRegex } from "@/lib/constants/regex-list";
-import { envClient } from "@/lib/env.client";
 import { AnimatePresence, motion } from "framer-motion";
 import { AtSign, Eye, EyeOff, Mail, ShieldCheck, User } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -32,22 +31,22 @@ export default function SetupPage() {
     setError("");
 
     if (!usernameRegex.test(username)) {
-      setError(AUTH_PAGES_COPY.setup.messages.usernameValidation);
+      setError("Username can only contain letters, numbers, underscores, and hyphens");
       return;
     }
 
     if (username.length < 3) {
-      setError(AUTH_PAGES_COPY.setup.messages.usernameMinLength);
+      setError("Username must be at least 3 characters long");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(AUTH_PAGES_COPY.setup.messages.passwordMismatch);
+      setError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      setError(AUTH_PAGES_COPY.setup.messages.passwordMinLength);
+      setError("Password must be at least 8 characters long");
       return;
     }
 
@@ -61,13 +60,13 @@ export default function SetupPage() {
 
     try {
       await setupAdmin(formData);
-      toast.success(AUTH_PAGES_COPY.setup.messages.successToast);
+      toast.success("Setup completed successfully! Please login with your new credentials.");
       router.push("/login");
     } catch (err: any) {
       if (err?.digest?.startsWith?.("NEXT_REDIRECT")) {
         throw err;
       }
-      setError(err?.message || AUTH_PAGES_COPY.setup.messages.failedError);
+      setError(err?.message || "Setup failed");
     } finally {
       setLoading(false);
     }
@@ -78,7 +77,7 @@ export default function SetupPage() {
       labelsList={AUTH_PAGES_COPY.setup}
       footer={
         <p className="text-center text-muted-foreground text-sm font-medium">
-          {formatCopy(AUTH_PAGES_COPY.setup.footer, { appName: envClient.NEXT_PUBLIC_APP_NAME })}
+          {formatCopy(AUTH_PAGES_COPY.setup.footer)}
         </p>
       }
     >
@@ -87,13 +86,13 @@ export default function SetupPage() {
         <motion.div variants={itemVariants} className="mb-8">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-[10px] font-black uppercase tracking-wider mb-4 border border-primary/20">
             <ShieldCheck className="w-3.5 h-3.5" />
-            {AUTH_PAGES_COPY.setup.badge}
+            Instance Configuration
           </div>
           <h2 className="text-3xl font-bold tracking-tight mb-3">
-            {AUTH_PAGES_COPY.setup.title}
+            Configure Administrator
           </h2>
           <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-            {formatCopy(AUTH_PAGES_COPY.setup.subtitle, { appName: envClient.NEXT_PUBLIC_APP_NAME })}
+            {formatCopy(AUTH_PAGES_COPY.setup.subtitle)}
           </p>
         </motion.div>
 
@@ -116,12 +115,12 @@ export default function SetupPage() {
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
-                {AUTH_PAGES_COPY.setup.fields.nameLabel}
+                Full Name
               </label>
               <div className="relative group">
                 <Input
                   type="text"
-                  placeholder={AUTH_PAGES_COPY.setup.fields.namePlaceholder}
+                  placeholder="Administrator Name"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -134,12 +133,12 @@ export default function SetupPage() {
             {/* Username */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
-                {AUTH_PAGES_COPY.setup.fields.usernameLabel}
+                Username
               </label>
               <div className="relative group">
                 <Input
                   type="text"
-                  placeholder={AUTH_PAGES_COPY.setup.fields.usernamePlaceholder}
+                  placeholder="admin"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
@@ -152,12 +151,12 @@ export default function SetupPage() {
             {/* Email */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
-                {AUTH_PAGES_COPY.setup.fields.emailLabel}
+                Email
               </label>
               <div className="relative group">
                 <Input
                   type="email"
-                  placeholder={AUTH_PAGES_COPY.setup.fields.emailPlaceholder}
+                  placeholder="admin@company.com"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -171,12 +170,12 @@ export default function SetupPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold ml-1 text-foreground/70">
-                  {AUTH_PAGES_COPY.setup.fields.passwordLabel}
+                  Password
                 </label>
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder={AUTH_PAGES_COPY.setup.fields.passwordPlaceholder}
+                    placeholder="••••••••"
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -194,12 +193,12 @@ export default function SetupPage() {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold ml-1 text-foreground/70">
-                  {AUTH_PAGES_COPY.setup.fields.confirmPasswordLabel}
+                  Confirm Password
                 </label>
                 <div className="relative group">
                   <Input
                     type={showConfirm ? "text" : "password"}
-                    placeholder={AUTH_PAGES_COPY.setup.fields.confirmPasswordPlaceholder}
+                    placeholder="••••••••"
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -225,9 +224,9 @@ export default function SetupPage() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                {AUTH_PAGES_COPY.setup.buttons.loading}
+                Initializing...
               </div>
-            ) : AUTH_PAGES_COPY.setup.buttons.submit}
+            ) : "Complete Setup"}
           </Button>
         </motion.form>
       </div>

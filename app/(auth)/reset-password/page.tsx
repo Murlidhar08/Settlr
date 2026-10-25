@@ -33,9 +33,9 @@ function ResetPasswordForm() {
 
   useEffect(() => {
     if (!token) {
-      setError(copy.messages.invalidToken);
+      setError("Invalid or expired password reset token.");
     }
-  }, [token, copy.messages.invalidToken]);
+  }, [token]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -43,17 +43,17 @@ function ResetPasswordForm() {
     setSuccessMsg("");
 
     if (!token) {
-      setError(copy.messages.invalidToken);
+      setError("Invalid or expired password reset token.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(copy.messages.passwordMismatch);
+      setError("Passwords do not match.");
       return;
     }
 
     if (password.length < 8) {
-      setError(copy.messages.passwordMinLength);
+      setError("Password must be at least 8 characters.");
       return;
     }
 
@@ -66,7 +66,7 @@ function ResetPasswordForm() {
       });
 
       if (result.error) {
-        setError(result.error.message || copy.messages.failedError);
+        setError(result.error.message || "Failed to reset password.");
       } else {
         if (revokeSessions) {
           try {
@@ -75,13 +75,13 @@ function ResetPasswordForm() {
             // ignore if not logged in
           }
         }
-        setSuccessMsg(copy.messages.successMsg);
+        setSuccessMsg("Password successfully reset! Redirecting...");
         setTimeout(() => {
           router.push("/login");
         }, 2000);
       }
     } catch (err) {
-      setError(copy.messages.genericError);
+      setError("An unexpected error occurred. Try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -93,9 +93,9 @@ function ResetPasswordForm() {
       labelsList={copy}
       footer={
         <p className="text-center text-muted-foreground text-sm">
-          {copy.footer.needHelp}{" "}
+          Need help?{" "}
           <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
-            {copy.footer.contactSupport}
+            Contact Support
           </a>
         </p>
       }
@@ -103,10 +103,10 @@ function ResetPasswordForm() {
       <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-4xl font-bold tracking-tight mb-3">
-            {copy.title}
+            Reset Password
           </h2>
           <p className="text-muted-foreground text-lg font-medium">
-            {copy.subtitle}
+            Create a new secure password for your account
           </p>
         </motion.div>
 
@@ -115,12 +115,12 @@ function ResetPasswordForm() {
             {/* New Password */}
             <div className="space-y-2">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
-                {copy.fields.newPasswordLabel}
+                New Password
               </label>
               <div className="relative group">
                 <Input
                   type={showPassword ? "text" : "password"}
-                  placeholder={copy.fields.newPasswordPlaceholder}
+                  placeholder="••••••••"
                   className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -130,7 +130,7 @@ function ResetPasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary cursor-pointer"
                 >
                   {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
@@ -140,12 +140,12 @@ function ResetPasswordForm() {
             {/* Confirm Password */}
             <div className="space-y-2">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
-                {copy.fields.confirmPasswordLabel}
+                Confirm Password
               </label>
               <div className="relative group">
                 <Input
                   type={showConfirm ? "text" : "password"}
-                  placeholder={copy.fields.confirmPasswordPlaceholder}
+                  placeholder="••••••••"
                   className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
@@ -155,7 +155,7 @@ function ResetPasswordForm() {
                 <button
                   type="button"
                   onClick={() => setShowConfirm(!showConfirm)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary cursor-pointer"
                 >
                   {showConfirm ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
                 </button>
@@ -177,10 +177,10 @@ function ResetPasswordForm() {
                 htmlFor="revoke-sessions"
                 className="text-sm font-semibold text-foreground/80 hover:text-foreground cursor-pointer transition-colors"
               >
-                {copy.fields.revokeSessionsLabel}
+                End all active sessions
               </label>
               <p className="text-xs text-muted-foreground font-medium">
-                {copy.fields.revokeSessionsDescription}
+                Log out of all devices and active sessions after resetting password
               </p>
             </div>
           </div>
@@ -215,14 +215,14 @@ function ResetPasswordForm() {
           <Button
             type="submit"
             disabled={loading || !token}
-            className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 active:scale-[0.98]"
+            className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 active:scale-[0.98] cursor-pointer"
           >
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                {copy.buttons.loading}
+                Resetting...
               </div>
-            ) : copy.buttons.submit}
+            ) : "Reset Password"}
           </Button>
 
           <div className="text-center">
@@ -230,7 +230,7 @@ function ResetPasswordForm() {
               href="/login"
               className="text-primary font-bold hover:text-primary/80 transition-colors"
             >
-              {copy.buttons.backToSignIn}
+              Back to Sign In
             </Link>
           </div>
         </motion.form>
@@ -250,8 +250,8 @@ export default function ResetPasswordPage() {
           </div>
         </div>
         <div className="space-y-2 text-center">
-          <h2 className="text-xl font-bold tracking-tight">{AUTH_PAGES_COPY.resetPassword.loadingFallback.title}</h2>
-          <p className="text-sm text-muted-foreground animate-pulse">{AUTH_PAGES_COPY.resetPassword.loadingFallback.subtitle}</p>
+          <h2 className="text-xl font-bold tracking-tight">Securing Connection</h2>
+          <p className="text-sm text-muted-foreground animate-pulse">Initializing reset sequence...</p>
         </div>
       </div>
     }>

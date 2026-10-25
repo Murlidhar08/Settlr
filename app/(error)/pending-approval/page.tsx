@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import AuthCenterLayout from "@/components/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
-import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 
 export default function PendingApprovalPage() {
@@ -48,7 +48,7 @@ export default function PendingApprovalPage() {
             labelsList={copy}
             colorTheme="amber"
             icon={<Clock size={64} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500 stroke-[1.5]" />}
-            footer={copy.footer}
+            footer="Account Activation Pending Review"
         >
             {/* CENTER AREA */}
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
@@ -57,10 +57,10 @@ export default function PendingApprovalPage() {
                         <Clock className="w-8 h-8 text-amber-600 animate-pulse" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tight mb-3">
-                        {copy.title}
+                        Awaiting Approval
                     </h2>
                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                        {formatCopy(copy.description)}
+                        Your account registration is complete, but is currently awaiting administrator review. An administrator will verify your details and activate your access shortly.
                     </p>
                 </motion.div>
 
@@ -77,7 +77,7 @@ export default function PendingApprovalPage() {
                                 }`}
                         >
                             <LogOut size={16} />
-                            {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
+                            {loading ? "Redirecting..." : "Back to Login"}
                         </motion.button>
                     </div>
                 </motion.div>

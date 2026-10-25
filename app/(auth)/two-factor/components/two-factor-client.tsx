@@ -18,9 +18,9 @@ export default function TwoFactorClient() {
       footer={
         <div className="text-center">
           <p className="text-muted-foreground text-sm font-medium">
-            {AUTH_PAGES_COPY.twoFactor.footer.needHelp}{" "}
+            Need help?{" "}
             <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              {AUTH_PAGES_COPY.twoFactor.footer.contactSupport}
+              Contact Support
             </a>
           </p>
         </div>
@@ -30,12 +30,12 @@ export default function TwoFactorClient() {
       <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-4xl font-bold tracking-tight mb-3">
-            {showBackup ? AUTH_PAGES_COPY.twoFactor.backup.title : AUTH_PAGES_COPY.twoFactor.totp.title}
+            {showBackup ? "Backup Access" : "Security Check"}
           </h2>
           <p className="text-muted-foreground text-lg font-medium leading-relaxed">
             {showBackup
-              ? AUTH_PAGES_COPY.twoFactor.backup.subtitle
-              : AUTH_PAGES_COPY.twoFactor.totp.subtitle}
+              ? "Enter one of your emergency recovery codes to sign in."
+              : "Your account is protected with two-factor authentication."}
           </p>
         </motion.div>
 
@@ -64,7 +64,7 @@ export default function TwoFactorClient() {
                       onClick={() => setShowBackup(true)}
                       className="bg-background px-4 py-2 rounded-full text-muted-foreground font-bold tracking-widest border border-border/50 shadow-xs hover:bg-muted transition-colors cursor-pointer"
                     >
-                      {AUTH_PAGES_COPY.twoFactor.totp.useBackupButton}
+                      Use backup code
                     </button>
                   </div>
                 </div>
@@ -85,7 +85,7 @@ export default function TwoFactorClient() {
                     onClick={() => setShowBackup(false)}
                     className="text-primary font-bold hover:text-primary/80 transition-colors cursor-pointer"
                   >
-                    {AUTH_PAGES_COPY.twoFactor.backup.backToTotpButton}
+                    Back to Security Code
                   </button>
                 </div>
               </motion.div>

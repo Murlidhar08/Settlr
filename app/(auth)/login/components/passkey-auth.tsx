@@ -3,7 +3,6 @@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { authClient } from "@/lib/auth/auth-client";
-import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { Fingerprint } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,7 +11,6 @@ import { toast } from "sonner";
 export default function PasskeyAuth({ lastLogin, loading, setLoading }: { lastLogin: string, loading: boolean, setLoading: (loading: boolean) => void }) {
     const router = useRouter();
     const [passkeyLoading, setPasskeyLoading] = useState(false);
-    const copy = AUTH_PAGES_COPY.login.buttons;
 
     const handlePasskeySignIn = async () => {
         setLoading(true);
@@ -45,16 +43,16 @@ export default function PasskeyAuth({ lastLogin, loading, setLoading }: { lastLo
             {passkeyLoading ? (
                 <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
-                    {copy.authenticating}
+                    Authenticating...
                 </div>
             ) : (
                 <div className="flex items-center justify-center gap-3">
                     <Fingerprint className="size-6 text-primary group-hover:scale-110 transition-transform" />
-                    <span className="tracking-tight">{copy.passkey}</span>
+                    <span className="tracking-tight">Sign In with Passkey</span>
                 </div>
             )}
             {lastLogin === "passkey" && (
-                <Badge variant="secondary" className="absolute -top-3 -right-2 px-3 py-1 bg-background border-primary/20 text-primary shadow-md animate-in fade-in zoom-in duration-300">{copy.lastUsed}</Badge>
+                <Badge variant="secondary" className="absolute -top-3 -right-2 px-3 py-1 bg-background border-primary/20 text-primary shadow-md animate-in fade-in zoom-in duration-300">Last used</Badge>
             )}
         </Button>
     )

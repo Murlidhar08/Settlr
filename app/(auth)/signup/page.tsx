@@ -59,7 +59,7 @@ export default function SignupPage() {
       return;
     }
 
-    if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
+    if (!usernameRegex.test(username)) {
       setUsernameAvailable(false);
       return;
     }
@@ -82,38 +82,37 @@ export default function SignupPage() {
     return () => clearTimeout(delayDebounceFn);
   }, [username]);
 
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
 
     if (!usernameRegex.test(username)) {
-      setError(copy.messages.usernameValidation);
+      setError("Username can only contain letters, numbers, underscores, and hyphens");
       return;
     }
 
     if (username.length < 3) {
-      setError(copy.messages.usernameMinLength);
+      setError("Username must be at least 3 characters long");
       return;
     }
 
     if (checkingUsername) {
-      setError(copy.messages.checkingUsername);
+      setError("Checking username availability...");
       return;
     }
 
     if (usernameAvailable === false) {
-      setError(copy.messages.usernameUnavailable);
+      setError("Please choose an available username");
       return;
     }
 
     if (password !== confirmPassword) {
-      setError(copy.messages.passwordMismatch);
+      setError("Passwords do not match");
       return;
     }
 
     if (password.length < 8) {
-      setError(copy.messages.passwordMinLength);
+      setError("Password must be at least 8 characters long");
       return;
     }
 
@@ -147,29 +146,31 @@ export default function SignupPage() {
       if (result.error) {
         turnstileRef.current?.reset();
         setCaptchaToken(null);
-        setError(result.error.message || copy.messages.failedError);
+        setError(result.error.message || "Signup failed");
       } else {
-        toast.success(formatCopy(copy.messages.successToast));
+        toast.success(formatCopy("Registration successful! Please check your email for a link to confirm your account."));
         router.push("/login");
       }
     } catch (err) {
       turnstileRef.current?.reset();
       setCaptchaToken(null);
-      setError(copy.messages.genericError);
+      setError("An error occurred during signup");
       console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
+
+
   return (
     <AuthCenterLayout
       labelsList={copy}
       footer={
         <p className="text-center text-muted-foreground">
-          {copy.footer.alreadyHaveAccountPrompt}{" "}
+          {"Already have an account?"}{" "}
           <Link href="/login" className="font-bold text-primary hover:text-primary/80 transition-colors">
-            {copy.footer.signInLink}
+            Sign In
           </Link>
         </p>
       }
@@ -178,7 +179,7 @@ export default function SignupPage() {
       <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
         <motion.div variants={itemVariants} className="mb-8">
           <h2 className="text-4xl font-bold tracking-tight mb-3">
-            {copy.title}
+            Create account
           </h2>
           <p className="text-muted-foreground text-lg font-medium leading-relaxed">
             {formatCopy(copy.subtitle)}
@@ -203,11 +204,11 @@ export default function SignupPage() {
           <div className="space-y-4">
             {/* Name */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.nameLabel}</label>
+              <label className="text-sm font-semibold ml-1 text-foreground/70">Full Name</label>
               <div className="relative group">
                 <Input
                   type="text"
-                  placeholder={copy.fields.namePlaceholder}
+                  placeholder="John Doe"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
@@ -219,11 +220,11 @@ export default function SignupPage() {
 
             {/* Username */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.usernameLabel}</label>
+              <label className="text-sm font-semibold ml-1 text-foreground/70">Username</label>
               <div className="relative group">
                 <Input
                   type="text"
-                  placeholder={copy.fields.usernamePlaceholder}
+                  placeholder="johndoe"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={username}
                   onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/\s+/g, ""))}
@@ -240,21 +241,21 @@ export default function SignupPage() {
                 <div className="text-xs ml-1 transition-all duration-200">
                   {checkingUsername && (
                     <span className="text-muted-foreground animate-pulse">
-                      {copy.messages.checkingAvailability}
+                      Checking username availability...
                     </span>
                   )}
                   {!checkingUsername && usernameAvailable === true && (
                     <span className="text-emerald-500 font-medium">
-                      {copy.messages.usernameAvailable}
+                      Username is available!
                     </span>
                   )}
                   {!checkingUsername && usernameAvailable === false && (
                     <span className="text-destructive font-medium">
                       {username.length < 3
-                        ? copy.messages.usernameMustBeMin3
+                        ? "Username must be at least 3 characters"
                         : !usernameRegex.test(username)
-                          ? copy.messages.usernameAlphanumericOnly
-                          : copy.messages.usernameTaken}
+                          ? "Only alphanumeric characters, underscores, and hyphens allowed"
+                          : "Username is already taken"}
                     </span>
                   )}
                 </div>
@@ -263,11 +264,11 @@ export default function SignupPage() {
 
             {/* Email */}
             <div className="space-y-1.5">
-              <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.emailLabel}</label>
+              <label className="text-sm font-semibold ml-1 text-foreground/70">Email Address</label>
               <div className="relative group">
                 <Input
                   type="email"
-                  placeholder={copy.fields.emailPlaceholder}
+                  placeholder="name@company.com"
                   className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -280,11 +281,11 @@ export default function SignupPage() {
             {/* Password */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.fields.passwordLabel}</label>
+                <label className="text-sm font-semibold ml-1 text-foreground/70">Password</label>
                 <div className="relative group">
                   <Input
                     type={showPassword ? "text" : "password"}
-                    placeholder={copy.fields.passwordPlaceholder}
+                    placeholder="••••••••"
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -302,12 +303,12 @@ export default function SignupPage() {
 
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold ml-1 text-foreground/70">
-                  {copy.fields.confirmPasswordLabel}
+                  Confirm
                 </label>
                 <div className="relative group">
                   <Input
                     type={showConfirm ? "text" : "password"}
-                    placeholder={copy.fields.confirmPasswordPlaceholder}
+                    placeholder="••••••••"
                     className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
@@ -340,9 +341,9 @@ export default function SignupPage() {
             {loading ? (
               <div className="flex items-center gap-2">
                 <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                {copy.buttons.loading}
+                Creating account...
               </div>
-            ) : copy.buttons.submit}
+            ) : "Create Account"}
           </Button>
         </motion.form>
       </div>

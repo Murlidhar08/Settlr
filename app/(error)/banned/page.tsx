@@ -8,7 +8,7 @@ import { Suspense, useEffect, useState } from "react";
 import AuthCenterLayout from "@/components/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
-import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 
 function BannedAccountContent() {
@@ -50,7 +50,7 @@ function BannedAccountContent() {
             labelsList={copy}
             colorTheme="destructive"
             icon={<ShieldAlert size={64} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500 stroke-[1.5]" />}
-            footer={copy.footer}
+            footer="Security & Terms of Service Enforcement"
         >
             {/* CENTER CONTENT */}
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
@@ -59,10 +59,10 @@ function BannedAccountContent() {
                         <ShieldAlert className="w-8 h-8 text-destructive animate-pulse" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tight mb-3">
-                        {copy.title}
+                        Account Banned
                     </h2>
                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                        {formatCopy(copy.description)}
+                        Your account has been permanently banned due to a violation of our platform policies. If you believe this action was taken in error, please contact our support team.
                     </p>
                 </motion.div>
 
@@ -75,7 +75,7 @@ function BannedAccountContent() {
                                 exit={{ opacity: 0, y: -10 }}
                                 className="rounded-2xl bg-destructive/5 p-5 text-sm text-destructive border border-destructive/20 flex flex-col gap-1.5"
                             >
-                                <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">{copy.reasonLabel}</span>
+                                <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">Enforcement Reason</span>
                                 <p className="font-semibold leading-relaxed">{reason}</p>
                             </motion.div>
                         )}
@@ -87,7 +87,7 @@ function BannedAccountContent() {
                             className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                         >
                             <Mail size={18} className="text-muted-foreground" />
-                            {copy.buttons.support}
+                            Contact Support
                         </a>
 
                         <motion.button
@@ -101,7 +101,7 @@ function BannedAccountContent() {
                                 }`}
                         >
                             <LogOut size={16} />
-                            {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
+                            {loading ? "Redirecting..." : "Back to Login"}
                         </motion.button>
                     </div>
                 </motion.div>
@@ -110,11 +110,11 @@ function BannedAccountContent() {
     );
 }
 
-export default function BannedAccount() {
+export default function BannedAccountPage() {
     return (
         <Suspense fallback={
             <div className="h-screen w-full flex items-center justify-center bg-background">
-                <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+                <div className="w-8 h-8 border-4 border-destructive/30 border-t-destructive rounded-full animate-spin" />
             </div>
         }>
             <BannedAccountContent />

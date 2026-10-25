@@ -14,8 +14,8 @@ import { Suspense } from "react";
 function ErrorContent() {
   const searchParams = useSearchParams();
   const copy = AUTH_PAGES_COPY.error;
-  const title = searchParams.get("title") || copy.defaultTitle;
-  const description = searchParams.get("description") || copy.defaultDescription;
+  const title = searchParams.get("title") || "Error";
+  const description = searchParams.get("description") || "Something went wrong.";
 
   return (
     <AuthCenterLayout
@@ -24,7 +24,7 @@ function ErrorContent() {
       footer={
         <div className="flex flex-col sm:flex-row justify-between items-center gap-4 text-center sm:text-left">
           <p className="text-[10px] font-black uppercase tracking-[0.4em] text-muted-foreground opacity-40">
-            {copy.footerUnit}
+            System Reliability Unit
           </p>
           <p className="text-muted-foreground text-xs font-medium">
             &copy; {new Date().getFullYear()} {envClient.NEXT_PUBLIC_APP_NAME}
@@ -43,7 +43,7 @@ function ErrorContent() {
               {title}
             </h2>
             <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-              {copy.defaultSubtitle}
+              An unexpected condition was encountered.
             </p>
           </div>
         </motion.div>
@@ -52,7 +52,7 @@ function ErrorContent() {
           <div className="bg-muted/40 border border-border/50 p-6 rounded-3xl relative overflow-hidden group hover:bg-muted/60 transition-all duration-500">
             <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2" />
             <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/60 mb-3">
-              {copy.detailBadge}
+              Detailed Information
             </h3>
             <p className="text-foreground text-lg font-medium leading-relaxed">
               {description}
@@ -65,7 +65,7 @@ function ErrorContent() {
             >
               <Link className="flex items-center" href="/dashboard">
                 <Home className="mr-2 h-5 w-5" />
-                {copy.buttons.returnHome}
+                Return Home
               </Link>
             </Button>
             <Button
@@ -74,7 +74,7 @@ function ErrorContent() {
             >
               <Link className="flex items-center" href="/login">
                 <ArrowLeft className="mr-2 h-5 w-5 transition-transform group-hover:-translate-x-1" />
-                {copy.buttons.backToSignIn}
+                Back to Sign In
               </Link>
             </Button>
           </div>

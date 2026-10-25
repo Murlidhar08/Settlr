@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import AuthCenterLayout from "@/components/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
-import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 
 export default function AccountSuspendedPage() {
@@ -48,7 +48,7 @@ export default function AccountSuspendedPage() {
             labelsList={copy}
             colorTheme="amber"
             icon={<AlertTriangle size={64} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500 stroke-[1.5]" />}
-            footer={copy.footer}
+            footer="Administrative Access Control"
         >
             {/* CENTER AREA */}
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
@@ -57,10 +57,10 @@ export default function AccountSuspendedPage() {
                         <AlertTriangle className="w-8 h-8 text-amber-500 animate-pulse" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tight mb-3">
-                        {copy.title}
+                        Account Suspended
                     </h2>
                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                        {formatCopy(copy.description)}
+                        Your account access has been temporarily suspended by an administrator. This is usually due to missing verification, policy updates, or administrative holds. Please reach out to support for more details.
                     </p>
                 </motion.div>
 
@@ -71,7 +71,7 @@ export default function AccountSuspendedPage() {
                             className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                         >
                             <Mail size={18} className="text-muted-foreground" />
-                            {copy.buttons.support}
+                            Contact Support
                         </a>
 
                         <motion.button
@@ -85,7 +85,7 @@ export default function AccountSuspendedPage() {
                                 }`}
                         >
                             <LogOut size={16} />
-                            {loading ? copy.buttons.redirecting : copy.buttons.backToLogin}
+                            {loading ? "Redirecting..." : "Back to Login"}
                         </motion.button>
                     </div>
                 </motion.div>

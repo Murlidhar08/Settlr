@@ -64,7 +64,7 @@ function ConfirmDeleteAccountContent() {
             hero={heroCopy}
             icon={heroIcon}
             colorTheme={theme}
-            footer={delLabels.footer}
+            footer="Security & Account Privacy Verification"
         >
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
                 {deleted ? (
@@ -76,19 +76,19 @@ function ConfirmDeleteAccountContent() {
 
                         <div className="space-y-2">
                             <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                {delLabels.success.title}
+                                Account Successfully Deleted
                             </h2>
                             <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                                {delLabels.success.description}
+                                Your account and all associated data have been permanently removed from our system.
                             </p>
                         </div>
 
                         <div className="rounded-2xl bg-emerald-500/5 p-5 text-sm text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 flex flex-col gap-1.5 text-left">
                             <span className="font-black text-[10px] uppercase tracking-widest text-emerald-600/60 dark:text-emerald-400/60">
-                                {delLabels.success.badge}
+                                Data Erased
                             </span>
                             <p className="font-semibold leading-relaxed">
-                                {delLabels.success.text}
+                                All your profile information, sessions, documents, and database records have been deleted permanently.
                             </p>
                         </div>
 
@@ -99,7 +99,7 @@ function ConfirmDeleteAccountContent() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5 cursor-pointer"
                             >
                                 <Home size={16} />
-                                {delLabels.success.returnHomeButton}
+                                Return to Homepage
                             </motion.button>
                         </div>
                     </motion.div>
@@ -112,7 +112,7 @@ function ConfirmDeleteAccountContent() {
 
                         <div className="space-y-2">
                             <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                {delLabels.error.title}
+                                Invalid or Expired Link
                             </h2>
                             <p className="text-muted-foreground text-sm leading-relaxed font-medium">
                                 {error}
@@ -126,7 +126,7 @@ function ConfirmDeleteAccountContent() {
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5 cursor-pointer"
                             >
                                 <Home size={16} />
-                                {delLabels.error.returnHomeButton}
+                                Return to Homepage
                             </motion.button>
                         </div>
                     </motion.div>
@@ -139,19 +139,19 @@ function ConfirmDeleteAccountContent() {
 
                         <div className="space-y-2">
                             <h2 className="text-3xl font-black tracking-tight text-foreground">
-                                {delLabels.confirmation.title}
+                                Confirm Account Deletion
                             </h2>
                             <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                                {delLabels.confirmation.description}
+                                You are about to permanently delete your account and all associated data. This action is irreversible and cannot be recovered.
                             </p>
                         </div>
 
                         <div className="rounded-2xl bg-destructive/5 p-5 text-sm text-destructive border border-destructive/20 flex flex-col gap-1.5 text-left">
                             <span className="font-black text-[10px] uppercase tracking-widest text-destructive/60">
-                                {delLabels.confirmation.warningBadge}
+                                Permanent Action
                             </span>
                             <p className="font-semibold leading-relaxed">
-                                {delLabels.confirmation.warningText}
+                                Deleting your account will permanently remove all your data, including businesses, transactions, documents, and settings. This action cannot be undone.
                             </p>
                         </div>
 
@@ -168,7 +168,7 @@ function ConfirmDeleteAccountContent() {
                             >
                                 <LoadingSwap isLoading={isPending} className="flex items-center gap-2">
                                     <Trash2 size={16} />
-                                    {delLabels.confirmation.deleteButton}
+                                    Permanently Delete Account & Data
                                 </LoadingSwap>
                             </motion.button>
 
@@ -178,7 +178,7 @@ function ConfirmDeleteAccountContent() {
                                 disabled={isPending}
                                 className="w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98 cursor-pointer"
                             >
-                                {delLabels.confirmation.cancelButton}
+                                Cancel & Keep Account
                             </button>
                         </div>
                     </motion.div>

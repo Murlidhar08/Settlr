@@ -7,7 +7,7 @@ import { useState } from "react";
 
 import AuthCenterLayout from "@/components/auth-layout";
 import { itemVariants } from "@/lib/animations";
-import { ERROR_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 
 export default function ServerErrorPage() {
     const [refreshing, setRefreshing] = useState(false);
@@ -23,7 +23,7 @@ export default function ServerErrorPage() {
             labelsList={copy}
             colorTheme="slate"
             icon={<ServerCrash size={64} className="text-white relative z-10 group-hover:scale-110 transition-transform duration-500 stroke-[1.5]" />}
-            footer={copy.footer}
+            footer="System Integrity Protection"
         >
             {/* CENTER AREA */}
             <div className="flex flex-col justify-center max-w-md mx-auto w-full py-8 lg:py-0">
@@ -32,10 +32,10 @@ export default function ServerErrorPage() {
                         <ServerCrash className="w-8 h-8 text-slate-600 dark:text-slate-400 animate-pulse" />
                     </div>
                     <h2 className="text-3xl font-black tracking-tight mb-3">
-                        {copy.title}
+                        Server Error
                     </h2>
                     <p className="text-muted-foreground text-sm leading-relaxed font-medium">
-                        {formatCopy(copy.description)}
+                        Our servers are experiencing an unexpected issue (500 Internal Server Error). We are already working to resolve this. Please refresh the page or try again in a few minutes.
                     </p>
                 </motion.div>
 
@@ -47,7 +47,7 @@ export default function ServerErrorPage() {
                             className="flex-1 h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs bg-foreground text-background hover:opacity-90 transition-all duration-300 active:scale-98 shadow-lg shadow-black/5 cursor-pointer"
                         >
                             <RefreshCw size={16} className={refreshing ? "animate-spin" : ""} />
-                            {refreshing ? copy.buttons.refreshing : copy.buttons.refresh}
+                            {refreshing ? "Refreshing..." : "Refresh Page"}
                         </button>
 
                         <Link
@@ -55,7 +55,7 @@ export default function ServerErrorPage() {
                             className="flex-1 h-13 flex items-center justify-center gap-3 rounded-2xl font-bold text-sm bg-muted/40 hover:bg-muted text-foreground border border-border/50 hover:border-border transition-all duration-300 active:scale-98"
                         >
                             <ArrowLeft size={16} className="text-muted-foreground" />
-                            {copy.buttons.backToHome}
+                            Go Back Home
                         </Link>
                     </div>
                 </motion.div>

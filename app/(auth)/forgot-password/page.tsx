@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
-import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
+import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { AnimatePresence, motion } from "framer-motion";
 import { Mail, ShieldAlert, ShieldCheck } from "lucide-react";
 import Link from "next/link";
@@ -55,14 +55,14 @@ export default function ForgotPasswordPage() {
       if (result.error) {
         turnstileRef.current?.reset();
         setCaptchaToken(null);
-        setError(result.error.message || copy.messages.failedToSend);
+        setError(result.error.message || "Failed to send reset email");
       } else {
         setSuccess(true);
       }
     } catch (err) {
       turnstileRef.current?.reset();
       setCaptchaToken(null);
-      setError(copy.messages.genericError);
+      setError("Something went wrong. Please try again.");
       console.error(err);
     } finally {
       setLoading(false);
@@ -74,7 +74,10 @@ export default function ForgotPasswordPage() {
       labelsList={copy}
       footer={
         <p className="text-center text-muted-foreground text-sm">
-          {copy.footer.needHelp} <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">{copy.footer.contactSupport}</a>
+          Need help?{" "}
+          <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
+            Contact Support
+          </a>
         </p>
       }
     >
@@ -91,20 +94,20 @@ export default function ForgotPasswordPage() {
             >
               <motion.div variants={itemVariants}>
                 <h2 className="text-4xl font-bold tracking-tight mb-3">
-                  {copy.form.title}
+                  Forgot Password?
                 </h2>
                 <p className="text-muted-foreground text-lg font-medium leading-relaxed">
-                  {formatCopy(copy.form.subtitle)}
+                  Enter your email to receive a secure password recovery link.
                 </p>
               </motion.div>
 
               <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-sm font-semibold ml-1 text-foreground/70">{copy.form.emailLabel}</label>
+                  <label className="text-sm font-semibold ml-1 text-foreground/70">Email Address</label>
                   <div className="relative group">
                     <Input
                       type="email"
-                      placeholder={copy.form.emailPlaceholder}
+                      placeholder="name@company.com"
                       className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -143,9 +146,9 @@ export default function ForgotPasswordPage() {
                   {loading ? (
                     <div className="flex items-center gap-2">
                       <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                      {copy.form.sendingButton}
+                      Sending...
                     </div>
-                  ) : copy.form.submitButton}
+                  ) : "Send Reset Link"}
                 </Button>
 
                 <div className="text-center">
@@ -153,7 +156,7 @@ export default function ForgotPasswordPage() {
                     href="/login"
                     className="text-primary font-bold hover:text-primary/80 transition-colors"
                   >
-                    {copy.form.backToSignIn}
+                    Back to Sign In
                   </Link>
                 </div>
               </motion.form>
@@ -178,9 +181,9 @@ export default function ForgotPasswordPage() {
               </div>
 
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold tracking-tight">{copy.success.title}</h2>
+                <h2 className="text-3xl font-bold tracking-tight">Check your email</h2>
                 <p className="text-muted-foreground text-lg leading-relaxed max-w-sm mx-auto font-medium">
-                  {formatCopy(copy.success.subtitle, { email })}
+                  {`If an account exists with ${email}, a reset link has been sent. Follow the instructions to set a new password.`}
                 </p>
               </div>
 
@@ -188,7 +191,7 @@ export default function ForgotPasswordPage() {
                 className="rounded-2xl h-14 w-full font-bold text-lg shadow-lg shadow-primary/20"
                 onClick={() => router.push("/login")}
               >
-                {copy.success.returnToLoginButton}
+                Return to Login
               </Button>
             </motion.div>
           )}
