@@ -80,8 +80,6 @@ export default function SettingsPage() {
     router.push("/logout");
   };
 
-
-
   return (
     <div className="min-h-screen bg-background pb-34">
       <motion.div

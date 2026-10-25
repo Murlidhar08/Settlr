@@ -1,7 +1,7 @@
 "use client";
 
 import { Currency, ThemeMode } from "@/lib/generated/prisma/enums";
-import { setActiveLanguage } from "@/lib/languages/i18n";
+import { getActiveLanguage, setActiveLanguage } from "@/lib/languages/i18n";
 import { setGlobalUserConfig } from "@/utility/global-user-config";
 import { useTheme } from "next-themes";
 import { createContext, useContext, useEffect, useState } from "react";
@@ -36,6 +36,12 @@ export function UserConfigProvider({ config, children }: UserConfigProviderProps
   const [state, setState] = useState(config);
   const [theme, setThemeState] = useState<ThemeMode>(config.theme);
   const { setTheme: setNextTheme } = useTheme();
+
+  // Synchronously set active language and preferences before children render
+  if (config?.language && getActiveLanguage() !== config.language) {
+    setActiveLanguage(config.language);
+    setGlobalUserConfig(config);
+  }
 
   // Sync state with server config when it updates
   useEffect(() => {

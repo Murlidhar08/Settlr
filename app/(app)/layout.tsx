@@ -5,14 +5,14 @@ export const dynamic = "force-dynamic";
 // Lib
 import { getUserSession } from "@/lib/auth/auth";
 import { isSetupRequired } from "@/lib/setup";
+import { setActiveLanguage } from "@/lib/languages/i18n";
 
 // Components
 import { ImpersonationIndicator } from "@/components/auth/impersonation-indicator";
 import { LayoutTransitions } from "@/components/layout-transitions";
 import { NavBar } from "@/components/navbar/nav-bar";
-import { AppHeader } from "@/components/header/app-header";
+import { AppHeader, HeaderProvider } from "@/components/header";
 import { AppContentScrollArea } from "@/components/app-content-scroll-area";
-import { HeaderProvider } from "@/components/providers/header-provider";
 import { UserConfigProvider } from "@/components/providers/user-config-provider";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { getDefaultConfig, getUserConfig } from "@/lib/user-config";
@@ -33,6 +33,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   // User Config
   const userConfig = (await getUserConfig()) ?? getDefaultConfig();
+  if (userConfig?.language) {
+    setActiveLanguage(userConfig.language);
+  }
 
   return (
     <UserConfigProvider config={userConfig}>

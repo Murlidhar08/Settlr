@@ -15,6 +15,28 @@ export default {
         en: "अंग्रेजी (English)",
         hi: "हिन्दी (Hindi)"
     },
+    title: {
+        dashboard: "डैशबोर्ड",
+        admin: "एडमिन",
+        settings: "सेटिंग्स",
+        danger: "खतरे का क्षेत्र",
+        danger_zone: "खतरे का क्षेत्र",
+        link_account: "जुड़े हुए खाते",
+        linked_accounts: "जुड़े हुए खाते",
+        session_management: "सक्रिय सत्र",
+        security: "सुरक्षा",
+        passkeys: "पासकी",
+        profile: "प्रोफ़ाइल",
+        edit: "प्रोफ़ाइल संपादित करें",
+        edit_profile: "प्रोफ़ाइल संपादित करें",
+        admin_dashboard: "एडमिन पैनल",
+        user: "यूज़र मैनेजमेंट",
+        user_management: "यूज़र मैनेजमेंट",
+        application_settings: "एप्लिकेशन सेटिंग्स",
+        storage: "स्टोरेज मैनेजर",
+        storage_manager: "स्टोरेज मैनेजर",
+        add: "नया यूज़र जोड़ें",
+    },
     auth: {
         msg: {
             session_expired: "आपका सत्र समाप्त हो गया है। कृपया फिर से लॉगिन करें।",
