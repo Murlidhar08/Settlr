@@ -7,8 +7,8 @@ import { AnimatePresence, motion } from "framer-motion";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { BackupCodeTab } from "./components/backup-code-tab";
-import { TotpForm } from "./components/totp-form";
+import { BackupCodeTab } from "./backup-code-tab";
+import { TotpForm } from "./totp-form";
 
 export default function TwoFactorClient() {
   const router = useRouter();
