@@ -24,7 +24,7 @@ export function formatCopy(
 ): string {
   let result = template.replace(
     /\{appName\}/g,
-    envClient.NEXT_PUBLIC_APP_NAME || "App"
+    envClient.NEXT_PUBLIC_APP_NAME
   );
   if (variables) {
     for (const [key, value] of Object.entries(variables)) {
@@ -40,8 +40,7 @@ export function formatCopy(
 export const ERROR_PAGES_COPY = {
   banned: {
     title: "Account Banned",
-    description:
-      "Your account has been permanently banned due to a violation of our platform policies. If you believe this action was taken in error, please contact our support team.",
+    description: "Your account has been permanently banned due to a violation of our platform policies. If you believe this action was taken in error, please contact our support team.",
     reasonLabel: "Enforcement Reason",
     buttons: {
       support: "Contact Support",
@@ -52,15 +51,13 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "Access",
       titleLine2: "Restricted.",
-      description:
-        "This account has been flagged and suspended for violating our platform's terms of use.",
+      description: "This account has been flagged and suspended for violating our platform's terms of use.",
     },
   },
 
   expired: {
     title: "Link Expired",
-    description:
-      "The security token or access link you clicked is no longer valid. This usually happens if the link has already been used, expired due to time limits, or is malformed.",
+    description: "The security token or access link you clicked is no longer valid. This usually happens if the link has already been used, expired due to time limits, or is malformed.",
     buttons: {
       backToLogin: "Back to Login",
     },
@@ -68,15 +65,13 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "Access Link",
       titleLine2: "Expired.",
-      description:
-        "For security purposes, verification links are single-use and have short lifespans.",
+      description: "For security purposes, verification links are single-use and have short lifespans.",
     },
   },
 
   notFound: {
     title: "Page Not Found",
-    description:
-      "Oops! The page you are looking for does not exist, has been removed, or has had its name changed. Let's get you back on track.",
+    description: "Oops! The page you are looking for does not exist, has been removed, or has had its name changed. Let's get you back on track.",
     buttons: {
       backToHome: "Go Back",
     },
@@ -90,8 +85,7 @@ export const ERROR_PAGES_COPY = {
 
   pendingApproval: {
     title: "Awaiting Approval",
-    description:
-      "Your account registration is complete, but is currently awaiting administrator review. An administrator will verify your details and activate your access shortly.",
+    description: "Your account registration is complete, but is currently awaiting administrator review. An administrator will verify your details and activate your access shortly.",
     buttons: {
       backToLogin: "Back to Login",
       redirecting: "Redirecting...",
@@ -100,8 +94,7 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "Verification",
       titleLine2: "In Progress.",
-      description:
-        "We're currently reviewing your credentials to maintain platform security.",
+      description: "We're currently reviewing your credentials to maintain platform security.",
     },
   },
 
@@ -118,8 +111,7 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "System",
       titleLine2: "Interrupted.",
-      description:
-        "Our servers encountered an unexpected failure. Please try again shortly or return home.",
+      description: "Our servers encountered an unexpected failure. Please try again shortly or return home.",
     },
   },
 
@@ -136,8 +128,7 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "Access",
       titleLine2: "Suspended.",
-      description:
-        "This account is temporarily suspended. Please contact us to resolve this block.",
+      description: "This account is temporarily suspended. Please contact us to resolve this block.",
     },
   },
 
@@ -152,8 +143,7 @@ export const ERROR_PAGES_COPY = {
     hero: {
       titleLine1: "Access",
       titleLine2: "Restricted.",
-      description:
-        "This resource requires higher security clearance or a different administrative level.",
+      description: "This resource requires higher security clearance or a different administrative level.",
     },
   },
 } as const;
@@ -188,8 +178,7 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Master your",
       titleLine2: "financial destiny.",
-      description:
-        "Experience the next generation of finance management with real-time insights and enterprise security.",
+      description: "Experience the next generation of finance management with real-time insights and enterprise security.",
     },
   },
 
@@ -205,6 +194,8 @@ export const AUTH_PAGES_COPY = {
       emailPlaceholder: "name@company.com",
       passwordLabel: "Password",
       passwordPlaceholder: "••••••••",
+      confirmPasswordLabel: "Confirm",
+      confirmPasswordPlaceholder: "••••••••",
     },
     buttons: {
       submit: "Create Account",
@@ -213,19 +204,28 @@ export const AUTH_PAGES_COPY = {
     footer: {
       alreadyHaveAccountPrompt: "Already have an account?",
       signInLink: "Sign in",
-      termsNotice:
-        "By signing up, you agree to our Terms of Service and Privacy Policy",
+      termsNotice: "By signing up, you agree to our Terms of Service and Privacy Policy",
     },
     messages: {
-      successToast:
-        "Registration successful! Please check your email for a link to confirm your account.",
+      successToast: "Registration successful! Please check your email for a link to confirm your account.",
       genericError: "An error occurred during signup",
+      failedError: "Signup failed",
+      usernameValidation: "Username can only contain letters, numbers, underscores, and hyphens",
+      usernameMinLength: "Username must be at least 3 characters long",
+      checkingUsername: "Checking username availability...",
+      usernameUnavailable: "Please choose an available username",
+      passwordMismatch: "Passwords do not match",
+      passwordMinLength: "Password must be at least 8 characters long",
+      checkingAvailability: "Checking availability...",
+      usernameAvailable: "Username is available!",
+      usernameMustBeMin3: "Username must be at least 3 characters",
+      usernameAlphanumericOnly: "Only alphanumeric characters, underscores, and hyphens allowed",
+      usernameTaken: "Username is already taken",
     },
     hero: {
       titleLine1: "The future of",
       titleLine2: "wealth management.",
-      description:
-        "Join thousands of professionals using {appName} to streamline their financial operations.",
+      description: "Join thousands of professionals using {appName} to streamline their financial operations.",
     },
   },
 
@@ -242,9 +242,12 @@ export const AUTH_PAGES_COPY = {
     },
     success: {
       title: "Check your email",
-      subtitle:
-        "If an account exists with {email}, a reset link has been sent. Follow the instructions to set a new password.",
+      subtitle: "If an account exists with {email}, a reset link has been sent. Follow the instructions to set a new password.",
       returnToLoginButton: "Return to Login",
+    },
+    messages: {
+      failedToSend: "Failed to send reset email",
+      genericError: "Something went wrong. Please try again.",
     },
     footer: {
       needHelp: "Need help?",
@@ -253,8 +256,7 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Secure Identity",
       titleLine2: "Protection.",
-      description:
-        "{appName} uses multi-layer encryption to ensure your account remains under your control, always.",
+      description: "{appName} uses multi-layer encryption to ensure your account remains under your control, always.",
     },
   },
 
@@ -280,6 +282,15 @@ export const AUTH_PAGES_COPY = {
       loading: "Resetting...",
       backToSignIn: "Back to Sign In",
     },
+    messages: {
+      invalidToken: "Invalid or expired password reset token.",
+      passwordMismatch: "Passwords do not match.",
+      passwordMinLength: "Password must be at least 8 characters.",
+      invalidResetToken: "Invalid reset token.",
+      failedError: "Failed to reset password.",
+      successMsg: "Password successfully reset! Redirecting...",
+      genericError: "An unexpected error occurred. Try again.",
+    },
     footer: {
       needHelp: "Need help?",
       contactSupport: "Contact Support",
@@ -291,8 +302,7 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Account Security",
       titleLine2: "Restored.",
-      description:
-        "Once you reset your password, your sessions will be updated across all devices for maximum protection.",
+      description: "Once you reset your password, your sessions will be updated across all devices for maximum protection.",
     },
   },
 
@@ -324,35 +334,29 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Extra Layer of",
       titleLine2: "Protection.",
-      description:
-        "By enabling 2FA, you ensure that only you can access your account, even if someone else knows your password.",
+      description: "By enabling 2FA, you ensure that only you can access your account, even if someone else knows your password.",
     },
   },
 
   confirmDeleteAccount: {
     confirmation: {
       title: "Confirm Account Deletion",
-      description:
-        "You are about to permanently delete your account and all associated data. This action is irreversible and cannot be recovered.",
+      description: "You are about to permanently delete your account and all associated data. This action is irreversible and cannot be recovered.",
       warningBadge: "Permanent Action",
-      warningText:
-        "Deleting your account will permanently remove all your data, including businesses, transactions, documents, and settings. This action cannot be undone.",
+      warningText: "Deleting your account will permanently remove all your data, including businesses, transactions, documents, and settings. This action cannot be undone.",
       deleteButton: "Permanently Delete Account & Data",
       cancelButton: "Cancel & Keep Account",
     },
     success: {
       title: "Account Successfully Deleted",
-      description:
-        "Your account and all associated data have been permanently removed from our system.",
+      description: "Your account and all associated data have been permanently removed from our system.",
       badge: "Data Erased",
-      text:
-        "All your profile information, sessions, documents, and database records have been deleted permanently.",
+      text: "All your profile information, sessions, documents, and database records have been deleted permanently.",
       returnHomeButton: "Return to Homepage",
     },
     error: {
       title: "Invalid or Expired Link",
-      description:
-        "This deletion confirmation link is invalid or has expired. If you still wish to delete your account, please request a new link from your security settings.",
+      description: "This deletion confirmation link is invalid or has expired. If you still wish to delete your account, please request a new link from your security settings.",
       returnHomeButton: "Return to Homepage",
     },
     footer: "Security & Account Privacy Verification",
@@ -360,14 +364,12 @@ export const AUTH_PAGES_COPY = {
       confirm: {
         titleLine1: "Permanent",
         titleLine2: "Deletion.",
-        description:
-          "Confirming this action will permanently remove your account, profile, documents, and data.",
+        description: "Confirming this action will permanently remove your account, profile, documents, and data.",
       },
       deleted: {
         titleLine1: "Account",
         titleLine2: "Deleted.",
-        description:
-          "All your data and active sessions have been safely removed from our platform.",
+        description: "All your data and active sessions have been safely removed from our platform.",
       },
       expired: {
         titleLine1: "Link",
@@ -380,8 +382,7 @@ export const AUTH_PAGES_COPY = {
   setup: {
     badge: "Instance Configuration",
     title: "Configure Administrator",
-    subtitle:
-      "Create the primary root account to secure your {appName} instance.",
+    subtitle: "Create the primary root account to secure your {appName} instance.",
     fields: {
       nameLabel: "Full Name",
       namePlaceholder: "Administrator Name",
@@ -399,10 +400,8 @@ export const AUTH_PAGES_COPY = {
       loading: "Initializing...",
     },
     messages: {
-      successToast:
-        "Setup completed successfully! Please login with your new credentials.",
-      usernameValidation:
-        "Username can only contain letters, numbers, underscores, and hyphens",
+      successToast: "Setup completed successfully! Please login with your new credentials.",
+      usernameValidation: "Username can only contain letters, numbers, underscores, and hyphens",
       usernameMinLength: "Username must be at least 3 characters long",
       passwordMismatch: "Passwords do not match",
       passwordMinLength: "Password must be at least 8 characters long",
@@ -412,8 +411,7 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Deployment",
       titleLine2: "Successful.",
-      description:
-        "You are just one step away from launching your private financial architect platform.",
+      description: "You are just one step away from launching your private financial architect platform.",
     },
   },
 
@@ -430,8 +428,7 @@ export const AUTH_PAGES_COPY = {
     hero: {
       titleLine1: "Excellence in",
       titleLine2: "Digital Finance.",
-      description:
-        "Our infrastructure is built for ultimate resilience, ensuring your data stays protected and accessible.",
+      description: "Our infrastructure is built for ultimate resilience, ensuring your data stays protected and accessible.",
     },
   },
 } as const;

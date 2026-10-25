@@ -2,23 +2,22 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import { Eye, EyeOff, ShieldAlert, ShieldCheck } from "lucide-react";
-import Image from "next/image";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
+import AuthCenterLayout from "@/components/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
+import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
-import { envClient } from "@/lib/env.client";
-import Link from "next/link";
-
 
 function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const copy = AUTH_PAGES_COPY.resetPassword;
 
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,64 +26,47 @@ function ResetPasswordForm() {
   const [revokeSessions, setRevokeSessions] = useState(false);
 
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
-  const [token, setToken] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  const token = searchParams.get("token");
 
   useEffect(() => {
-    const tokenValue = searchParams.get("token");
-    if (!tokenValue) {
-      setError("Invalid or expired password reset token.");
-      setTimeout(() => {
-        router.push("/login");
-      }, 1000);
-    } else {
-      setToken(tokenValue);
+    if (!token) {
+      setError(copy.messages.invalidToken);
     }
-  }, [searchParams]);
+  }, [token, copy.messages.invalidToken]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setSuccessMsg("");
 
+    if (!token) {
+      setError(copy.messages.invalidToken);
+      return;
+    }
+
     if (password !== confirmPassword) {
-      setError("Passwords do not match.");
+      setError(copy.messages.passwordMismatch);
       return;
     }
 
     if (password.length < 8) {
-      setError("Password must be at least 8 characters.");
-      return;
-    }
-
-    if (!token) {
-      setError("Invalid reset token.");
+      setError(copy.messages.passwordMinLength);
       return;
     }
 
     setLoading(true);
 
     try {
-      const result = await authClient.resetPassword(
-        {
-          token,
-          newPassword: password,
-        },
-        revokeSessions
-          ? {
-            headers: {
-              "x-revoke-all-sessions": "true",
-            },
-            query: {
-              revokeSessions: "true",
-            },
-          }
-          : undefined
-      );
+      const result = await authClient.resetPassword({
+        newPassword: password,
+        token: token,
+      });
 
       if (result.error) {
-        setError(result.error.message || "Failed to reset password.");
+        setError(result.error.message || copy.messages.failedError);
       } else {
         if (revokeSessions) {
           try {
@@ -93,268 +75,167 @@ function ResetPasswordForm() {
             // ignore if not logged in
           }
         }
-        setSuccessMsg("Password successfully reset! Redirecting...");
+        setSuccessMsg(copy.messages.successMsg);
         setTimeout(() => {
           router.push("/login");
         }, 2000);
       }
     } catch (err) {
-      setError("An unexpected error occurred. Try again.");
-      console.error(err)
+      setError(copy.messages.genericError);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="h-screen w-full flex flex-col lg:flex-row select-none bg-background overflow-hidden relative">
-      {/* LEFT SIDE: FORM */}
-      <motion.div
-        initial="hidden"
-        animate="visible"
-        variants={containerVariants}
-        className="flex flex-col justify-between w-full lg:w-1/2 px-6 sm:px-12 lg:px-6 py-8 relative z-10 h-full overflow-y-auto scrollbar-none bg-linear-to-b from-primary/12 via-background to-background backdrop-blur-sm border-r border-border/50"
-      >
-
-        {/* LOGO + BRAND */}
-        <motion.div
-          variants={itemVariants}
-          className="flex items-center gap-4 mb-12 group cursor-pointer"
-          onClick={() => router.push("/")}
-        >
-          <div className="relative w-12 h-12 flex items-center justify-center">
-            <div className="absolute inset-0 bg-primary/10 rounded-2xl blur-lg group-hover:bg-primary/20 transition-colors" />
-            <div className="relative z-10 p-2 bg-background rounded-2xl border border-border/50 shadow-sm group-hover:border-primary/50 transition-colors">
-              <Image
-                src="/images/logo/light_logo.png"
-                alt={envClient.NEXT_PUBLIC_APP_NAME}
-                loading="eager"
-                width={32}
-                height={32}
-                className="dark:hidden group-hover:rotate-12 transition-transform duration-500"
-              />
-              <Image
-                src="/images/logo/dark_logo.png"
-                alt={envClient.NEXT_PUBLIC_APP_NAME}
-                loading="eager"
-                width={32}
-                height={32}
-                className="hidden dark:block group-hover:rotate-12 transition-transform duration-500"
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-0">
-            <h1 className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-br from-foreground to-foreground/70 leading-none">
-              {envClient.NEXT_PUBLIC_APP_NAME}
-            </h1>
-          </div>
-        </motion.div>
-
-        {/* CENTER FORM AREA */}
-        <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
-          <motion.div variants={itemVariants} className="mb-8">
-            <h2 className="text-4xl font-bold tracking-tight mb-3">
-              {AUTH_PAGES_COPY.resetPassword.title}
-            </h2>
-            <p className="text-muted-foreground text-lg font-medium">
-              {AUTH_PAGES_COPY.resetPassword.subtitle}
-            </p>
-          </motion.div>
-
-          <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-4">
-              {/* New Password */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">
-                  {AUTH_PAGES_COPY.resetPassword.fields.newPasswordLabel}
-                </label>
-                <div className="relative group">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    placeholder={AUTH_PAGES_COPY.resetPassword.fields.newPasswordPlaceholder}
-                    className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={!token}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
-                  >
-                    {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-
-              {/* Confirm Password */}
-              <div className="space-y-2">
-                <label className="text-sm font-semibold ml-1 text-foreground/70">
-                  {AUTH_PAGES_COPY.resetPassword.fields.confirmPasswordLabel}
-                </label>
-                <div className="relative group">
-                  <Input
-                    type={showConfirm ? "text" : "password"}
-                    placeholder={AUTH_PAGES_COPY.resetPassword.fields.confirmPasswordPlaceholder}
-                    className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    disabled={!token}
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowConfirm(!showConfirm)}
-                    className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
-                  >
-                    {showConfirm ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {/* End All Sessions Checkbox */}
-            <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/40 transition-colors">
-              <Checkbox
-                id="revoke-sessions"
-                checked={revokeSessions}
-                onCheckedChange={(checked) => setRevokeSessions(Boolean(checked))}
-                disabled={!token || loading}
-                className="mt-0.5 size-5 rounded-lg border-2"
-              />
-              <div className="flex flex-col gap-0.5 select-none">
-                <label
-                  htmlFor="revoke-sessions"
-                  className="text-sm font-semibold text-foreground/80 hover:text-foreground cursor-pointer transition-colors"
-                >
-                  {AUTH_PAGES_COPY.resetPassword.fields.revokeSessionsLabel}
-                </label>
-                <p className="text-xs text-muted-foreground font-medium">
-                  {AUTH_PAGES_COPY.resetPassword.fields.revokeSessionsDescription}
-                </p>
-              </div>
-            </div>
-
-            {/* Status Messages */}
-            <AnimatePresence mode="wait">
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-center gap-3"
-                >
-                  <ShieldAlert className="w-5 h-5 shrink-0" />
-                  <p className="font-medium">{error}</p>
-                </motion.div>
-              )}
-
-              {successMsg && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: "auto" }}
-                  exit={{ opacity: 0, height: 0 }}
-                  className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-3"
-                >
-                  <ShieldCheck className="w-5 h-5 shrink-0" />
-                  <p className="font-medium">{successMsg}</p>
-                </motion.div>
-              )}
-            </AnimatePresence>
-
-            <Button
-              type="submit"
-              disabled={loading || !token}
-              className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 active:scale-[0.98]"
-            >
-              {loading ? (
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
-                  {AUTH_PAGES_COPY.resetPassword.buttons.loading}
-                </div>
-              ) : AUTH_PAGES_COPY.resetPassword.buttons.submit}
-            </Button>
-
-            <div className="text-center">
-              <Link
-                href="/login"
-                className="text-primary font-bold hover:text-primary/80 transition-colors"
-              >
-                {AUTH_PAGES_COPY.resetPassword.buttons.backToSignIn}
-              </Link>
-            </div>
-          </motion.form>
-        </div>
-
-        {/* BOTTOM DECORATION / FOOTER */}
-        <motion.div variants={itemVariants} className="mt-8 pt-8 border-t border-border/50">
-          <p className="text-center text-muted-foreground text-sm">
-            {AUTH_PAGES_COPY.resetPassword.footer.needHelp}{" "}
-            <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
-              {AUTH_PAGES_COPY.resetPassword.footer.contactSupport}
-            </a>
+    <AuthCenterLayout
+      labelsList={copy}
+      footer={
+        <p className="text-center text-muted-foreground text-sm">
+          {copy.footer.needHelp}{" "}
+          <a href="mailto:support@example.app" className="font-bold text-primary hover:text-primary/80 transition-colors">
+            {copy.footer.contactSupport}
+          </a>
+        </p>
+      }
+    >
+      <div className="flex flex-col justify-center max-w-sm mx-auto w-full py-8 lg:py-0">
+        <motion.div variants={itemVariants} className="mb-8">
+          <h2 className="text-4xl font-bold tracking-tight mb-3">
+            {copy.title}
+          </h2>
+          <p className="text-muted-foreground text-lg font-medium">
+            {copy.subtitle}
           </p>
         </motion.div>
-      </motion.div>
 
-      {/* RIGHT SIDE: ILLUSTRATION & FEATURES */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 1 }}
-        className="hidden lg:flex flex-1 p-12 items-center justify-center bg-linear-to-br from-primary via-primary/90 to-primary/80 relative overflow-hidden"
-      >
-        {/* Animated Background Elements */}
-        <div className="absolute top-0 right-0 w-200 h-200 bg-white/10 rounded-full blur-[120px] -translate-y-1/2 translate-x-1/3 animate-pulse" />
-        <div className="absolute bottom-0 left-0 w-150 h-150 bg-black/10 rounded-full blur-[100px] translate-y-1/2 -translate-x-1/4" />
+        <motion.form variants={itemVariants} onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-4">
+            {/* New Password */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold ml-1 text-foreground/70">
+                {copy.fields.newPasswordLabel}
+              </label>
+              <div className="relative group">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  placeholder={copy.fields.newPasswordPlaceholder}
+                  className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={!token}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
+                >
+                  {showPassword ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
 
-        {/* Abstract Grid Pattern */}
-        <div className="absolute inset-0 opacity-10 mask-[radial-gradient(ellipse_at_center,black,transparent)]"
-          style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '40px 40px' }} />
-
-        <div className="relative z-10 w-full max-w-2xl text-center text-white space-y-12">
-          <motion.div
-            animate={floatAnimate}
-            transition={floatTransition}
-            className="w-32 h-32 bg-white/10 backdrop-blur-2xl rounded-[2.5rem] flex items-center justify-center border border-white/20 shadow-2xl mx-auto relative group"
-          >
-            <div className="absolute inset-0 bg-white/20 rounded-[2.5rem] blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            <Image
-              src="/images/logo/dark_logo.png"
-              alt={envClient.NEXT_PUBLIC_APP_NAME}
-              loading="eager"
-              width={80}
-              height={80}
-              className="relative z-10 group-hover:scale-110 transition-transform duration-500"
-            />
-          </motion.div>
-
-          <div className="space-y-6">
-            <motion.h2
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.3 }}
-              className="text-5xl font-black tracking-tight leading-tight"
-            >
-              {AUTH_PAGES_COPY.resetPassword.hero.titleLine1} <br />
-              <span className="text-transparent bg-clip-text bg-linear-to-r from-white to-white/60">
-                {AUTH_PAGES_COPY.resetPassword.hero.titleLine2}
-              </span>
-            </motion.h2>
-
-            <motion.p
-              initial={{ y: 20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              transition={{ delay: 0.5 }}
-              className="text-white/80 text-xl font-medium max-w-lg mx-auto leading-relaxed"
-            >
-              {AUTH_PAGES_COPY.resetPassword.hero.description}
-            </motion.p>
+            {/* Confirm Password */}
+            <div className="space-y-2">
+              <label className="text-sm font-semibold ml-1 text-foreground/70">
+                {copy.fields.confirmPasswordLabel}
+              </label>
+              <div className="relative group">
+                <Input
+                  type={showConfirm ? "text" : "password"}
+                  placeholder={copy.fields.confirmPasswordPlaceholder}
+                  className="h-14 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  disabled={!token}
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirm(!showConfirm)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors group-focus-within:text-primary"
+                >
+                  {showConfirm ? <Eye className="w-5 h-5" /> : <EyeOff className="w-5 h-5" />}
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+
+          {/* End All Sessions Checkbox */}
+          <div className="flex items-start gap-3 p-3.5 rounded-2xl bg-muted/30 border border-border/50 hover:bg-muted/40 transition-colors">
+            <Checkbox
+              id="revoke-sessions"
+              checked={revokeSessions}
+              onCheckedChange={(checked) => setRevokeSessions(Boolean(checked))}
+              disabled={!token || loading}
+              className="mt-0.5 size-5 rounded-lg border-2"
+            />
+            <div className="flex flex-col gap-0.5 select-none">
+              <label
+                htmlFor="revoke-sessions"
+                className="text-sm font-semibold text-foreground/80 hover:text-foreground cursor-pointer transition-colors"
+              >
+                {copy.fields.revokeSessionsLabel}
+              </label>
+              <p className="text-xs text-muted-foreground font-medium">
+                {copy.fields.revokeSessionsDescription}
+              </p>
+            </div>
+          </div>
+
+          {/* Status Messages */}
+          <AnimatePresence mode="wait">
+            {error && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-2xl bg-destructive/10 border border-destructive/20 p-4 text-sm text-destructive flex items-center gap-3"
+              >
+                <ShieldAlert className="w-5 h-5 shrink-0" />
+                <p className="font-medium">{error}</p>
+              </motion.div>
+            )}
+
+            {successMsg && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                exit={{ opacity: 0, height: 0 }}
+                className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-4 text-sm text-emerald-600 dark:text-emerald-400 flex items-center gap-3"
+              >
+                <ShieldCheck className="w-5 h-5 shrink-0" />
+                <p className="font-medium">{successMsg}</p>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <Button
+            type="submit"
+            disabled={loading || !token}
+            className="relative rounded-2xl h-14 w-full text-lg font-bold shadow-lg shadow-primary/20 hover:shadow-primary/40 transition-all duration-300 active:scale-[0.98]"
+          >
+            {loading ? (
+              <div className="flex items-center gap-2">
+                <div className="w-4 h-4 border-2 border-primary-foreground/30 border-t-primary-foreground rounded-full animate-spin" />
+                {copy.buttons.loading}
+              </div>
+            ) : copy.buttons.submit}
+          </Button>
+
+          <div className="text-center">
+            <Link
+              href="/login"
+              className="text-primary font-bold hover:text-primary/80 transition-colors"
+            >
+              {copy.buttons.backToSignIn}
+            </Link>
+          </div>
+        </motion.form>
+      </div>
+    </AuthCenterLayout>
   );
 }
 
