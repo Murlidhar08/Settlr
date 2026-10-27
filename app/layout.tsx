@@ -59,7 +59,7 @@ export const metadata: Metadata = {
     siteName: envClient.NEXT_PUBLIC_APP_NAME,
     images: [
       {
-        url: '/images/og/og-banner.png',
+        url: '/api/image?type=og',
         width: 1200,
         height: 630,
         alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
@@ -72,7 +72,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: envClient.NEXT_PUBLIC_APP_NAME,
     description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
-    images: ['/images/og/twitter-banner.png'],
+    images: [
+      {
+        url: '/api/image?type=twitter',
+        width: 1500,
+        height: 500,
+        alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
+      },
+    ],
   },
 };
 
