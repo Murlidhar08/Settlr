@@ -43,7 +43,6 @@ export default function BackAccountHeaderClient({ account }: { account: Financia
     return (
         <>
             <AppHeader
-                title={account?.name}
                 backUrl={'/accounts' as any}
                 showProfile={false}
                 menuItems={[

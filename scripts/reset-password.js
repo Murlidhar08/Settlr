@@ -7,7 +7,7 @@ const dotenv = require("dotenv");
 const { Client } = require("pg");
 
 // 1. Load environment variables (.env.local, .env.production, .env)
-const envFiles = [".env.local", ".env.production", ".env"];
+const envFiles = [".env.local", ".env"];
 for (const file of envFiles) {
   const fullPath = path.resolve(process.cwd(), file);
   if (fs.existsSync(fullPath)) {

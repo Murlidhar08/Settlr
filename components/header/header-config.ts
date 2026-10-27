@@ -29,6 +29,11 @@ export interface HeaderRouteRule extends HeaderConfig {
 
 export const headerRoutesConfig: HeaderRouteRule[] = [
   {
+    pattern: /^\/accounts\/[^/]+$/,
+    title: "Account Details",
+    showBack: true,
+  },
+  {
     pattern: /^\/transactions\/[^/]+$/,
     title: "Transaction Details",
     showBack: true,
