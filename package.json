@@ -1,6 +1,6 @@
 {
   "name": "settlr",
-  "version": "1.0.18",
+  "version": "1.1.0",
   "private": true,
   "engines": {
     "node": ">=22"
@@ -18,37 +18,41 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
-    "typecheck": "tsc --noEmit",
-    "sync-template": "git fetch upstream && git merge upstream/main"
+    "typecheck": "eslint && tsc --noEmit",
+    "reset-password": "node scripts/reset-password.js",
+    "sync-template": "git fetch upstream && git merge upstream/main",
+    "update": "node scripts/auto-update.js",
+    "update:check": "node scripts/auto-update.js --check",
+    "update:apply": "node scripts/auto-update.js --apply"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",
-    "@better-auth/passkey": "^1.7.7",
-    "@better-auth/prisma-adapter": "^1.7.7",
+    "@better-auth/passkey": "^1.7.14",
+    "@better-auth/prisma-adapter": "^1.7.14",
     "@ducanh2912/next-pwa": "^10.2.9",
     "@hookform/resolvers": "^5.9.2",
-    "@marsidev/react-turnstile": "^1.6.2",
-    "@tanstack/react-query": "^5.104.4",
-    "@tanstack/react-query-devtools": "^5.104.4",
+    "@marsidev/react-turnstile": "^1.6.3",
+    "@tanstack/react-query": "^5.105.0",
+    "@tanstack/react-query-devtools": "^5.105.0",
     "@types/pg": "^8.23.1",
-    "better-auth": "^1.7.10",
+    "better-auth": "^1.7.14",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^4.4.0",
+    "dotenv": "^18.0.9",
+    "framer-motion": "^14.6.0",
     "jspdf": "^4.2.1",
-    "jspdf-autotable": "^5.0.8",
-    "dotenv": "^18.0.8",
-    "framer-motion": "^14.3.0",
-    "lucide-react": "^1.59.0",
-    "next": "^16.4.2",
+    "jspdf-autotable": "^5.0.9",
+    "lucide-react": "^1.62.0",
+    "next": "^16.4.3",
     "next-themes": "^0.4.6",
     "nextjs-toploader": "^3.9.17",
-    "nodemailer": "^10.1.2",
+    "nodemailer": "^10.2.1",
     "prisma": "^7.10.1",
     "react": "^19.3.1",
     "react-day-picker": "^10.0.2",
     "react-dom": "^19.3.1",
-    "react-hook-form": "^7.90.0",
+    "react-hook-form": "^7.91.0",
     "react-qr-code": "^2.2.0",
     "recharts": "^3.10.1",
     "sonner": "^2.0.8",
@@ -58,7 +62,7 @@
   "devDependencies": {
     "@eslint/compat": "^2.1.1",
     "@eslint/js": "^10.0.1",
-    "@next/bundle-analyzer": "^16.4.2",
+    "@next/bundle-analyzer": "^16.4.3",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@tailwindcss/postcss": "^4.3.3",
@@ -68,7 +72,7 @@
     "@types/react-dom": "^19.3.0",
     "cross-env": "^10.1.0",
     "eslint": "^10.13.0",
-    "eslint-config-next": "^16.4.2",
+    "eslint-config-next": "^16.4.3",
     "jimp": "^1.6.1",
     "pg": "^8.23.1",
     "tailwindcss": "^4.3.3",
@@ -76,10 +80,15 @@
     "typescript": "^7.0.2"
   },
   "allowScripts": {
-    "@prisma/engines@7.10.1": true,
-    "core-js@3.50.0": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true,
     "esbuild@0.28.2": true,
     "prisma@7.10.1": true,
-    "unrs-resolver@1.12.2": true
+    "@prisma/engines@7.10.1": true,
+    "core-js@3.51.0": true
+  },
+  "overrides": {
+    "serialize-javascript": "^7.1.4",
+    "zod": "$zod"
   }
 }

@@ -135,7 +135,7 @@ export default function UserForm({ initialData, backUrl }: UserFormProps) {
             } else {
                 await createUserMutation.mutateAsync(values);
                 toast.success("User created successfully");
-                router.push("/admin");
+                router.push("/admin/user");
             }
             router.refresh();
         } catch (error) {

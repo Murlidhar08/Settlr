@@ -11,6 +11,7 @@ export const DEFAULT_USER_SETTINGS = {
   currency: Currency.INR,
   currencySymbol: "₹",
   locale: "en-IN",
+  debug: false
 } as const;
 
 /**

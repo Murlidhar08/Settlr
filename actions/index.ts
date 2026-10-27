@@ -4,6 +4,7 @@
  */
 
 export * from "./admin.actions";
+export * from "./admin-dashboard.actions";
 export * from "./admin/app-config";
 export * from "./auth/setup";
 export * from "./business.actions";

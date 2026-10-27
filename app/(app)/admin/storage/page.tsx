@@ -184,7 +184,7 @@ const StorageItem = ({ item, depth, onRefresh }: StorageItemProps) => {
     );
 };
 
-export const AdminStorageManager = () => {
+const AdminStorageManager = () => {
     const { data: items, isLoading, refetch, error } = useStorageItems("/");
 
     useEffect(() => {
@@ -267,3 +267,11 @@ export const AdminStorageManager = () => {
         </div>
     );
 };
+
+export default function AdminStoragePage() {
+    return (
+        <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full">
+            <AdminStorageManager />
+        </div>
+    );
+}

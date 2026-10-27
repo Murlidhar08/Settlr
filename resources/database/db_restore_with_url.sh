@@ -13,7 +13,7 @@
 if [ -z "$1" ]; then
   echo "Usage: $0 <backup_file> [database_url]"
   echo "Supported formats: .dump, .sql, .tar, .dump.gz, .sql.gz, .tar.gz"
-  echo "Example: $0 ./resources/database/db_backup/property_hub.dump 'postgresql://user:pass@host:5432/dbname'"
+  echo "Example: $0 ./resources/database/db_backup/settlr.dump 'postgresql://user:pass@host:5432/dbname'"
   exit 1
 fi
 

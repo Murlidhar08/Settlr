@@ -51,6 +51,28 @@ export default {
         price: "Price",
         search_account_transactions: "Search title or amount...",
     },
+    title: {
+        dashboard: "Dashboard",
+        admin: "Admin",
+        settings: "Settings",
+        danger: "Danger Zone",
+        danger_zone: "Danger Zone",
+        link_account: "Linked Accounts",
+        linked_accounts: "Linked Accounts",
+        session_management: "Active Sessions",
+        security: "Security",
+        passkeys: "Passkeys",
+        profile: "Profile",
+        edit: "Edit Profile",
+        edit_profile: "Edit Profile",
+        admin_dashboard: "Admin Dashboard",
+        user: "User Management",
+        user_management: "User Management",
+        application_settings: "Application Settings",
+        storage: "Storage Manager",
+        storage_manager: "Storage Manager",
+        add: "Add User",
+    },
     auth: {
         msg: {
             session_expired: "Your session has expired. Please login again.",
@@ -254,6 +276,9 @@ export default {
     // Admin Page
     admin: {
         title: "Admin",
+        dashboard: {
+            title: "Admin Dashboard",
+        },
         access_restricted: "Access Restricted",
         restricted_description: "You do not have the necessary permissions to access this administrative resource.",
         return_to_dashboard: "Return to Dashboard",

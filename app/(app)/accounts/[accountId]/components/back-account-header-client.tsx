@@ -2,7 +2,8 @@
 
 import { deleteFinancialAccount, setAccountAsDefault, toggleFinancialAccountActive } from "@/actions/financial-account.actions"
 import { AddAccountModal } from "@/components/account/add-account-modal"
-import { BackHeader } from "@/components/header/back-header"
+import { AppHeader } from "@/components/header"
+
 import {
     AlertDialog,
     AlertDialogAction,
@@ -41,8 +42,7 @@ export default function BackAccountHeaderClient({ account }: { account: Financia
 
     return (
         <>
-            <BackHeader
-                title={account?.name}
+            <AppHeader
                 backUrl={'/accounts' as any}
                 showProfile={false}
                 menuItems={[

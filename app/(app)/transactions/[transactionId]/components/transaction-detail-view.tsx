@@ -1,6 +1,5 @@
 "use client"
 
-import { BackHeader } from "@/components/header/back-header"
 import { useConfirm } from "@/components/providers/confirm-provider"
 import { useUserConfig } from "@/components/providers/user-config-provider"
 import { AddTransactionModal } from "@/components/transaction/add-transaction-modal"
@@ -12,6 +11,7 @@ import { motion } from "framer-motion"
 import { ArrowDownLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock, Hash, History, Pencil, PenSquareIcon, Phone, Trash2, User } from "lucide-react"
 import { toast } from "sonner"
 
+import { AppHeader } from "@/components/header"
 import { tran } from "@/lib/languages/i18n"
 import { cn } from "@/lib/utils"
 import Link from "next/link"
@@ -67,7 +67,7 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
                 <div className="absolute -bottom-1/4 -left-1/4 w-[80%] h-[80%] rounded-full opacity-5 blur-[100px] bg-indigo-500" />
             </div>
 
-            <BackHeader
+            <AppHeader
                 title={tran("transactions.details")}
                 showProfile={false}
                 menuItems={[

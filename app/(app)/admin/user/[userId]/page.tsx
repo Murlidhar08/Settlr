@@ -1,19 +1,14 @@
 import { getUserById, getUserDocuments } from "@/actions/user.actions";
 import AppTabs from "@/components/tab/app-tabs";
+import { UserProfileHeader } from "@/components/user/user-profile-header";
 import {
     FileText,
     User as UserIcon
 } from "lucide-react";
 import { notFound } from "next/navigation";
-import { UserProfileHeader } from "../../../../../components/user/user-profile-header";
-import dynamic from "next/dynamic";
-import { Skeleton } from "@/components/ui/skeleton";
 import GeneralTab from "./components/general-tab";
 import { UserHeader } from "./components/user-header-action";
-
-const DocumentTab = dynamic(() => import("../components/document-tab"), {
-    loading: () => <Skeleton className="h-64 w-full rounded-3xl" />,
-});
+import dynamic from "next/dynamic";
 
 export default async function UserDetailsPage({ params }: { params: Promise<{ userId: string }> }) {
     const { userId } = await params;
@@ -23,6 +18,7 @@ export default async function UserDetailsPage({ params }: { params: Promise<{ us
 
     // Fetch user documents count
     const documents = await getUserDocuments(userId);
+    const DocumentTab = dynamic(() => import("../components/document-tab"))
 
     const tabs = [
         {
