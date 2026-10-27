@@ -15,7 +15,6 @@ import { ImpersonationIndicator } from "@/components/auth/impersonation-indicato
 import { AppProviders } from "@/components/providers";
 import NextTopLoader from 'nextjs-toploader';
 
-
 const nunitoSans = Nunito_Sans({
   variable: '--font-sans',
   subsets: ["latin"],
@@ -36,8 +35,8 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-  metadataBase: new URL(envServer.BETTER_AUTH_URL),
   title: envClient.NEXT_PUBLIC_APP_NAME,
+  metadataBase: new URL(envServer.BETTER_AUTH_URL),
   description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
   manifest: "/manifest.json",
   appleWebApp: {
@@ -62,7 +61,7 @@ export const metadata: Metadata = {
     siteName: envClient.NEXT_PUBLIC_APP_NAME,
     images: [
       {
-        url: '/images/og/og-banner.png',
+        url: '/api/image?type=og',
         width: 1200,
         height: 630,
         alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
@@ -75,7 +74,14 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     title: envClient.NEXT_PUBLIC_APP_NAME,
     description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
-    images: ['/images/og/twitter-banner.png'],
+    images: [
+      {
+        url: '/api/image?type=twitter',
+        width: 1500,
+        height: 500,
+        alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
+      },
+    ],
   },
 };
 

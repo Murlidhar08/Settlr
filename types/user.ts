@@ -11,6 +11,7 @@ export interface UserSettingsInput {
   currency?: Currency;
   currencySymbol?: string;
   locale?: string;
+  debug?: boolean;
 }
 
 /**

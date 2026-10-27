@@ -1,7 +1,7 @@
 "use client"
 
 import { togglePartyActive } from "@/actions/parties.actions"
-import { BackHeader } from "@/components/header/back-header"
+import { AppHeader } from "@/components/header"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,7 +45,7 @@ export default function BackHeaderClient({ party }: { party: any }) {
 
   return (
     <>
-      <BackHeader
+      <AppHeader
         title={party?.name}
         backUrl='/parties'
         showProfile={false}

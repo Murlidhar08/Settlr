@@ -1,19 +1,17 @@
 "use client";
 
-import type { HeaderConfig, HeaderMenuItem } from "@/components/header/header-config";
+import type { HeaderConfig } from "@/components/header/header-config";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import clsx from "clsx";
 import { motion } from "framer-motion";
 import { ArrowLeft, EllipsisVertical, Menu, X } from "lucide-react";
-import type { Route } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { ReactNode } from "react";
 import { useNavItems } from "../navbar/use-nav-items";
-import { useHeader, useSetHeaderConfig } from "../providers/header-provider";
+import { useHeaderValue, useSetHeaderConfig } from "../providers/header-provider";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -32,16 +30,14 @@ import {
 } from "../ui/sheet";
 import ProfileAvatar from "../user/profile-avatar";
 
-export interface AppHeaderProps {
-  title?: string;
-  description?: string;
-  backUrl?: Route | string;
-  showBack?: boolean;
-  showProfile?: boolean;
-  showMobileNav?: boolean;
-  menuItems?: HeaderMenuItem[];
-  rightAction?: ReactNode;
-  hidden?: boolean;
+export interface AppHeaderProps extends HeaderConfig {
+  /**
+   * When true, renders this header directly into the local DOM where placed,
+   * completely independent of the global layout HeaderProvider.
+   * Useful when a page sets `hidden` on the global header and wants to render
+   * a header locally in its own custom place.
+   */
+  standalone?: boolean;
 }
 
 /**
@@ -50,9 +46,13 @@ export interface AppHeaderProps {
  *    layout header that automatically stays visible across all pages and loading states.
  * 2. When rendered inside a page with props (e.g. <AppHeader title="..." />), it updates
  *    the persistent header configuration without rendering duplicate DOM nodes.
+ * 3. When `standalone` is true, renders directly in place.
  */
-export function AppHeader(props: AppHeaderProps) {
-  const ctx = useHeader();
+export function AppHeader(props: AppHeaderProps = {}) {
+  // If explicitly standalone, render directly in DOM without affecting global layout context
+  if (props.standalone) {
+    return <AppHeaderContent standaloneProps={props} />;
+  }
 
   const isOverrideCall =
     props.title !== undefined ||
@@ -62,27 +62,32 @@ export function AppHeader(props: AppHeaderProps) {
     props.showProfile !== undefined ||
     props.showMobileNav !== undefined ||
     props.menuItems !== undefined ||
-    props.rightAction !== undefined ||
-    props.hidden !== undefined;
+    props.hidden !== undefined ||
+    props.className !== undefined;
 
   // When used inside a child page/component to set custom configuration
   useSetHeaderConfig(isOverrideCall ? props : {});
 
-  // If inside HeaderProvider and used as an override caller from a page, don't duplicate header in DOM unless layout header is hidden
-  if (ctx && isOverrideCall && !ctx.headerConfig?.hidden) {
+  // If inside HeaderProvider and used as an override caller from a page, don't duplicate header in DOM
+  if (isOverrideCall) {
     return null;
   }
 
-  return <AppHeaderContent standaloneProps={!ctx || ctx.headerConfig?.hidden ? props : undefined} />;
+  return <AppHeaderContent />;
 }
 
 function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProps }) {
-  const ctx = useHeader();
+  const valueConfig = useHeaderValue();
   const router = useRouter();
   const pathname = usePathname();
   const navItems = useNavItems();
 
-  const config: HeaderConfig = standaloneProps || ctx?.headerConfig || {};
+  const config: HeaderConfig = standaloneProps || valueConfig || {};
+
+  // If hidden is true, do not render any header markup!
+  if (config.hidden) {
+    return null;
+  }
 
   if (config.hidden) {
     return null;
@@ -101,7 +106,10 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
       initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
-      className="sticky top-0 z-30 h-14 sm:h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-4 sm:px-6 border-b border-border shadow-sm"
+      className={cn(
+        "sticky top-0 z-30 h-14 sm:h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-4 sm:px-6 border-b border-border shadow-sm",
+        config.className
+      )}
     >
       <div className="w-1/4 sm:w-1/3 flex items-center gap-2">
         {/* Left Section: Back Button or Mobile Logo */}
@@ -210,35 +218,34 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
           )}
       </div>
 
-      {/* Center Section: Gradient Title & Subtitle Badge */}
+      {/* Center Section: Gradient Title & Subtitle Badge or Custom Children */}
       <div className="flex-1 flex flex-col items-center justify-center min-w-0 mx-2 sm:mx-4">
-        <div className="flex-1 flex justify-center overflow-hidden">
-          <h1 className="text-xl font-black tracking-normal sm:text-2xl lg:text-3xl bg-linear-to-br from-foreground to-primary/80 bg-clip-text text-transparent">
-            {config.title ? tran(config.title) : ""}
-          </h1>
-        </div>
+        <>
+          <div className="flex-1 flex justify-center overflow-hidden">
+            <h1 className="text-xl font-black tracking-normal sm:text-2xl lg:text-3xl bg-linear-to-br from-foreground to-primary/80 bg-clip-text text-transparent truncate">
+              {config.title ? tran(config.title) : ""}
+            </h1>
+          </div>
 
-        {config.description && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.92 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="mt-0.5"
-          >
-            <Badge
-              variant="secondary"
-              className="h-5 rounded-full px-2.5 text-[9px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border-primary/20"
+          {config.description && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="mt-0.5"
             >
-              {tran(config.description)}
-            </Badge>
-          </motion.div>
-        )}
+              <Badge
+                variant="secondary"
+                className="h-5 rounded-full px-2.5 text-[9px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border-primary/20"
+              >
+                {tran(config.description)}
+              </Badge>
+            </motion.div>
+          )}
+        </>
       </div>
 
       {/* Right Section: Actions Dropdown, Custom Right Action, Profile Avatar & Mobile Drawer */}
       <div className="w-1/4 sm:w-1/3 flex items-center justify-end gap-2">
-        {/* Custom Right Action */}
-        {config.rightAction}
-
         {/* Menu Items Dropdown */}
         {config.menuItems && config.menuItems.length > 0 && (
           <DropdownMenu>

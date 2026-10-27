@@ -1,6 +1,6 @@
 "use client"
 
-import { BackHeader } from "@/components/header/back-header"
+import { AppHeader } from "@/components/header"
 import { useConfirm } from "@/components/providers/confirm-provider"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
@@ -22,7 +22,6 @@ import {
     HelpCircle,
     Loader2,
     Pencil,
-    ShieldAlert,
     Trash2,
     Truck,
     UserCheck,
@@ -131,7 +130,8 @@ export default function BusinessDetailPage() {
 
     return (
         <div className="w-full bg-background min-h-screen pb-34">
-            <BackHeader
+            <AppHeader
+                showProfile={false}
                 title={business.name}
                 menuItems={[{
                     icon: <Trash2 />,

@@ -11,12 +11,17 @@ import {
   Dispatch,
   ReactNode,
   SetStateAction,
+  useCallback,
   useContext,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from "react";
+
+const useIsomorphicLayoutEffect =
+  typeof window !== "undefined" ? useLayoutEffect : useEffect;
 
 function areMenuItemsEqual(a?: HeaderMenuItem[], b?: HeaderMenuItem[]) {
   if (a === b) return true;
@@ -25,7 +30,9 @@ function areMenuItemsEqual(a?: HeaderMenuItem[], b?: HeaderMenuItem[]) {
   return a.every(
     (item, i) =>
       item.label === b[i].label &&
-      item.destructive === b[i].destructive
+      item.destructive === b[i].destructive &&
+      item.onClick === b[i].onClick &&
+      item.icon === b[i].icon
   );
 }
 
@@ -39,36 +46,71 @@ function areConfigsEqual(a: HeaderConfig | null, b: HeaderConfig | null) {
     a.backUrl === b.backUrl &&
     a.showProfile === b.showProfile &&
     a.showMobileNav === b.showMobileNav &&
-    a.rightAction === b.rightAction &&
     a.hidden === b.hidden &&
+    a.className === b.className &&
     areMenuItemsEqual(a.menuItems, b.menuItems)
   );
 }
 
-interface HeaderContextType {
-  headerConfig: HeaderConfig;
+export interface HeaderActionsContextType {
   setOverrideConfig: Dispatch<SetStateAction<HeaderConfig | null>>;
   resetHeaderConfig: () => void;
+  setHeaderConfig: (config: Partial<HeaderConfig> | null) => void;
 }
 
-const HeaderContext = createContext<HeaderContextType | null>(null);
+export interface HeaderContextType extends HeaderActionsContextType {
+  headerConfig: HeaderConfig;
+}
 
-export function useHeader() {
-  return useContext(HeaderContext);
+const HeaderValueContext = createContext<HeaderConfig>({});
+const HeaderActionsContext = createContext<HeaderActionsContextType | null>(null);
+
+/**
+ * Access the active header configuration values (consumed by AppHeader in layout).
+ */
+export function useHeaderValue(): HeaderConfig {
+  return useContext(HeaderValueContext);
+}
+
+/**
+ * Access stable header modifier actions without triggering re-renders on header value changes.
+ */
+export function useHeaderActions(): HeaderActionsContextType {
+  const ctx = useContext(HeaderActionsContext);
+  if (!ctx) {
+    throw new Error("useHeaderActions must be used within a HeaderProvider");
+  }
+  return ctx;
+}
+
+/**
+ * Legacy combined hook returning both header values and actions.
+ */
+export function useHeader(): HeaderContextType | null {
+  const actions = useContext(HeaderActionsContext);
+  const headerConfig = useContext(HeaderValueContext);
+  if (!actions) return null;
+  return {
+    ...actions,
+    headerConfig,
+  };
 }
 
 export function HeaderProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
+  const [prevPathname, setPrevPathname] = useState(pathname);
   const [overrideConfig, setOverrideConfig] = useState<HeaderConfig | null>(null);
 
-  // Automatically reset any page-specific override when the route changes
-  useEffect(() => {
+  // Synchronously reset page-specific overrides when route pathname changes during render
+  // This eliminates 1-frame flashes of previous page header configs.
+  if (prevPathname !== pathname) {
+    setPrevPathname(pathname);
     setOverrideConfig(null);
-  }, [pathname]);
+  }
 
   const routeConfig = useMemo(() => getHeaderConfigForPath(pathname), [pathname]);
 
-  const activeConfig = useMemo(() => {
+  const activeConfig = useMemo<HeaderConfig>(() => {
     if (!overrideConfig) return routeConfig;
     return {
       ...routeConfig,
@@ -76,33 +118,47 @@ export function HeaderProvider({ children }: { children: ReactNode }) {
     };
   }, [routeConfig, overrideConfig]);
 
-  const resetHeaderConfig = () => {
+  const resetHeaderConfig = useCallback(() => {
     setOverrideConfig(null);
-  };
+  }, []);
+
+  const setHeaderConfig = useCallback((config: Partial<HeaderConfig> | null) => {
+    if (!config) {
+      setOverrideConfig(null);
+      return;
+    }
+    setOverrideConfig((curr) => {
+      const next = { ...(curr || {}), ...config };
+      return areConfigsEqual(curr, next) ? curr : next;
+    });
+  }, []);
+
+  const actions = useMemo<HeaderActionsContextType>(() => ({
+    setOverrideConfig,
+    resetHeaderConfig,
+    setHeaderConfig,
+  }), [resetHeaderConfig, setHeaderConfig]);
 
   return (
-    <HeaderContext.Provider
-      value={{
-        headerConfig: activeConfig,
-        setOverrideConfig,
-        resetHeaderConfig,
-      }}
-    >
-      {children}
-    </HeaderContext.Provider>
+    <HeaderActionsContext.Provider value={actions}>
+      <HeaderValueContext.Provider value={activeConfig}>
+        {children}
+      </HeaderValueContext.Provider>
+    </HeaderActionsContext.Provider>
   );
 }
 
 /**
  * Hook to set or override the header config dynamically from any child page/component.
+ * Consumes HeaderActionsContext only, so caller components do not re-render when header updates.
  * Safely guards against infinite re-renders by comparing prop values.
  */
 export function useSetHeaderConfig(props: Partial<HeaderConfig>) {
-  const ctx = useHeader();
+  const actions = useContext(HeaderActionsContext);
   const prevRef = useRef<Partial<HeaderConfig> | null>(null);
 
-  useEffect(() => {
-    if (!ctx) return;
+  useIsomorphicLayoutEffect(() => {
+    if (!actions) return;
     const prev = prevRef.current;
     const hasChanged =
       !prev ||
@@ -112,27 +168,27 @@ export function useSetHeaderConfig(props: Partial<HeaderConfig>) {
       prev.backUrl !== props.backUrl ||
       prev.showProfile !== props.showProfile ||
       prev.showMobileNav !== props.showMobileNav ||
-      prev.rightAction !== props.rightAction ||
       prev.hidden !== props.hidden ||
+      prev.className !== props.className ||
       !areMenuItemsEqual(prev.menuItems, props.menuItems);
 
     if (hasChanged) {
       prevRef.current = props;
-      ctx.setOverrideConfig((curr) => {
+      actions.setOverrideConfig((curr) => {
         const next = { ...(curr || {}), ...props };
         return areConfigsEqual(curr, next) ? curr : next;
       });
     }
   }, [
-    ctx,
+    actions,
     props.title,
     props.description,
     props.showBack,
     props.backUrl,
     props.showProfile,
     props.showMobileNav,
-    props.rightAction,
     props.hidden,
+    props.className,
     props.menuItems,
   ]);
 }

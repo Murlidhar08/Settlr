@@ -22,7 +22,8 @@ export async function upsertUserSettings(data: UserSettingsInput) {
       language: data.language ?? "en",
       theme: data.theme ?? ThemeMode.LIGHT,
       currency: data.currency ?? Currency.INR,
-      locale: data.locale ?? "en-IN"
+      locale: data.locale ?? "en-IN",
+      debug: data.debug ?? false,
     },
     update: {
       dateFormat: data.dateFormat,
@@ -30,6 +31,8 @@ export async function upsertUserSettings(data: UserSettingsInput) {
       language: data.language,
       theme: data.theme,
       currency: data.currency,
+      locale: data.locale,
+      debug: data.debug,
     },
   });
 
