@@ -82,5 +82,9 @@
     "esbuild@0.28.2": true,
     "prisma@7.10.1": true,
     "@prisma/engines@7.10.1": true
+  },
+  "overrides": {
+    "serialize-javascript": "^7.1.4",
+    "zod": "$zod"
   }
 }
