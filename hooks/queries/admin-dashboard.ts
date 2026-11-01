@@ -1,9 +1,7 @@
 import {
   adminRevokeSession,
-  applySystemUpdateAction,
   checkSystemUpdateAction,
-  getAdminDashboardSummary,
-  restartApplicationAction,
+  getAdminDashboardSummary
 } from "@/actions/admin-dashboard.actions";
 import { updateUserStatus } from "@/actions/admin.actions";
 import { UserStatus } from "@/lib/generated/prisma/enums";
@@ -75,36 +73,3 @@ export const useSystemUpdateStatus = () => {
     refetchOnWindowFocus: false,
   });
 };
-
-export const useApplySystemUpdate = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (options?: { restart?: boolean }) => {
-      const result = await applySystemUpdateAction(options);
-      if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to apply system update");
-      }
-      return result.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.systemUpdate });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.dashboard });
-      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.settings.appVersion });
-    },
-  });
-};
-
-export const useRestartApplication = () => {
-  return useMutation({
-    mutationFn: async () => {
-      const result = await restartApplicationAction();
-      if (!result.success || !result.data) {
-        throw new Error(result.error || "Failed to restart application");
-      }
-      return result.data;
-    },
-  });
-};
-
-

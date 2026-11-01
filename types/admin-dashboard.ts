@@ -105,15 +105,16 @@ export interface SystemUpdateStatus {
   currentVersion: string;
   latestVersion: string;
   currentCommit: string;
-  latestCommit: string;
+  updateAvailable: boolean;
   hasVersionUpdate: boolean;
   hasCommitUpdate: boolean;
   hasUpdate: boolean;
   releaseTitle?: string;
   releaseNotes?: string;
   publishedAt?: string;
-  lastCheckedAt: string;
+  checkedAt: string;
 }
+
 
 export interface ApplyUpdateResult {
   success: boolean;

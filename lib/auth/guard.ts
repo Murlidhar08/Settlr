@@ -1,6 +1,8 @@
 import { headers } from "next/headers";
 import { auth } from "./auth";
 import { checkUserPermission, statement } from "./permissions";
+import { ForbiddenError, UnauthorizedError } from "@/lib/errors";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 
 export type PermissionsStatement = typeof statement;
 export type Resource = keyof PermissionsStatement;
@@ -22,6 +24,11 @@ export async function hasPermission<R extends Resource>(
             return false;
         }
 
+        const user = session.user as any;
+        if (user.banned || user.status === UserStatus.banned || user.status === UserStatus.suspended || user.status === UserStatus.pendingapproval) {
+            return false;
+        }
+
         return checkUserPermission(session.user.role, {
             [resource]: [action],
         } as any);
@@ -32,7 +39,7 @@ export async function hasPermission<R extends Resource>(
 
 /**
  * Require permission for a server action or route.
- * Throws "UNAUTHORIZED" or "FORBIDDEN" if authorization fails.
+ * Throws typed UnauthorizedError or ForbiddenError if authorization fails.
  */
 export async function requirePermission<R extends Resource>(
     resource: R,
@@ -43,7 +50,18 @@ export async function requirePermission<R extends Resource>(
     });
 
     if (!session?.user) {
-        throw new Error("UNAUTHORIZED");
+        throw new UnauthorizedError("You must be logged in to perform this action");
+    }
+
+    const user = session.user as any;
+    if (user.banned || user.status === UserStatus.banned) {
+        throw new ForbiddenError("Your account has been banned");
+    }
+    if (user.status === UserStatus.suspended) {
+        throw new ForbiddenError("Your account has been suspended");
+    }
+    if (user.status === UserStatus.pendingapproval) {
+        throw new ForbiddenError("Your account is pending administrator approval");
     }
 
     const isAuthorized = checkUserPermission(session.user.role, {
@@ -51,7 +69,7 @@ export async function requirePermission<R extends Resource>(
     } as any);
 
     if (!isAuthorized) {
-        throw new Error("FORBIDDEN");
+        throw new ForbiddenError("You do not have permission to perform this action");
     }
 
     return { session, user: session.user };

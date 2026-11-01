@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 /**
+ * Known placeholder / development secrets that must never be used in production.
+ */
+const KNOWN_DEFAULT_SECRETS = new Set([
+  "lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ",
+  "your-secret-key-must-be-changed",
+]);
+
+/**
  * Server-side Environment Variables Schema
  */
 const serverEnvSchema = z.object({
@@ -60,6 +68,13 @@ function validateServerEnv(): ServerEnv {
       .join("\n");
 
     const message = `❌ Invalid or missing Server Environment Variables:\n${formattedErrors}\n\nPlease check your .env or .env.local file.`;
+    console.error(message);
+    throw new Error(message);
+  }
+
+  // Reject known default secrets in production
+  if (result.data.NODE_ENV === "production" && KNOWN_DEFAULT_SECRETS.has(result.data.BETTER_AUTH_SECRET)) {
+    const message = "❌ Insecure BETTER_AUTH_SECRET: You are using a known public default secret in production. Please generate a unique random secret.";
     console.error(message);
     throw new Error(message);
   }

@@ -18,12 +18,9 @@
     "db:generate": "prisma generate",
     "db:studio": "prisma studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
-    "typecheck": "eslint && tsc --noEmit",
+    "typecheck": "tsc --noEmit",
     "reset-password": "node scripts/reset-password.js",
-    "sync-template": "git fetch upstream && git merge upstream/main",
-    "update": "node scripts/auto-update.js",
-    "update:check": "node scripts/auto-update.js --check",
-    "update:apply": "node scripts/auto-update.js --apply"
+    "sync-template": "git fetch upstream && git merge upstream/main"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

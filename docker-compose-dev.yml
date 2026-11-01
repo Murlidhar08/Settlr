@@ -36,7 +36,7 @@ services:
       ADVANCE_PASS_CHECK: "true"
 
       # Better Auth
-      BETTER_AUTH_SECRET: "lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ"
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:-lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ}"
       BETTER_AUTH_URL: "http://localhost:3000"
       BETTER_AUTH_TRUSTED_ORIGINS: "https://example.com,https://*.example.com"
 
@@ -53,6 +53,8 @@ services:
 
     ports:
       - "3000:3000"
+    volumes:
+      - uploads_data:/app/uploads
     networks:
       - prisma-network
     restart: unless-stopped
@@ -71,11 +73,11 @@ services:
     container_name: property_prisma_studio
     restart: always
     ports:
-      - "5555:5555"
+      - "127.0.0.1:5555:5555"
     environment:
       DATABASE_URL: "postgresql://next_user:next_pass@postgres_db:5432/next_template?schema=public"
       STUDIO_PORT: 5555
-      STUDIO_HOST: "0.0.0.0"
+      STUDIO_HOST: "127.0.0.1"
       STUDIO_BROWSER: "none"
       AUTO_INTROSPECT: ${AUTO_INTROSPECT:-true}
     networks:
@@ -92,3 +94,4 @@ networks:
 
 volumes:
   postgres_data:
+  uploads_data:

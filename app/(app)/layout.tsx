@@ -26,8 +26,8 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   // Session check
   const session = await getUserSession();
 
-  // Handle Redirection based on status
-  if (session.user.banned) redirect("/banned");
+  // Handle Redirection based on status (enforcing banned enum and boolean status)
+  if (session.user.banned || session.user.status === UserStatus.banned) redirect("/banned");
   if (session.user.status === UserStatus.pendingapproval) redirect("/pending-approval");
   if (session.user.status === UserStatus.suspended) redirect("/suspended");
 

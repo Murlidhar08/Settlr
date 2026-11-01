@@ -53,10 +53,23 @@ export async function comprehensiveDeleteUser(userId: string) {
 export async function updateUserStatus(userId: string, status: UserStatus) {
     await requirePermission("user", "update");
 
+    const isBanning = status === UserStatus.banned;
+    const isSuspended = status === UserStatus.suspended;
+
     await prisma.user.update({
         where: { id: userId },
-        data: { status }
+        data: {
+            status,
+            ...(isBanning ? { banned: true } : status === UserStatus.approved ? { banned: false } : {})
+        }
     });
+
+    // Invalidate active sessions immediately on ban or suspend
+    if (isBanning || isSuspended) {
+        await prisma.session.deleteMany({
+            where: { userId }
+        }).catch(() => {});
+    }
 
     return { success: true };
 }

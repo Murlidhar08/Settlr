@@ -3,6 +3,8 @@ import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const VALID_BRANCH_REGEX = /^[a-zA-Z0-9._/-]+$/;
+
 /**
  * Parses semver string into [major, minor, patch] numbers.
  */
@@ -61,14 +63,23 @@ export function getGitRemoteRepo(): string | null {
 }
 
 /**
- * Gets the current active git branch name.
+ * Gets the current active git branch name with regex validation.
  */
 export function getCurrentBranch(): string {
   try {
-    return execSync("git rev-parse --abbrev-ref HEAD", {
+    const branch = execSync("git rev-parse --abbrev-ref HEAD", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "ignore"],
     }).trim();
+    if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+      throw new Error("Invalid git branch format");
+    }
+    return branch;
+
+    if (!VALID_BRANCH_REGEX.test(branch)) {
+      throw new Error("Invalid git branch format");
+    }
+    return branch;
   } catch {
     return "main";
   }
@@ -118,6 +129,14 @@ export async function checkForUpdates(options?: {
     "Murlidhar08/next-template";
   const repo = normalizeRepo(rawRepo);
   const branch = options?.branch || getCurrentBranch();
+  if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+    throw new Error("Invalid git branch format");
+  }
+
+  if (!VALID_BRANCH_REGEX.test(branch)) {
+    throw new Error("Invalid git branch name");
+  }
+
   const currentVersion = getLocalPackageVersion();
   const currentCommit = getCurrentCommit();
 
@@ -134,96 +153,124 @@ export async function checkForUpdates(options?: {
   let releaseTitle: string | undefined;
   let releaseNotes: string | undefined;
   let publishedAt: string | undefined;
-  let latestCommit = "";
+  let latestCommit: string | undefined;
 
-  // 1. Check GitHub latest release first
+  // 1. Check GitHub Releases
   try {
-    const releaseRes = await fetch(
+    const releasesRes = await fetch(
       `https://api.github.com/repos/${repo}/releases/latest`,
-      { headers, cache: "no-store" }
+      { headers, next: { revalidate: 300 } }
     );
-    if (releaseRes.ok) {
-      const releaseData = await releaseRes.json();
-      if (releaseData.tag_name) {
-        latestVersion = releaseData.tag_name.replace(/^v/, "");
-        releaseTitle = releaseData.name || releaseData.tag_name;
-        releaseNotes = releaseData.body;
-        publishedAt = releaseData.published_at;
+
+    if (releasesRes.ok) {
+      const release = await releasesRes.json();
+      if (release.tag_name) {
+        latestVersion = release.tag_name.replace(/^v/, "").trim();
+        releaseTitle = release.name || release.tag_name;
+        releaseNotes = release.body;
+        publishedAt = release.published_at;
       }
     }
   } catch {
-    // Ignore and fallback
+    // Continue
   }
 
-  // 2. If no release found, fetch remote package.json from raw GitHub
+  // 2. Check tags if no release found
   if (latestVersion === currentVersion) {
     try {
-      const rawPkgRes = await fetch(
-        `https://raw.githubusercontent.com/${repo}/${branch}/package.json`,
-        { headers: { "User-Agent": headers["User-Agent"] }, cache: "no-store" }
+      const tagsRes = await fetch(
+        `https://api.github.com/repos/${repo}/tags?per_page=1`,
+        { headers, next: { revalidate: 300 } }
       );
-      if (rawPkgRes.ok) {
-        const rawPkg = await rawPkgRes.json();
-        if (rawPkg.version) {
-          latestVersion = rawPkg.version;
+
+      if (tagsRes.ok) {
+        const tags = await tagsRes.json();
+        if (Array.isArray(tags) && tags.length > 0 && tags[0]?.name) {
+          latestVersion = tags[0].name.replace(/^v/, "").trim();
         }
       }
     } catch {
-      // Ignore
+      // Continue
     }
   }
 
-  // 3. Fetch latest commit SHA on the target branch
+  // 3. Fallback: package.json on target branch
+  if (latestVersion === currentVersion) {
+    try {
+      const rawPkgRes = await fetch(
+        `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(branch)}/package.json`,
+        { headers: { "User-Agent": "Next-Template-AutoUpdate/1.0" }, next: { revalidate: 300 } }
+      );
+
+      if (rawPkgRes.ok) {
+        const remotePkg = await rawPkgRes.json();
+        if (remotePkg.version) {
+          latestVersion = remotePkg.version;
+        }
+      }
+    } catch {
+      // Continue
+    }
+  }
+
+  // 4. Check latest commit SHA on target branch
   try {
-    const commitRes = await fetch(
-      `https://api.github.com/repos/${repo}/commits/${branch}`,
-      { headers, cache: "no-store" }
+    const branchRes = await fetch(
+      `https://api.github.com/repos/${repo}/commits/${encodeURIComponent(branch)}`,
+      { headers, next: { revalidate: 300 } }
     );
-    if (commitRes.ok) {
-      const commitData = await commitRes.json();
-      if (commitData.sha) {
-        latestCommit = commitData.sha.slice(0, 7);
-        if (!releaseTitle && commitData.commit?.message) {
-          releaseTitle = commitData.commit.message.split("\n")[0];
+
+    if (branchRes.ok) {
+      const commitData = await branchRes.json();
+      if (commitData?.sha) {
+        latestCommit = commitData.sha.substring(0, 7);
+        if (!publishedAt && commitData?.commit?.committer?.date) {
+          publishedAt = commitData.commit.committer.date;
         }
       }
     }
   } catch {
-    // Ignore
+    // Continue
   }
 
-  const hasVersionUpdate = compareSemver(currentVersion, latestVersion) > 0;
-  const hasCommitUpdate = Boolean(latestCommit && latestCommit !== currentCommit);
+  const semverComparison = compareSemver(currentVersion, latestVersion);
+  const hasVersionUpdate = semverComparison > 0;
+  const hasCommitUpdate =
+    Boolean(latestCommit) &&
+    currentCommit !== "unknown" &&
+    latestCommit !== currentCommit;
   const hasUpdate = hasVersionUpdate || hasCommitUpdate;
+  const updateAvailable = hasUpdate;
 
   return {
-    repo,
-    branch,
     currentVersion,
     latestVersion,
     currentCommit,
-    latestCommit: latestCommit || currentCommit,
+    updateAvailable,
     hasVersionUpdate,
     hasCommitUpdate,
     hasUpdate,
-    releaseTitle,
+    branch,
+    repo,
     releaseNotes,
+    releaseTitle,
     publishedAt,
-    lastCheckedAt: new Date().toISOString(),
+    checkedAt: new Date().toISOString(),
   };
 }
 
 /**
- * Runs a command and captures its output into the logs list.
+ * Runs a shell step synchronously and appends output to updater execution log.
  */
-function runStep(cmd: string, stepName: string, logs: string[]): string {
-  logs.push(`► [${stepName}] Starting: ${cmd}`);
+function runStep(command: string, stepName: string, logs: string[]): string {
+  logs.push(`► [${stepName}] Executing: ${command}`);
   try {
-    const output = execSync(cmd, {
+    const output = execSync(command, {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "pipe"],
-      timeout: 180000, // 3 minutes timeout per step
+      timeout: 180000, // 3 minutes timeout
     }).trim();
+
     if (output) {
       logs.push(output);
     }
@@ -257,26 +304,15 @@ export function scheduleServerRestart(delayMs = 2000): void {
       process.exit(0);
     }
 
-    // 3. Systemd / Kubernetes / Cloud Run / PaaS
-    if (process.env.KUBERNETES_SERVICE_HOST || process.env.SYSTEMD_EXEC_PID) {
-      console.log("[App Updater] Container/Systemd environment detected. Exiting for service restart...");
-      process.exit(0);
-    }
-
-    // 4. Standalone / Development Node process
+    // 3. Fallback: Spawn new process and exit current
     try {
       const isWindows = process.platform === "win32";
-      const cmd = process.env.npm_lifecycle_event
-        ? (isWindows ? "npm.cmd" : "npm")
-        : process.argv[0];
-      const args = process.env.npm_lifecycle_event
-        ? ["run", process.env.npm_lifecycle_event]
-        : process.argv.slice(1);
+      const cmd = isWindows ? "cmd.exe" : "npm";
+      const args = isWindows ? ["/c", "npm", "start"] : ["start"];
 
-      console.log(`[App Updater] Spawning new process: ${cmd} ${args.join(" ")}`);
       const child = spawn(cmd, args, {
         detached: true,
-        stdio: "inherit",
+        stdio: "ignore",
         shell: isWindows,
         cwd: process.cwd(),
         env: process.env,
@@ -303,8 +339,16 @@ export async function applyAppUpdate(options?: {
   const previousVersion = getLocalPackageVersion();
   const previousCommit = getCurrentCommit();
   const branch = options?.branch || getCurrentBranch();
-  const logs: string[] = [];
+  if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+    throw new Error("Invalid git branch format");
+  }
 
+  // Validate git branch to prevent command injection
+  if (!VALID_BRANCH_REGEX.test(branch)) {
+    throw new Error("Invalid git branch format");
+  }
+
+  const logs: string[] = [];
   logs.push(`Initiating application update on branch '${branch}'...`);
   logs.push(`Current state: v${previousVersion} (${previousCommit})`);
 
@@ -331,7 +375,7 @@ export async function applyAppUpdate(options?: {
   }
 
   try {
-    // 2. Git pull
+    // 2. Git pull safely with validated branch
     runStep(`git pull origin ${branch}`, "Git Pull", logs);
 
     // 3. Install npm dependencies
