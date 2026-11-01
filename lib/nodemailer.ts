@@ -1,7 +1,6 @@
 import { createTransport, SentMessageInfo } from "nodemailer";
 import { getAppConfig } from "./app-config";
-import { hasRole } from "./auth/permissions";
-import { getUserSession } from "./auth/auth";
+import { requirePermission } from "./auth/guard";
 import z from "zod";
 import { testSmtpSchema } from "./zod/email/smtpschema";
 import { getTestEmailHtml } from "./templates/email-test";
@@ -42,9 +41,9 @@ export async function verifySMTP(): Promise<{
 }
 
 interface sendMailProp {
-  sendTo: string
-  subject: string
-  htmlContent: string
+  sendTo: string;
+  subject: string;
+  htmlContent: string;
 }
 
 export async function sendMail({ sendTo, subject, htmlContent }: sendMailProp):
@@ -73,9 +72,8 @@ export async function sendMail({ sendTo, subject, htmlContent }: sendMailProp):
       success: true,
       messageId: info.messageId,
       data: info
-    }
-  }
-  catch (error: any) {
+    };
+  } catch (error: any) {
     console.error("SMTP send error:", error);
     return {
       success: false,
@@ -85,13 +83,9 @@ export async function sendMail({ sendTo, subject, htmlContent }: sendMailProp):
   }
 }
 
-// Custom config
+// Custom config test (RBAC guarded and free of circular dependencies)
 export async function testSmtpConfig(data: z.infer<typeof testSmtpSchema>) {
-  const session = await getUserSession();
-
-  if (!hasRole(session?.user?.role, "admin")) {
-    throw new Error("Unauthorized");
-  }
+  await requirePermission("config", "update");
 
   const validated = testSmtpSchema.parse(data);
 

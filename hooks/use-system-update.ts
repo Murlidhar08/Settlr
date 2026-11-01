@@ -1,8 +1,6 @@
 "use client";
 
 import {
-  useApplySystemUpdate,
-  useRestartApplication,
   useSystemUpdateStatus,
 } from "@/hooks/queries/admin-dashboard";
 import type { ApplyUpdateResult } from "@/types/admin-dashboard";
@@ -18,8 +16,6 @@ export function useSystemUpdate() {
     error: checkError,
   } = useSystemUpdateStatus();
 
-  const applyMutation = useApplySystemUpdate();
-  const restartMutation = useRestartApplication();
   const [updateResult, setUpdateResult] = useState<ApplyUpdateResult | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const [isLogsOpen, setIsLogsOpen] = useState(false);
@@ -94,65 +90,6 @@ export function useSystemUpdate() {
       );
     }
   };
-
-  /**
-   * Applies the update directly from the application and restarts the server.
-   */
-  const handleApplyUpdate = async () => {
-    try {
-      setIsConfirmOpen(false);
-      toast.loading("Applying update: pulling commits, installing dependencies, and generating schema...", {
-        id: "apply-update",
-        duration: 180000,
-      });
-
-      const result = await applyMutation.mutateAsync({ restart: true });
-      setUpdateResult(result);
-
-      if (result.success) {
-        toast.success(
-          `Update complete! Updated to v${result.updatedVersion} (${result.updatedCommit}).`,
-          {
-            id: "apply-update",
-            duration: 6000,
-          }
-        );
-
-        if (result.restarting) {
-          await pollForServerRestart();
-        } else {
-          setIsLogsOpen(true);
-        }
-      } else {
-        toast.error(result.message || "Update encountered an error.", {
-          id: "apply-update",
-        });
-      }
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to apply system update",
-        { id: "apply-update" }
-      );
-    }
-  };
-
-  /**
-   * Triggers a manual application restart.
-   */
-  const handleManualRestart = async () => {
-    try {
-      toast.loading("Scheduling application restart...", { id: "manual-restart" });
-      await restartMutation.mutateAsync();
-      toast.dismiss("manual-restart");
-      await pollForServerRestart();
-    } catch (err) {
-      toast.error(
-        err instanceof Error ? err.message : "Failed to trigger server restart",
-        { id: "manual-restart" }
-      );
-    }
-  };
-
   const hasUpdate = Boolean(status?.hasUpdate);
   const isUpToDate = Boolean(status && !status.hasUpdate);
 
@@ -160,15 +97,12 @@ export function useSystemUpdate() {
     status,
     isLoading,
     isChecking,
-    isUpdating: applyMutation.isPending,
     isRestarting,
     isUpToDate,
     hasUpdate,
     updateResult,
     checkError,
     handleCheckUpdates,
-    handleApplyUpdate,
-    handleManualRestart,
     isConfirmOpen,
     setIsConfirmOpen,
     isLogsOpen,

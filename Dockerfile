@@ -43,7 +43,7 @@ FROM node:24-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Copy necessary files for runtime prisma generation
+# Copy necessary files for runtime
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/package-lock.json ./
 COPY --from=builder /app/public ./public
@@ -59,10 +59,14 @@ COPY --from=prod-deps /app/node_modules ./node_modules
 COPY --from=builder /app/resources/scripts/docker-bootstrap.sh /usr/local/bin/bootstrap.sh
 RUN sed -i 's/\r$//' /usr/local/bin/bootstrap.sh && chmod +x /usr/local/bin/bootstrap.sh
 
+# Ensure uploads directory exists with non-root node ownership
+RUN mkdir -p /app/uploads && chown -R node:node /app
+
+USER node
+
 EXPOSE 3000
 ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 
-# Logic: Generate prisma command then start next js application server
 ENTRYPOINT ["bootstrap.sh"]
 CMD ["node", "server.js"]

@@ -163,6 +163,16 @@ model Passkey {
   @@map("passkey")
 }
 
+model RateLimit {
+  id          String @id
+  key         String
+  count       Int
+  lastRequest BigInt
+
+  @@unique([key])
+  @@map("rate_limit")
+}
+
 // Application settings tables
 
 model UserSettings {

@@ -14,14 +14,19 @@ const setupSchema = z.object({
 });
 
 export async function setupAdmin(formData: FormData) {
-  // 1. Check if users exist
-  const userCount = await prisma.user.count();
-  if (userCount > 0) {
-    redirect("/login");
-  }
-
   const rawData = Object.fromEntries(formData.entries());
   const validatedData = setupSchema.parse(rawData);
+
+  // M-8: Acquire PostgreSQL transaction advisory lock to prevent first-run setup race conditions
+  const canProceed = await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(849204)`;
+    const userCount = await tx.user.count();
+    return userCount === 0;
+  });
+
+  if (!canProceed) {
+    redirect("/login");
+  }
 
   // 2. Create the user using Better Auth to handle password hashing
   const user = await auth.api.signUpEmail({
@@ -34,11 +39,10 @@ export async function setupAdmin(formData: FormData) {
   });
 
   if (!user) {
-    throw new Error("Failed to create user");
+    throw new Error("Failed to create admin user");
   }
 
-  // 3. Update the user to be admin and verified
-  // We use direct prisma update because we want to bypass the verification flow for the first admin
+  // 3. Update the user to be admin, verified, and approved
   await prisma.user.update({
     where: { id: user.user.id },
     data: {
@@ -48,7 +52,5 @@ export async function setupAdmin(formData: FormData) {
     },
   });
 
-  // Default business and accounts are created by the auth hook in auth.ts
-  // Redirect to login after successful setup
   redirect("/login");
 }

@@ -6,9 +6,7 @@ import { envServer } from "@/lib/env.server";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import {
-  applyAppUpdate,
   checkForUpdates,
-  scheduleServerRestart,
 } from "@/lib/system/app-updater";
 import type {
   AdminDashboardSummary,
@@ -376,46 +374,6 @@ export async function checkSystemUpdateAction(): Promise<{
   return safeAction(async () => {
     await requirePermission("config", "read");
     return checkForUpdates();
-  });
-}
-
-/**
- * Applies the system update directly from the application and schedules a restart.
- */
-export async function applySystemUpdateAction(options?: {
-  restart?: boolean;
-}): Promise<{
-  success: boolean;
-  data?: ApplyUpdateResult;
-  error?: string;
-}> {
-  return safeAction(async () => {
-    await requirePermission("config", "update");
-    const result = await applyAppUpdate({
-      restart: options?.restart ?? true,
-    });
-    if (!result.success) {
-      throw new Error(result.message || "Failed to complete update process.");
-    }
-    return result;
-  });
-}
-
-/**
- * Triggers a standalone server restart.
- */
-export async function restartApplicationAction(): Promise<{
-  success: boolean;
-  data?: { scheduled: boolean; message: string };
-  error?: string;
-}> {
-  return safeAction(async () => {
-    await requirePermission("config", "update");
-    scheduleServerRestart(1500);
-    return {
-      scheduled: true,
-      message: "Server restart scheduled in 1.5 seconds.",
-    };
   });
 }
 

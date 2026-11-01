@@ -30,6 +30,20 @@ export const auth = betterAuth({
     envServer.BETTER_AUTH_URL,
     ...(envServer.BETTER_AUTH_TRUSTED_ORIGINS ? envServer.BETTER_AUTH_TRUSTED_ORIGINS.split(",") : []),
   ],
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    storage: "database",
+    modelName: "rateLimit",
+    customRules: {
+      "/sign-in": { window: 60, max: 5 },
+      "/sign-up": { window: 60, max: 5 },
+      "/two-factor": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 5 },
+      "/reset-password": { window: 60, max: 5 },
+    },
+  },
 
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -89,6 +103,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
     // Send password reset mail
     sendResetPassword: async ({ user, url }) => {
       try {
@@ -117,29 +132,15 @@ export const auth = betterAuth({
     },
 
     // Send password reset successfully mail
-    onPasswordReset: async ({ user }, request) => {
+    onPasswordReset: async ({ user }) => {
       try {
-        const revokeHeader = request?.headers?.get("x-revoke-all-sessions") || request?.headers?.get("x-revoke-other-sessions");
-        let shouldRevoke = revokeHeader === "true";
-        if (!shouldRevoke && request?.url) {
-          try {
-            const url = new URL(request.url, envServer.BETTER_AUTH_URL);
-            if (url.searchParams.get("revokeSessions") === "true") {
-              shouldRevoke = true;
-            }
-          } catch {
-            // ignore URL parse errors
-          }
-        }
-
-        if (shouldRevoke) {
-          await prisma.session.deleteMany({
-            where: {
-              userId: user.id,
-            },
-          });
-          console.log(`Successfully revoked all sessions for user ${user.email} on password reset.`);
-        }
+        // M-1: Unconditionally revoke all sessions for this user on password reset
+        await prisma.session.deleteMany({
+          where: {
+            userId: user.id,
+          },
+        });
+        console.log(`Successfully revoked all sessions for user ${user.email} on password reset.`);
 
         const appUrl = envServer.BETTER_AUTH_URL;
         const emailHtml = getPasswordResetSuccessEmailHtml(user.email, appUrl);
@@ -366,4 +367,3 @@ export const getUserSession = async () => {
 
   return session;
 };
-
