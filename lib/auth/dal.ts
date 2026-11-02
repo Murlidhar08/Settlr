@@ -3,6 +3,7 @@ import { requirePermission, Resource, PermissionsStatement } from "./guard";
 import { UnauthorizedError, ForbiddenError } from "@/lib/errors";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { hasAnyRole, Role } from "./permissions";
+import { prisma } from "@/lib/prisma/prisma";
 
 /**
  * Data Access Layer (DAL) Session Guard.
@@ -74,4 +75,35 @@ export async function requireRoles(allowedRoles: (Role | string)[]) {
   }
 
   return session;
+}
+
+/**
+ * N-4: Enforces the last-admin invariant inside an action or transaction.
+ * Ensures that removing, demoting, or disabling the target user will not
+ * leave the application with 0 active approved administrators.
+ */
+export async function assertNotLastAdmin(targetUserId: string, tx?: any) {
+  const db = tx || prisma;
+
+  const target = await db.user.findUnique({
+    where: { id: targetUserId },
+    select: { id: true, role: true, status: true, banned: true },
+  });
+
+  if (!target || !target.role.includes("admin")) {
+    return;
+  }
+
+  const otherActiveAdmins = await db.user.count({
+    where: {
+      id: { not: targetUserId },
+      role: { contains: "admin" },
+      status: UserStatus.approved,
+      banned: false,
+    },
+  });
+
+  if (otherActiveAdmins === 0) {
+    throw new ForbiddenError("Cannot remove, demote, or disable the last active administrator");
+  }
 }

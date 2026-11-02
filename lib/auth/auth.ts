@@ -5,6 +5,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin, customSession, haveIBeenPwned, lastLoginMethod, multiSession, twoFactor, username, captcha } from "better-auth/plugins";
 import { redirect } from "next/navigation";
+import crypto from "crypto";
 
 // Lib
 import { sendMail } from "../nodemailer";
@@ -20,6 +21,16 @@ import { getDeleteAccountEmailHtml } from "../templates/email-delete-account";
 import { getPasswordResetSuccessEmailHtml } from "../templates/email-password-reseted";
 import { getResetPasswordEmailHtml } from "../templates/email-reset-password";
 import { getVerificationEmailHtml } from "../templates/email-verification";
+
+/**
+ * Generates an HMAC signature for authenticating internal admin setup calls.
+ */
+export const getSetupSignature = () => {
+  return crypto
+    .createHmac("sha256", envServer.BETTER_AUTH_SECRET)
+    .update("internal-admin-setup")
+    .digest("hex");
+};
 
 export const auth = betterAuth({
   appName: envServer.NEXT_PUBLIC_APP_NAME,
@@ -37,11 +48,25 @@ export const auth = betterAuth({
     storage: "database",
     modelName: "rateLimit",
     customRules: {
-      "/sign-in": { window: 60, max: 5 },
-      "/sign-up": { window: 60, max: 5 },
-      "/two-factor": { window: 60, max: 5 },
-      "/forget-password": { window: 60, max: 5 },
+      "/sign-in/*": { window: 60, max: 5 },
+      "/sign-up/*": { window: 60, max: 5 },
+      "/two-factor/*": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 3 },
       "/reset-password": { window: 60, max: 5 },
+      "/request-password-reset": { window: 60, max: 3 },
+    },
+  },
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"],
+      trustedProxies: [
+        "127.0.0.1",
+        "::1",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        ...(envServer.TRUSTED_PROXIES ? envServer.TRUSTED_PROXIES.split(",").map((s) => s.trim()).filter(Boolean) : []),
+      ],
     },
   },
 
@@ -329,13 +354,30 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (_user, context) => {
+          const setupHeader = context?.headers?.get("x-setup-token");
+          const isSetupRequest = setupHeader === getSetupSignature();
+
+          if (!isSetupRequest) {
+            const adminCount = await prisma.user.count({
+              where: {
+                role: { contains: "admin" },
+              },
+            });
+
+            if (adminCount === 0) {
+              // N-3: Refuse public sign-up when no admin exists to prevent squatting and locking out setup
+              return false;
+            }
+          }
+        },
         after: async (user) => {
-          // Peform any action after user is added to database
+          // Perform any action after user is added to database
           console.log(`New user created: ${user.email}`);
         },
       },
-    }
-  }
+    },
+  },
 });
 
 export type Auth = typeof auth;

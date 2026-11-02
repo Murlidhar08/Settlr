@@ -106,11 +106,13 @@ export function DocumentCard({ document, isEditable = false }: DocumentCardProps
                     </div>
 
                     <DropdownMenu>
-                        <DropdownMenuTrigger>
-                            <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
-                                <MoreVertical size={20} />
-                            </Button>
-                        </DropdownMenuTrigger>
+                        <DropdownMenuTrigger
+                            render={
+                                <Button variant="ghost" size="icon" className="rounded-xl h-10 w-10 hover:bg-muted opacity-0 group-hover:opacity-100 transition-opacity">
+                                    <MoreVertical size={20} />
+                                </Button>
+                            }
+                        />
                         <DropdownMenuContent align="end" className="rounded-2xl min-w-45 p-2 bg-card/95 backdrop-blur-md shadow-xl border-border/50">
                             <DropdownMenuItem onClick={handlePreview} className="flex items-center gap-3 px-4 py-3 rounded-xl cursor-pointer hover:bg-primary/5 text-sm font-bold transition-colors">
                                 <Maximize2 size={16} className="text-primary" />

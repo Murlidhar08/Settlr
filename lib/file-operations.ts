@@ -46,6 +46,35 @@ export const getRelativePath = (absolutePath: string) => {
 };
 
 /**
+ * Validates file buffer against known file format magic bytes.
+ * Prevents disguised executable uploads (e.g. .exe renamed to .png).
+ */
+export function validateMagicBytes(buffer: Buffer, extension: string): boolean {
+    const ext = extension.toLowerCase().replace(/^\./, "");
+    if (buffer.length < 4) return false;
+
+    switch (ext) {
+        case "png":
+            return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+        case "jpg":
+        case "jpeg":
+            return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+        case "webp":
+            if (buffer.length < 12) return false;
+            return (
+                buffer.toString("ascii", 0, 4) === "RIFF" &&
+                buffer.toString("ascii", 8, 12) === "WEBP"
+            );
+        case "gif":
+            return buffer.toString("ascii", 0, 4) === "GIF8";
+        case "pdf":
+            return buffer.toString("ascii", 0, 4) === "%PDF";
+        default:
+            return false;
+    }
+}
+
+/**
  * Uploads a file to a specific destination directory with containment guarantees.
  */
 export const uploadFile = async (file: File, destinationDir: string, fileName?: string): Promise<string> => {
