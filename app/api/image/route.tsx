@@ -132,14 +132,14 @@ function parseDimensions(
   // Override width/height if explicitly provided as numbers
   if (widthParam) {
     const parsedWidth = parseInt(widthParam, 10);
-    if (!isNaN(parsedWidth) && parsedWidth >= 200 && parsedWidth <= 3000) {
+    if (!isNaN(parsedWidth) && parsedWidth >= 200 && parsedWidth <= 1500) {
       width = parsedWidth;
     }
   }
 
   if (heightParam) {
     const parsedHeight = parseInt(heightParam, 10);
-    if (!isNaN(parsedHeight) && parsedHeight >= 200 && parsedHeight <= 3000) {
+    if (!isNaN(parsedHeight) && parsedHeight >= 200 && parsedHeight <= 1500) {
       height = parsedHeight;
     }
   }
@@ -193,17 +193,18 @@ export async function GET(req: NextRequest) {
       searchParams.get("title") ||
       searchParams.get("appName") ||
       defaultBrand
-    ).trim();
+    ).trim().slice(0, 80);
 
     const description = (
       searchParams.get("description") ||
       searchParams.get("appDescription") ||
       searchParams.get("desc") ||
       defaultDescription
-    ).trim();
+    ).trim().slice(0, 250);
 
     // Extract other customization parameters
-    const badge = searchParams.get("badge") || searchParams.get("tagline") || "Next.js 16 • React 19";
+    const rawBadge = searchParams.get("badge") || searchParams.get("tagline") || "Next.js 16 • React 19";
+    const badge = rawBadge.trim().slice(0, 50);
     const showBadge = badge !== "none" && badge !== "false" && badge.length > 0;
     const theme = searchParams.get("theme") === "light" ? "light" : "dark";
     const showLogo = searchParams.get("logo") !== "false";
@@ -229,12 +230,13 @@ export async function GET(req: NextRequest) {
     } catch {
       // Ignore URL parsing fallback
     }
-    const domain = searchParams.get("domain") || searchParams.get("url") || fallbackDomain;
+    const rawDomain = searchParams.get("domain") || searchParams.get("url") || fallbackDomain;
+    const domain = rawDomain.trim().slice(0, 60);
 
     // Extract optional tags
     const tagsParam = searchParams.get("tags") || searchParams.get("features");
     const tags = tagsParam
-      ? tagsParam.split(",").map((t) => t.trim()).filter(Boolean)
+      ? tagsParam.split(",").map((t) => t.trim().slice(0, 30)).filter(Boolean).slice(0, 5)
       : ["Better Auth", "Prisma 7", "Tailwind 4", "TypeScript"];
 
     // Retrieve application logo base64 if enabled

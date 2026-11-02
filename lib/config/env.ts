@@ -1,6 +1,14 @@
 import { z } from "zod";
 
 /**
+ * Known placeholder / development secrets that must never be used in production.
+ */
+const KNOWN_DEFAULT_SECRETS = new Set([
+  "lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ",
+  "your-secret-key-must-be-changed",
+]);
+
+/**
  * Server-side Environment Variables Schema
  */
 const serverEnvSchema = z.object({
@@ -19,6 +27,8 @@ const serverEnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 characters long"),
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
+  TRUSTED_PROXIES: z.string().optional(),
+  SETUP_TOKEN: z.string().optional(),
 
   // OAuth Providers (Optional)
   GOOGLE_CLIENT_ID: z.string().optional(),
@@ -60,6 +70,13 @@ function validateServerEnv(): ServerEnv {
       .join("\n");
 
     const message = `❌ Invalid or missing Server Environment Variables:\n${formattedErrors}\n\nPlease check your .env or .env.local file.`;
+    console.error(message);
+    throw new Error(message);
+  }
+
+  // Reject known default secrets in production
+  if (result.data.NODE_ENV === "production" && KNOWN_DEFAULT_SECRETS.has(result.data.BETTER_AUTH_SECRET)) {
+    const message = "❌ Insecure BETTER_AUTH_SECRET: You are using a known public default secret in production. Please generate a unique random secret.";
     console.error(message);
     throw new Error(message);
   }

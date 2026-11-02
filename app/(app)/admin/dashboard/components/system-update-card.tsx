@@ -30,15 +30,12 @@ export function SystemUpdateCard() {
     status,
     isLoading,
     isChecking,
-    isUpdating,
     isRestarting,
     isUpToDate,
     hasUpdate,
     updateResult,
     checkError,
     handleCheckUpdates,
-    handleApplyUpdate,
-    handleManualRestart,
     isConfirmOpen,
     setIsConfirmOpen,
     isLogsOpen,
@@ -92,7 +89,7 @@ export function SystemUpdateCard() {
               variant="outline"
               size="sm"
               onClick={handleCheckUpdates}
-              disabled={isChecking || isUpdating}
+              disabled={isChecking}
               className="h-9 px-3 text-xs font-semibold rounded-xl border-border/60 hover:bg-muted/60 transition-all cursor-pointer"
             >
               <RefreshCw
@@ -103,27 +100,6 @@ export function SystemUpdateCard() {
               />
               {isChecking ? "Checking..." : "Check for Updates"}
             </Button>
-
-            {hasUpdate && (
-              <Button
-                size="sm"
-                onClick={() => setIsConfirmOpen(true)}
-                disabled={isUpdating}
-                className="h-9 px-3.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
-              >
-                {isUpdating ? (
-                  <>
-                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                    Update Now
-                  </>
-                )}
-              </Button>
-            )}
           </div>
         </div>
 
@@ -165,28 +141,10 @@ export function SystemUpdateCard() {
                 <span className="text-sm font-bold text-foreground">
                   {status?.hasVersionUpdate
                     ? `New version available: v${status.currentVersion} → v${status.latestVersion}`
-                    : `New commits available on branch ${status?.branch} (${status?.currentCommit} → ${status?.latestCommit})`}
+                    : `New commits available on branch ${status?.branch} (${status?.currentCommit})`}
                 </span>
               </div>
             </div>
-
-            <Button
-              onClick={() => setIsConfirmOpen(true)}
-              disabled={isUpdating || isRestarting}
-              className="rounded-xl px-4 py-2 text-xs font-bold bg-primary text-primary-foreground shadow-sm shrink-0 cursor-pointer self-start md:self-auto"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Updating Application...
-                </>
-              ) : (
-                <>
-                  <Sparkles className="h-3.5 w-3.5 mr-1.5" />
-                  Apply Update & Restart
-                </>
-              )}
-            </Button>
           </div>
         ) : isUpToDate ? (
           <div className="p-3.5 rounded-xl border border-emerald-500/20 bg-emerald-500/5 dark:bg-emerald-500/10 flex items-center justify-between flex-wrap gap-2 text-xs">
@@ -196,9 +154,9 @@ export function SystemUpdateCard() {
                 Your application is up to date!
               </span>
             </div>
-            {status?.lastCheckedAt && (
+            {status?.checkedAt && (
               <span className="text-[11px] text-muted-foreground font-mono">
-                Last checked: {new Date(status.lastCheckedAt).toLocaleTimeString()}
+                Last checked: {new Date(status.checkedAt).toLocaleTimeString()}
               </span>
             )}
           </div>
@@ -221,71 +179,6 @@ export function SystemUpdateCard() {
           </div>
         ) : null}
       </div>
-
-      {/* Confirmation Dialog */}
-      <Dialog open={isConfirmOpen} onOpenChange={setIsConfirmOpen}>
-        <DialogContent className="max-w-md rounded-2xl">
-          <DialogHeader>
-            <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-2">
-              <Sparkles className="h-5 w-5" />
-            </div>
-            <DialogTitle className="text-base font-bold">
-              Confirm Application Update & Restart
-            </DialogTitle>
-            <DialogDescription className="text-xs text-muted-foreground space-y-2 pt-1 text-left">
-              <span>
-                You are about to update and restart this application directly from the repository.
-              </span>
-              <div className="p-3 rounded-xl bg-muted/40 border border-border/50 text-[11px] font-mono space-y-1">
-                <div>Repo: {status?.repo}</div>
-                <div>Branch: {status?.branch}</div>
-                <div>
-                  Version: v{status?.currentVersion} → v{status?.latestVersion}
-                </div>
-                <div>
-                  Commit: {status?.currentCommit} → {status?.latestCommit}
-                </div>
-              </div>
-              <span className="block pt-1 text-muted-foreground">
-                This will automatically:
-                <ul className="list-disc list-inside mt-1 space-y-0.5">
-                  <li>Pull latest commits from origin</li>
-                  <li>Install dependencies (`npm install`)</li>
-                  <li>Regenerate Prisma client and apply migrations</li>
-                  <li>Restart the application server and auto-reconnect</li>
-                </ul>
-              </span>
-            </DialogDescription>
-          </DialogHeader>
-
-          <DialogFooter className="mt-4 gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsConfirmOpen(false)}
-              disabled={isUpdating || isRestarting}
-              className="rounded-xl text-xs cursor-pointer"
-            >
-              Cancel
-            </Button>
-            <Button
-              size="sm"
-              onClick={handleApplyUpdate}
-              disabled={isUpdating || isRestarting}
-              className="rounded-xl text-xs font-bold bg-primary text-primary-foreground cursor-pointer"
-            >
-              {isUpdating ? (
-                <>
-                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Yes, Update & Restart"
-              )}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* Execution Logs Dialog */}
       <Dialog open={isLogsOpen} onOpenChange={setIsLogsOpen}>
@@ -348,16 +241,6 @@ export function SystemUpdateCard() {
           </div>
 
           <DialogFooter className="mt-4 gap-2 flex-wrap sm:flex-nowrap">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleManualRestart}
-              disabled={isRestarting}
-              className="rounded-xl text-xs font-semibold cursor-pointer"
-            >
-              <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
-              {isRestarting ? "Restarting..." : "Restart Server"}
-            </Button>
             {updateResult?.success && (
               <Button
                 variant="outline"

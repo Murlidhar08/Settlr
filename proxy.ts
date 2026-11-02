@@ -7,14 +7,41 @@ import type { NextRequest } from "next/server";
  * - MIME-type confusion (X-Content-Type-Options)
  * - Referrer leakage (Referrer-Policy)
  * - Browser feature restrictions (Permissions-Policy)
+ * - HSTS (Strict-Transport-Security)
+ * - Content Security Policy (CSP)
  */
+const isDev = process.env.NODE_ENV !== "production";
+
+const CSP_POLICY = [
+  "default-src 'self'",
+  // Next.js & Webpack HMR/Fast Refresh in development require 'unsafe-eval' for source maps
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://cdn.discordapp.com",
+  `connect-src 'self'${isDev ? " ws: wss:" : ""} https://challenges.cloudflare.com`,
+  "frame-src 'self' https://challenges.cloudflare.com",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "SAMEORIGIN",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-  "X-XSS-Protection": "1; mode=block",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Content-Security-Policy": CSP_POLICY,
 };
+
+/**
+ * Escapes regex special characters and translates wildcard patterns safely.
+ */
+function wildcardToRegex(pattern: string): RegExp {
+  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*");
+  return new RegExp(`^${escaped}$`);
+}
 
 /**
  * Validates Origin/Referer header on state-changing API requests to prevent CSRF/XSRF attacks.
@@ -33,35 +60,32 @@ function isValidOrigin(request: NextRequest): boolean {
     ...(process.env.BETTER_AUTH_TRUSTED_ORIGINS ? process.env.BETTER_AUTH_TRUSTED_ORIGINS.split(",") : []),
   ].filter(Boolean) as string[];
 
-  // If Origin header is present, check against allowed list
-  if (origin) {
+  const matchesAllowed = (candidate: string) => {
     return allowedOrigins.some((allowed) => {
       if (allowed.includes("*")) {
-        const pattern = new RegExp("^" + allowed.replace(/\*/g, ".*") + "$");
-        return pattern.test(origin);
+        return wildcardToRegex(allowed).test(candidate);
       }
-      return origin === allowed;
+      return candidate === allowed;
     });
+  };
+
+  // If Origin header is present, check against allowed list
+  if (origin) {
+    return matchesAllowed(origin);
   }
 
-  // If Referer is present instead, ensure it starts with an allowed origin
+  // If Referer is present instead, ensure it matches an allowed origin
   if (referer) {
     try {
       const refererOrigin = new URL(referer).origin;
-      return allowedOrigins.some((allowed) => {
-        if (allowed.includes("*")) {
-          const pattern = new RegExp("^" + allowed.replace(/\*/g, ".*") + "$");
-          return pattern.test(refererOrigin);
-        }
-        return refererOrigin === allowed;
-      });
+      return matchesAllowed(refererOrigin);
     } catch {
       return false;
     }
   }
 
-  // Same-origin safe fallback: for GET/HEAD, requests without origin/referer are allowed.
-  return true;
+  // Fail closed for mutating state-changing methods without origin or referer
+  return false;
 }
 
 /**

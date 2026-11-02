@@ -35,9 +35,28 @@ export const authClient = createAuthClient({
 export * from "./permissions";
 
 /**
+ * Safely purge client-side service worker caches upon logout (N-8)
+ */
+export const purgeClientCaches = async () => {
+  if (typeof window !== "undefined" && "caches" in window) {
+    try {
+      const cacheNames = await window.caches.keys();
+      await Promise.all(cacheNames.map((name) => window.caches.delete(name)));
+    } catch {
+      // Ignore cache deletion errors
+    }
+  }
+};
+
+/**
  * Re-export helpers for convenience
  */
-export const { signIn, signUp, signOut, useSession, getSession, resetPassword } = authClient
+export const { signIn, signUp, useSession, getSession, resetPassword } = authClient;
+
+export const signOut: typeof authClient.signOut = async (options) => {
+  await purgeClientCaches();
+  return authClient.signOut(options);
+};
 
 /**
  * Social providers

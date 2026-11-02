@@ -8,20 +8,29 @@ services:
       NEXT_PUBLIC_APP_DESCRIPTION: "Settlr for managing personal finance"
       ADVANCE_PASS_CHECK: "true"
 
-      # Better Auth
-      BETTER_AUTH_SECRET: "lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ"
-      BETTER_AUTH_URL: "http://localhost:3000"
-      BETTER_AUTH_TRUSTED_ORIGINS: "https://example.com,https://*.example.com"
+      # Better Auth (C-5: Require unique random secret)
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:?BETTER_AUTH_SECRET environment variable is required}"
+      BETTER_AUTH_URL: "${BETTER_AUTH_URL:-http://localhost:3000}"
+      BETTER_AUTH_TRUSTED_ORIGINS: "${BETTER_AUTH_TRUSTED_ORIGINS:-}"
 
       # DATABASE
-      DATABASE_URL: "postgresql://[USERNAME]:[PASSWORD]@[HOST]:[PORT]/settlr?schema=public"
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL is required}"
+
+      # Email Service
+      SMTP_HOST: "${SMTP_HOST:-mail.example.com}"
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: "${SMTP_USER:-user@example.com}"
+      SMTP_PASS: "${SMTP_PASS:-}"
+      SMTP_SECURE: ${SMTP_SECURE:-false}
+      FROM_EMAIL: "${FROM_EMAIL:-user <user@example.com>}"
+
     ports:
       - "3000:3000"
+    volumes:
+      - uploads_data:/app/uploads
     networks:
       - prisma-network
     restart: unless-stopped
-    volumes:
-      - uploads:/app/uploads
     healthcheck:
       test: [ "CMD-SHELL", "wget --no-verbose --tries=1 --spider http://127.0.0.1:3000/api/health || exit 1" ]
       interval: 10s
@@ -29,16 +38,17 @@ services:
       retries: 5
       start_period: 30s
 
+  # C-5: Bound strictly to localhost
   prisma-studio:
     image: chavda2772/prisma-studio:latest
     container_name: settlr_prisma_studio
     restart: always
     ports:
-      - "5555:5555"
+      - "127.0.0.1:5555:5555"
     environment:
-      DATABASE_URL: "postgresql://settlr_admin:Settlr@123@postgres_db:5432/settlr?schema=public"
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL is required}"
       STUDIO_PORT: 5555
-      STUDIO_HOST: "0.0.0.0"
+      STUDIO_HOST: "127.0.0.1"
       STUDIO_BROWSER: "none"
       AUTO_INTROSPECT: ${AUTO_INTROSPECT:-true}
     networks:
@@ -52,4 +62,4 @@ networks:
     name: prisma-network
 
 volumes:
-  uploads:
+  uploads_data:

@@ -1,7 +1,9 @@
-import type { ApplyUpdateResult, SystemUpdateStatus } from "@/types/admin-dashboard";
-import { execSync, spawn } from "node:child_process";
+import type { SystemUpdateStatus } from "@/types/admin-dashboard";
+import { execSync } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
+
+const VALID_BRANCH_REGEX = /^[a-zA-Z0-9._/-]+$/;
 
 /**
  * Parses semver string into [major, minor, patch] numbers.
@@ -61,14 +63,23 @@ export function getGitRemoteRepo(): string | null {
 }
 
 /**
- * Gets the current active git branch name.
+ * Gets the current active git branch name with regex validation.
  */
 export function getCurrentBranch(): string {
   try {
-    return execSync("git rev-parse --abbrev-ref HEAD", {
+    const branch = execSync("git rev-parse --abbrev-ref HEAD", {
       encoding: "utf8",
       stdio: ["pipe", "pipe", "ignore"],
     }).trim();
+    if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+      throw new Error("Invalid git branch format");
+    }
+    return branch;
+
+    if (!VALID_BRANCH_REGEX.test(branch)) {
+      throw new Error("Invalid git branch format");
+    }
+    return branch;
   } catch {
     return "main";
   }
@@ -118,6 +129,14 @@ export async function checkForUpdates(options?: {
     "Murlidhar08/next-template";
   const repo = normalizeRepo(rawRepo);
   const branch = options?.branch || getCurrentBranch();
+  if (!/^[a-zA-Z0-9._/-]+$/.test(branch)) {
+    throw new Error("Invalid git branch format");
+  }
+
+  if (!VALID_BRANCH_REGEX.test(branch)) {
+    throw new Error("Invalid git branch name");
+  }
+
   const currentVersion = getLocalPackageVersion();
   const currentCommit = getCurrentCommit();
 
@@ -134,282 +153,108 @@ export async function checkForUpdates(options?: {
   let releaseTitle: string | undefined;
   let releaseNotes: string | undefined;
   let publishedAt: string | undefined;
-  let latestCommit = "";
+  let latestCommit: string | undefined;
 
-  // 1. Check GitHub latest release first
+  // 1. Check GitHub Releases
   try {
-    const releaseRes = await fetch(
+    const releasesRes = await fetch(
       `https://api.github.com/repos/${repo}/releases/latest`,
-      { headers, cache: "no-store" }
+      { headers, next: { revalidate: 300 } }
     );
-    if (releaseRes.ok) {
-      const releaseData = await releaseRes.json();
-      if (releaseData.tag_name) {
-        latestVersion = releaseData.tag_name.replace(/^v/, "");
-        releaseTitle = releaseData.name || releaseData.tag_name;
-        releaseNotes = releaseData.body;
-        publishedAt = releaseData.published_at;
+
+    if (releasesRes.ok) {
+      const release = await releasesRes.json();
+      if (release.tag_name) {
+        latestVersion = release.tag_name.replace(/^v/, "").trim();
+        releaseTitle = release.name || release.tag_name;
+        releaseNotes = release.body;
+        publishedAt = release.published_at;
       }
-    }
-  } catch {
-    // Ignore and fallback
-  }
-
-  // 2. If no release found, fetch remote package.json from raw GitHub
-  if (latestVersion === currentVersion) {
-    try {
-      const rawPkgRes = await fetch(
-        `https://raw.githubusercontent.com/${repo}/${branch}/package.json`,
-        { headers: { "User-Agent": headers["User-Agent"] }, cache: "no-store" }
-      );
-      if (rawPkgRes.ok) {
-        const rawPkg = await rawPkgRes.json();
-        if (rawPkg.version) {
-          latestVersion = rawPkg.version;
-        }
-      }
-    } catch {
-      // Ignore
-    }
-  }
-
-  // 3. Fetch latest commit SHA on the target branch
-  try {
-    const commitRes = await fetch(
-      `https://api.github.com/repos/${repo}/commits/${branch}`,
-      { headers, cache: "no-store" }
-    );
-    if (commitRes.ok) {
-      const commitData = await commitRes.json();
-      if (commitData.sha) {
-        latestCommit = commitData.sha.slice(0, 7);
-        if (!releaseTitle && commitData.commit?.message) {
-          releaseTitle = commitData.commit.message.split("\n")[0];
-        }
-      }
-    }
-  } catch {
-    // Ignore
-  }
-
-  const hasVersionUpdate = compareSemver(currentVersion, latestVersion) > 0;
-  const hasCommitUpdate = Boolean(latestCommit && latestCommit !== currentCommit);
-  const hasUpdate = hasVersionUpdate || hasCommitUpdate;
-
-  return {
-    repo,
-    branch,
-    currentVersion,
-    latestVersion,
-    currentCommit,
-    latestCommit: latestCommit || currentCommit,
-    hasVersionUpdate,
-    hasCommitUpdate,
-    hasUpdate,
-    releaseTitle,
-    releaseNotes,
-    publishedAt,
-    lastCheckedAt: new Date().toISOString(),
-  };
-}
-
-/**
- * Runs a command and captures its output into the logs list.
- */
-function runStep(cmd: string, stepName: string, logs: string[]): string {
-  logs.push(`► [${stepName}] Starting: ${cmd}`);
-  try {
-    const output = execSync(cmd, {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "pipe"],
-      timeout: 180000, // 3 minutes timeout per step
-    }).trim();
-    if (output) {
-      logs.push(output);
-    }
-    logs.push(`✔ [${stepName}] Completed successfully.`);
-    return output;
-  } catch (err: unknown) {
-    const execErr = err as { stdout?: string; stderr?: string; message?: string };
-    const errOutput = (execErr.stderr || execErr.stdout || execErr.message || String(err)).trim();
-    logs.push(`✖ [${stepName}] Failed: ${errOutput}`);
-    throw new Error(`Step '${stepName}' failed: ${errOutput}`);
-  }
-}
-
-/**
- * Schedules a graceful server restart.
- * Waits for the current HTTP response to finish before triggering restart/exit.
- */
-export function scheduleServerRestart(delayMs = 2000): void {
-  setTimeout(() => {
-    console.log("[App Updater] Executing graceful server restart...");
-
-    // 1. PM2 environment
-    if (process.env.pm_id !== undefined) {
-      console.log("[App Updater] PM2 process detected. Exiting process for PM2 manager restart...");
-      process.exit(0);
-    }
-
-    // 2. Docker / Container environment (PID 1 or container env)
-    if (existsSync("/.dockerenv")) {
-      console.log("[App Updater] Docker container detected. Exiting process for container restart...");
-      process.exit(0);
-    }
-
-    // 3. Systemd / Kubernetes / Cloud Run / PaaS
-    if (process.env.KUBERNETES_SERVICE_HOST || process.env.SYSTEMD_EXEC_PID) {
-      console.log("[App Updater] Container/Systemd environment detected. Exiting for service restart...");
-      process.exit(0);
-    }
-
-    // 4. Standalone / Development Node process
-    try {
-      const isWindows = process.platform === "win32";
-      const cmd = process.env.npm_lifecycle_event
-        ? (isWindows ? "npm.cmd" : "npm")
-        : process.argv[0];
-      const args = process.env.npm_lifecycle_event
-        ? ["run", process.env.npm_lifecycle_event]
-        : process.argv.slice(1);
-
-      console.log(`[App Updater] Spawning new process: ${cmd} ${args.join(" ")}`);
-      const child = spawn(cmd, args, {
-        detached: true,
-        stdio: "inherit",
-        shell: isWindows,
-        cwd: process.cwd(),
-        env: process.env,
-      });
-      child.unref();
-      process.exit(0);
-    } catch (spawnErr) {
-      console.warn("[App Updater] Could not spawn new process, exiting cleanly:", spawnErr);
-      process.exit(0);
-    }
-  }, delayMs);
-}
-
-/**
- * Applies the application update directly on the server.
- */
-export async function applyAppUpdate(options?: {
-  branch?: string;
-  stash?: boolean;
-  skipInstall?: boolean;
-  skipPrisma?: boolean;
-  restart?: boolean;
-}): Promise<ApplyUpdateResult> {
-  const previousVersion = getLocalPackageVersion();
-  const previousCommit = getCurrentCommit();
-  const branch = options?.branch || getCurrentBranch();
-  const logs: string[] = [];
-
-  logs.push(`Initiating application update on branch '${branch}'...`);
-  logs.push(`Current state: v${previousVersion} (${previousCommit})`);
-
-  let hasStashed = false;
-
-  // 1. Check working directory for uncommitted changes
-  try {
-    const status = execSync("git status --porcelain", {
-      encoding: "utf8",
-      stdio: ["pipe", "pipe", "ignore"],
-    }).trim();
-
-    if (status.length > 0) {
-      logs.push(`Found uncommitted local changes:\n${status}`);
-      logs.push("Stashing local changes before pulling...");
-      execSync(`git stash push -m "Auto-updater stash before app update - ${Date.now()}"`, {
-        stdio: ["pipe", "pipe", "ignore"],
-      });
-      hasStashed = true;
-      logs.push("✔ Stashed uncommitted changes.");
     }
   } catch {
     // Continue
   }
 
-  try {
-    // 2. Git pull
-    runStep(`git pull origin ${branch}`, "Git Pull", logs);
+  // 2. Check tags if no release found
+  if (latestVersion === currentVersion) {
+    try {
+      const tagsRes = await fetch(
+        `https://api.github.com/repos/${repo}/tags?per_page=1`,
+        { headers, next: { revalidate: 300 } }
+      );
 
-    // 3. Install npm dependencies
-    if (!options?.skipInstall) {
-      runStep("npm install", "Dependency Sync", logs);
-    }
-
-    // 4. Generate Prisma Client
-    if (!options?.skipPrisma) {
-      runStep("npx prisma generate", "Prisma Client Generate", logs);
-
-      // Deploy migrations if needed (non-fatal if no migrations or already up to date)
-      try {
-        runStep("npx prisma migrate deploy", "Prisma Migrations", logs);
-      } catch (migrateErr) {
-        logs.push(`ℹ Prisma migration notice: ${migrateErr instanceof Error ? migrateErr.message : String(migrateErr)}`);
+      if (tagsRes.ok) {
+        const tags = await tagsRes.json();
+        if (Array.isArray(tags) && tags.length > 0 && tags[0]?.name) {
+          latestVersion = tags[0].name.replace(/^v/, "").trim();
+        }
       }
+    } catch {
+      // Continue
     }
-
-    // 5. Restore stash if previously stashed
-    if (hasStashed) {
-      logs.push("Restoring previously stashed local changes...");
-      try {
-        execSync("git stash pop", {
-          encoding: "utf8",
-          stdio: ["pipe", "pipe", "ignore"],
-        });
-        logs.push("✔ Stashed changes successfully restored.");
-      } catch {
-        logs.push("⚠ Notice: Merge conflict while popping stash. Your stashed files remain in 'git stash list'.");
-      }
-    }
-
-    const updatedVersion = getLocalPackageVersion();
-    const updatedCommit = getCurrentCommit();
-
-    logs.push(`✔ Application update finalized: v${updatedVersion} (${updatedCommit})`);
-
-    const shouldRestart = options?.restart !== false;
-    if (shouldRestart) {
-      logs.push("► Application restart scheduled in 2 seconds...");
-      scheduleServerRestart(2000);
-    }
-
-    return {
-      success: true,
-      previousVersion,
-      updatedVersion,
-      previousCommit,
-      updatedCommit,
-      logs,
-      message: `Updated successfully from v${previousVersion} (${previousCommit}) to v${updatedVersion} (${updatedCommit})`,
-      restarting: shouldRestart,
-    };
-  } catch (err) {
-    if (hasStashed) {
-      try {
-        execSync("git stash pop", {
-          encoding: "utf8",
-          stdio: ["pipe", "pipe", "ignore"],
-        });
-        logs.push("Restored stash after update failure.");
-      } catch {
-        logs.push("Could not automatically restore stash. Stash remains available in 'git stash list'.");
-      }
-    }
-
-    const errorMsg = err instanceof Error ? err.message : String(err);
-    logs.push(`✖ Update terminated with error: ${errorMsg}`);
-
-    return {
-      success: false,
-      previousVersion,
-      updatedVersion: getLocalPackageVersion(),
-      previousCommit,
-      updatedCommit: getCurrentCommit(),
-      logs,
-      message: errorMsg,
-    };
   }
+
+  // 3. Fallback: package.json on target branch
+  if (latestVersion === currentVersion) {
+    try {
+      const rawPkgRes = await fetch(
+        `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(branch)}/package.json`,
+        { headers: { "User-Agent": "Next-Template-AutoUpdate/1.0" }, next: { revalidate: 300 } }
+      );
+
+      if (rawPkgRes.ok) {
+        const remotePkg = await rawPkgRes.json();
+        if (remotePkg.version) {
+          latestVersion = remotePkg.version;
+        }
+      }
+    } catch {
+      // Continue
+    }
+  }
+
+  // 4. Check latest commit SHA on target branch
+  try {
+    const branchRes = await fetch(
+      `https://api.github.com/repos/${repo}/commits/${encodeURIComponent(branch)}`,
+      { headers, next: { revalidate: 300 } }
+    );
+
+    if (branchRes.ok) {
+      const commitData = await branchRes.json();
+      if (commitData?.sha) {
+        latestCommit = commitData.sha.substring(0, 7);
+        if (!publishedAt && commitData?.commit?.committer?.date) {
+          publishedAt = commitData.commit.committer.date;
+        }
+      }
+    }
+  } catch {
+    // Continue
+  }
+
+  const semverComparison = compareSemver(currentVersion, latestVersion);
+  const hasVersionUpdate = semverComparison > 0;
+  const hasCommitUpdate =
+    Boolean(latestCommit) &&
+    currentCommit !== "unknown" &&
+    latestCommit !== currentCommit;
+  const hasUpdate = hasVersionUpdate || hasCommitUpdate;
+  const updateAvailable = hasUpdate;
+
+  return {
+    currentVersion,
+    latestVersion,
+    currentCommit,
+    updateAvailable,
+    hasVersionUpdate,
+    hasCommitUpdate,
+    hasUpdate,
+    branch,
+    repo,
+    releaseNotes,
+    releaseTitle,
+    publishedAt,
+    checkedAt: new Date().toISOString(),
+  };
 }
