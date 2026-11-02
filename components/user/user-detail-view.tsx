@@ -248,11 +248,13 @@ export function UserDetailView({ user, role }: UserDetailViewProps) {
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-8 text-center sm:text-left">
           <div className="flex items-center self-end sm:self-center">
             <DropdownMenu>
-              <DropdownMenuTrigger>
-                <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 bg-muted/40 hover:bg-muted border border-border/50 shadow-sm transition-all">
-                  <MoreVertical size={24} />
-                </Button>
-              </DropdownMenuTrigger>
+              <DropdownMenuTrigger
+                render={
+                  <Button variant="ghost" size="icon" className="rounded-2xl h-14 w-14 bg-muted/40 hover:bg-muted border border-border/50 shadow-sm transition-all">
+                    <MoreVertical size={24} />
+                  </Button>
+                }
+              />
               <DropdownMenuContent align="start" className="rounded-2xl min-w-50 p-2 bg-card/95 backdrop-blur-md shadow-xl border-border/50">
                 {menuItems.map((item) => (
                   <DropdownMenuItem

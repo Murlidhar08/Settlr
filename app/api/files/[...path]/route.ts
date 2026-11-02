@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs";
-import { getAbsolutePath } from "@/lib/file-operations";
+import path from "path";
+import { getAbsolutePath, getRelativePath } from "@/lib/file-operations";
 import { getServerSession } from "@/lib/auth/auth";
 import { apiError } from "@/lib/api/response";
 import { UnauthorizedError, NotFoundError, ForbiddenError } from "@/lib/errors/app-error";
@@ -52,44 +53,62 @@ export async function GET(
 
     const { path: pathSegments } = await params;
     if (!pathSegments || pathSegments.length === 0) {
-      throw new NotFoundError("File path not specified");
+      throw new NotFoundError("File not found");
     }
 
-    const rawPath = pathSegments.join("/");
-    const normalizedPath = rawPath.replace(/\\/g, "/");
-    const absolutePath = getAbsolutePath(normalizedPath);
-
-    if (!fs.existsSync(absolutePath)) {
-      throw new NotFoundError(`File not found: ${normalizedPath}`);
-    }
-
-    // Authorization checks (C-4):
-    // 1. Profile avatars (profile/...) are accessible to active authenticated users
-    const isAvatar = normalizedPath.startsWith("profile/");
-
-    if (!isAvatar) {
-      // 2. KYC & user documents: require ownership or storage:read permission
-      const doc = await prisma.userDocument.findFirst({
-        where: {
-          OR: [
-            { documentRelativePath: normalizedPath },
-            { documentRelativePath: `/api/files/${normalizedPath}` },
-            { documentRelativePath: { endsWith: normalizedPath } }
-          ]
-        },
-        select: { userId: true }
-      });
-
-      const hasStorageRead = await hasPermission("storage", "read");
-      const isOwner = doc ? doc.userId === session.user.id : normalizedPath.startsWith(`document/${session.user.id}/`);
-
-      if (!isOwner && !hasStorageRead) {
-        // Return 404 to avoid leaking file existence to unauthorized users
+    // N-1: Reject any path segment containing traversal indicators, encoded slashes, or hidden files upfront
+    for (const segment of pathSegments) {
+      if (
+        !segment ||
+        segment === "." ||
+        segment === ".." ||
+        segment.startsWith(".") ||
+        segment.includes("/") ||
+        segment.includes("\\") ||
+        segment.includes("%") ||
+        segment.includes("\0")
+      ) {
         throw new NotFoundError("File not found");
       }
     }
 
-    const fileName = pathSegments[pathSegments.length - 1];
+    const rawPath = pathSegments.join("/");
+    const absolutePath = getAbsolutePath(rawPath);
+    const canonicalRelativePath = getRelativePath(absolutePath);
+
+    // Uniform byte-identical 404 response to eliminate filename existence oracles
+    if (!fs.existsSync(absolutePath)) {
+      throw new NotFoundError("File not found");
+    }
+
+    // Authorization checks (C-4 & N-1):
+    // 1. Profile avatars (profile/<filename>) are accessible to active authenticated users
+    // Strictly match single-level profile avatars (e.g. profile/user123.png)
+    const isAvatar = /^profile\/[^/]+$/.test(canonicalRelativePath);
+
+    if (!isAvatar) {
+      // 2. KYC & user documents: require ownership via exact database record or storage:read permission
+      // Exact match only against canonical path; drop endsWith and unverified owner folder guessing
+      const doc = await prisma.userDocument.findFirst({
+        where: {
+          OR: [
+            { documentRelativePath: canonicalRelativePath },
+            { documentRelativePath: `/api/files/${canonicalRelativePath}` },
+          ],
+        },
+        select: { userId: true },
+      });
+
+      const hasStorageRead = await hasPermission("storage", "read");
+      const isOwner = doc?.userId === session.user.id;
+
+      if (!isOwner && !hasStorageRead) {
+        // Return identical 404 to avoid leaking file existence to unauthorized users
+        throw new NotFoundError("File not found");
+      }
+    }
+
+    const fileName = path.basename(absolutePath);
     const extension = fileName.split(".").pop()?.toLowerCase() || "";
 
     const contentType = CONTENT_TYPE_MAP[extension] || "application/octet-stream";

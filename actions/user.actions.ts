@@ -1,15 +1,16 @@
 "use server";
 
-import { requireActiveSession, requireSelfOrPermission } from "@/lib/auth/dal";
+import { requireActiveSession, requireSelfOrPermission, assertNotLastAdmin } from "@/lib/auth/dal";
 import { requirePermission } from "@/lib/auth/guard";
 import { auth } from "@/lib/auth/auth";
 import { parseRoles, stringifyRoles } from "@/lib/auth/permissions";
-import { deleteFile, uploadFile } from "@/lib/file-operations";
+import { deleteFile, uploadFile, validateMagicBytes } from "@/lib/file-operations";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import { deleteUserAndAllData } from "@/lib/user-cleanup";
 import { cookies, headers } from "next/headers";
-import { NotFoundError, ValidationError } from "@/lib/errors";
+import { NotFoundError, ValidationError, ForbiddenError } from "@/lib/errors";
+import { logAudit } from "@/lib/audit";
 import path from "path";
 import crypto from "crypto";
 import { z } from "zod";
@@ -121,33 +122,43 @@ export async function uploadProfileImage(formData: FormData, userId?: string) {
     }
     const ext = rawExt;
 
-    // 2. Find existing user to verify existence before touching filesystem
+    // 2. Validate magic bytes (N-12) to prevent disguised executable uploads
+    const buffer = Buffer.from(await file.arrayBuffer());
+    if (!validateMagicBytes(buffer, ext)) {
+        throw new ValidationError("Invalid image content: file signature does not match image extension");
+    }
+
+    // 3. Find existing user to verify existence before touching filesystem
     const user = await prisma.user.findUnique({
         where: { id: targetUserId },
         select: { id: true, image: true }
     });
     if (!user) throw new NotFoundError("Target user not found");
 
-    // 3. Delete existing file if local storage
-    if (user.image && !user.image.startsWith("http")) {
-        const oldRelativePath = user.image.replace("/api/files/", "").split("?")[0];
-        try {
-            await deleteFile(oldRelativePath);
-        } catch (e) {
-            console.error("Failed to delete old profile image:", e);
-        }
-    }
-
     // 4. Safe deterministic filename sanitized via path.basename
     const safeBaseName = path.basename(`${targetUserId}.${ext}`);
     const relativePath = await uploadFile(file, "profile", safeBaseName);
     const dbPath = `${relativePath}?v=${Date.now()}`;
 
-    // 5. Update user image in Database
+    // 5. Update user image in Database FIRST (N-12: write new before deleting old)
     await prisma.user.update({
         where: { id: targetUserId },
         data: { image: dbPath }
     });
+
+    // 6. Delete old file only after DB commit succeeded, and strictly validate path (N-7)
+    if (user.image && !user.image.startsWith("http")) {
+        const oldRelativePath = user.image.replace("/api/files/", "").split("?")[0];
+        const safeUserIdPattern = targetUserId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const avatarPattern = new RegExp(`^profile\\/${safeUserIdPattern}\\.(png|jpg|jpeg|webp)$`, "i");
+        if (avatarPattern.test(oldRelativePath) && oldRelativePath !== relativePath) {
+            try {
+                await deleteFile(oldRelativePath);
+            } catch (e) {
+                console.error("Failed to delete old profile image:", e);
+            }
+        }
+    }
 
     return { filePath: dbPath };
 }
@@ -180,7 +191,17 @@ export async function getUserById(userId: string) {
 }
 
 export async function removeUserRole(userId: string, roleToRemove: string) {
-    await requirePermission("user", "update");
+    const { user: actor } = await requirePermission("user", "update");
+
+    // N-4: Prevent self-demotion from admin
+    if (actor.id === userId && roleToRemove.toLowerCase() === "admin") {
+        throw new ForbiddenError("Cannot remove your own administrator role");
+    }
+
+    // N-4: Last-admin invariant check
+    if (roleToRemove.toLowerCase() === "admin") {
+        await assertNotLastAdmin(userId);
+    }
 
     const targetUser = await prisma.user.findUnique({
         where: { id: userId },
@@ -195,13 +216,31 @@ export async function removeUserRole(userId: string, roleToRemove: string) {
     if (updatedRoles.length === 0) {
         // Removing the last role deletes the user completely - requires delete permission
         await requirePermission("user", "delete");
+        if (actor.id === userId) {
+            throw new ForbiddenError("Cannot delete your own account via administrative actions");
+        }
+        await assertNotLastAdmin(userId);
         await deleteUserAndAllData(userId);
+        await logAudit({
+            actorId: actor.id,
+            actorEmail: actor.email,
+            action: "USER_DELETE_LAST_ROLE",
+            targetId: userId,
+        });
         return { success: true, deletedUser: true };
     }
 
     await prisma.user.update({
         where: { id: userId },
         data: { role: updatedRoles.sort().join(",") }
+    });
+
+    await logAudit({
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: "USER_ROLE_REMOVE",
+        targetId: userId,
+        metadata: { roleRemoved: roleToRemove, remainingRoles: updatedRoles }
     });
 
     return {
@@ -212,8 +251,27 @@ export async function removeUserRole(userId: string, roleToRemove: string) {
 }
 
 export async function deleteUser(userId: string) {
-    await requirePermission("user", "delete");
-    return await deleteUserAndAllData(userId);
+    const { user: actor } = await requirePermission("user", "delete");
+
+    // N-4: Prevent self-delete in administrative actions
+    if (actor.id === userId) {
+        throw new ForbiddenError("Cannot delete your own account via administrative actions");
+    }
+
+    // N-4: Last-admin invariant check
+    await assertNotLastAdmin(userId);
+
+    const result = await deleteUserAndAllData(userId);
+
+    // N-6: Privileged audit log
+    await logAudit({
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: "USER_DELETE",
+        targetId: userId
+    });
+
+    return result;
 }
 
 export async function confirmDeleteAccountWithToken(token: string) {
@@ -283,16 +341,38 @@ export async function createUser(data: any) {
 }
 
 export async function updateUser(id: string, data: any) {
-    await requirePermission("user", "update");
+    const { user: actor } = await requirePermission("user", "update");
     if (!id || typeof id !== "string" || id.includes("/") || id.includes("\\") || id.includes("..")) {
         throw new ValidationError("Invalid user ID");
     }
+
+    const targetUser = await prisma.user.findUnique({
+        where: { id },
+        select: { id: true, role: true, status: true, banned: true }
+    });
+    if (!targetUser) throw new NotFoundError("User not found");
 
     const validated = adminUpdateUserSchema.parse(data);
     const userRole = (validated.roles || validated.role) ? stringifyRoles(validated.roles || validated.role!) : undefined;
 
     const isBanning = validated.status === UserStatus.banned;
     const isSuspension = validated.status === UserStatus.suspended;
+    const isDemotingAdmin = userRole !== undefined && targetUser.role.includes("admin") && !userRole.includes("admin");
+
+    // N-4: Prevent self-lockout (demoting or banning/suspending own account)
+    if (actor.id === id) {
+        if (isBanning || isSuspension) {
+            throw new ForbiddenError("Cannot ban or suspend your own account");
+        }
+        if (isDemotingAdmin) {
+            throw new ForbiddenError("Cannot remove your own administrator role");
+        }
+    }
+
+    // N-4: Last-admin invariant check
+    if (isBanning || isSuspension || isDemotingAdmin) {
+        await assertNotLastAdmin(id);
+    }
 
     const updateData: any = {
         ...(validated.name !== undefined ? { name: validated.name } : {}),
@@ -319,6 +399,20 @@ export async function updateUser(id: string, data: any) {
             where: { userId: id }
         }).catch(() => {});
     }
+
+    // N-6: Structured audit log
+    await logAudit({
+        actorId: actor.id,
+        actorEmail: actor.email,
+        action: "USER_UPDATE",
+        targetId: id,
+        metadata: {
+            status: validated.status,
+            role: userRole,
+            banned: isBanning,
+            suspended: isSuspension,
+        }
+    });
 
     return user;
 }
@@ -352,11 +446,26 @@ export async function uploadUserDocument(userId: string, formData: FormData) {
     const documentType = formData.get("documentType") as string;
     if (!file) throw new ValidationError("No file uploaded");
 
-    // Allow-list document extensions only (SVG is strictly forbidden)
+    // 1. Quota check (N-12): limit to maximum 20 documents per user to prevent disk exhaustion
+    const existingDocCount = await prisma.userDocument.count({
+        where: { userId }
+    });
+    if (existingDocCount >= 20) {
+        throw new ValidationError("Maximum document upload limit reached (20 documents)");
+    }
+
+    // 2. Allow-list document extensions only (SVG is strictly forbidden)
     const rawExt = (file.name.split(".").pop() || "").toLowerCase();
     if (!ALLOWED_DOCUMENT_EXTENSIONS.has(rawExt)) {
         throw new ValidationError("Invalid document type. Permitted formats: PDF, PNG, JPG, JPEG, WEBP");
     }
+
+    // 3. Validate magic bytes (N-12) to prevent disguised executable uploads
+    const fileBuffer = Buffer.from(await file.arrayBuffer());
+    if (!validateMagicBytes(fileBuffer, rawExt)) {
+        throw new ValidationError("Invalid document content: file signature does not match declared extension");
+    }
+
     const ext = `.${rawExt}`;
     const safeRandomId = crypto.randomUUID();
     const uniqueName = `${Date.now()}_${safeRandomId}${ext}`;
@@ -461,12 +570,17 @@ export async function removeUserProfile(userId: string) {
 
     if (!user) return false;
 
+    // N-7: Only delete if path strictly matches the user's own profile avatar
     if (user.image && !user.image.startsWith("http")) {
         const oldRelativePath = user.image.replace("/api/files/", "").split("?")[0];
-        try {
-            await deleteFile(oldRelativePath);
-        } catch (e) {
-            console.error("Failed to delete old profile image:", e);
+        const safeUserIdPattern = userId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        const avatarPattern = new RegExp(`^profile\\/${safeUserIdPattern}\\.(png|jpg|jpeg|webp)$`, "i");
+        if (avatarPattern.test(oldRelativePath)) {
+            try {
+                await deleteFile(oldRelativePath);
+            } catch (e) {
+                console.error("Failed to delete old profile image:", e);
+            }
         }
     }
 

@@ -27,6 +27,8 @@ const serverEnvSchema = z.object({
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 characters long"),
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
+  TRUSTED_PROXIES: z.string().optional(),
+  SETUP_TOKEN: z.string().optional(),
 
   // OAuth Providers (Optional)
   GOOGLE_CLIENT_ID: z.string().optional(),

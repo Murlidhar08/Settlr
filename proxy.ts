@@ -10,14 +10,29 @@ import type { NextRequest } from "next/server";
  * - HSTS (Strict-Transport-Security)
  * - Content Security Policy (CSP)
  */
+const isDev = process.env.NODE_ENV !== "production";
+
+const CSP_POLICY = [
+  "default-src 'self'",
+  // Next.js & Webpack HMR/Fast Refresh in development require 'unsafe-eval' for source maps
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' https://fonts.gstatic.com data:",
+  "img-src 'self' data: blob: https://lh3.googleusercontent.com https://cdn.discordapp.com",
+  `connect-src 'self'${isDev ? " ws: wss:" : ""} https://challenges.cloudflare.com`,
+  "frame-src 'self' https://challenges.cloudflare.com",
+  "frame-ancestors 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+].join("; ");
+
 const SECURITY_HEADERS: Record<string, string> = {
   "X-Frame-Options": "SAMEORIGIN",
   "X-Content-Type-Options": "nosniff",
   "Referrer-Policy": "strict-origin-when-cross-origin",
   "Permissions-Policy": "camera=(), microphone=(), geolocation=(), payment=()",
-  "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
-  "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: blob: https://lh3.googleusercontent.com https://cdn.discordapp.com; connect-src 'self' https://challenges.cloudflare.com; frame-src 'self' https://challenges.cloudflare.com; object-src 'none'; base-uri 'self';",
+  "Strict-Transport-Security": "max-age=31536000; includeSubDomains",
+  "Content-Security-Policy": CSP_POLICY,
 };
 
 /**
