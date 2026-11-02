@@ -5,6 +5,7 @@ import { prismaAdapter } from "better-auth/adapters/prisma";
 import { nextCookies } from "better-auth/next-js";
 import { admin as adminPlugin, customSession, haveIBeenPwned, lastLoginMethod, multiSession, twoFactor, username, captcha } from "better-auth/plugins";
 import { redirect } from "next/navigation";
+import crypto from "crypto";
 
 // Lib
 import { sendMail } from "../nodemailer";
@@ -22,6 +23,16 @@ import { getPasswordResetSuccessEmailHtml } from "../templates/email-password-re
 import { getResetPasswordEmailHtml } from "../templates/email-reset-password";
 import { getVerificationEmailHtml } from "../templates/email-verification";
 
+/**
+ * Generates an HMAC signature for authenticating internal admin setup calls.
+ */
+export const getSetupSignature = () => {
+  return crypto
+    .createHmac("sha256", envServer.BETTER_AUTH_SECRET)
+    .update("internal-admin-setup")
+    .digest("hex");
+};
+
 export const auth = betterAuth({
   appName: envServer.NEXT_PUBLIC_APP_NAME,
   baseURL: envServer.BETTER_AUTH_URL,
@@ -31,6 +42,34 @@ export const auth = betterAuth({
     envServer.BETTER_AUTH_URL,
     ...(envServer.BETTER_AUTH_TRUSTED_ORIGINS ? envServer.BETTER_AUTH_TRUSTED_ORIGINS.split(",") : []),
   ],
+  rateLimit: {
+    enabled: true,
+    window: 60,
+    max: 100,
+    storage: "database",
+    modelName: "rateLimit",
+    customRules: {
+      "/sign-in/*": { window: 60, max: 5 },
+      "/sign-up/*": { window: 60, max: 5 },
+      "/two-factor/*": { window: 60, max: 5 },
+      "/forget-password": { window: 60, max: 3 },
+      "/reset-password": { window: 60, max: 5 },
+      "/request-password-reset": { window: 60, max: 3 },
+    },
+  },
+  advanced: {
+    ipAddress: {
+      ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"],
+      trustedProxies: [
+        "127.0.0.1",
+        "::1",
+        "10.0.0.0/8",
+        "172.16.0.0/12",
+        "192.168.0.0/16",
+        ...(envServer.TRUSTED_PROXIES ? envServer.TRUSTED_PROXIES.split(",").map((s) => s.trim()).filter(Boolean) : []),
+      ],
+    },
+  },
 
   database: prismaAdapter(prisma, {
     provider: "postgresql",
@@ -98,6 +137,7 @@ export const auth = betterAuth({
   emailAndPassword: {
     enabled: true,
     requireEmailVerification: true,
+    revokeSessionsOnPasswordReset: true,
     // Send password reset mail
     sendResetPassword: async ({ user, url }) => {
       try {
@@ -126,29 +166,15 @@ export const auth = betterAuth({
     },
 
     // Send password reset successfully mail
-    onPasswordReset: async ({ user }, request) => {
+    onPasswordReset: async ({ user }) => {
       try {
-        const revokeHeader = request?.headers?.get("x-revoke-all-sessions") || request?.headers?.get("x-revoke-other-sessions");
-        let shouldRevoke = revokeHeader === "true";
-        if (!shouldRevoke && request?.url) {
-          try {
-            const url = new URL(request.url, envServer.BETTER_AUTH_URL);
-            if (url.searchParams.get("revokeSessions") === "true") {
-              shouldRevoke = true;
-            }
-          } catch {
-            // ignore URL parse errors
-          }
-        }
-
-        if (shouldRevoke) {
-          await prisma.session.deleteMany({
-            where: {
-              userId: user.id,
-            },
-          });
-          console.log(`Successfully revoked all sessions for user ${user.email} on password reset.`);
-        }
+        // M-1: Unconditionally revoke all sessions for this user on password reset
+        await prisma.session.deleteMany({
+          where: {
+            userId: user.id,
+          },
+        });
+        console.log(`Successfully revoked all sessions for user ${user.email} on password reset.`);
 
         const appUrl = envServer.BETTER_AUTH_URL;
         const emailHtml = getPasswordResetSuccessEmailHtml(user.email, appUrl);
@@ -366,6 +392,23 @@ export const auth = betterAuth({
   databaseHooks: {
     user: {
       create: {
+        before: async (_user, context) => {
+          const setupHeader = context?.headers?.get("x-setup-token");
+          const isSetupRequest = setupHeader === getSetupSignature();
+
+          if (!isSetupRequest) {
+            const adminCount = await prisma.user.count({
+              where: {
+                role: { contains: "admin" },
+              },
+            });
+
+            if (adminCount === 0) {
+              // N-3: Refuse public sign-up when no admin exists to prevent squatting and locking out setup
+              return false;
+            }
+          }
+        },
         after: async (user) => {
           if (!user?.id) return;
 
@@ -428,4 +471,3 @@ export const getUserSession = async () => {
 
   return session;
 };
-

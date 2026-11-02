@@ -36,19 +36,19 @@ services:
       ADVANCE_PASS_CHECK: ${ADVANCE_PASS_CHECK:-true}
 
       # Better Auth
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ}
-      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
-      BETTER_AUTH_TRUSTED_ORIGINS: ${BETTER_AUTH_TRUSTED_ORIGINS:-http://localhost:3000}
+      BETTER_AUTH_SECRET: "${BETTER_AUTH_SECRET:-lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ}"
+      BETTER_AUTH_URL: "http://localhost:3000"
+      BETTER_AUTH_TRUSTED_ORIGINS: "https://example.com,https://*.example.com"
 
       # DATABASE
       DATABASE_URL: "postgresql://settlr_admin:Settlr@123@postgres_db:5432/settlr?schema=public"
     ports:
       - "3000:3000"
+    volumes:
+      - uploads_data:/app/uploads
     networks:
       - prisma-network
     restart: unless-stopped
-    volumes:
-      - settlr_uploads:/app/uploads
     depends_on:
       postgres_db:
         condition: service_healthy
@@ -64,11 +64,11 @@ services:
     container_name: settlr_prisma_studio
     restart: always
     ports:
-      - "5555:5555"
+      - "127.0.0.1:5555:5555"
     environment:
       DATABASE_URL: "postgresql://settlr_admin:Settlr@123@postgres_db:5432/settlr?schema=public"
       STUDIO_PORT: 5555
-      STUDIO_HOST: "0.0.0.0"
+      STUDIO_HOST: "127.0.0.1"
       STUDIO_BROWSER: "none"
       AUTO_INTROSPECT: ${AUTO_INTROSPECT:-true}
     networks:
@@ -85,4 +85,4 @@ networks:
 
 volumes:
   postgres_data:
-  settlr_uploads:
+  uploads_data:

@@ -1,6 +1,7 @@
 "use server";
 
-import { auth, getUserSession } from "@/lib/auth/auth";
+import { auth } from "@/lib/auth/auth";
+import { requireActiveSession } from "@/lib/auth/dal";
 import { Currency, ThemeMode } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import packageJson from "@/package.json";
@@ -9,8 +10,7 @@ import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 
 export async function upsertUserSettings(data: UserSettingsInput) {
-  const session = await getUserSession();
-  if (!session?.user?.id) throw new Error("Unauthorized");
+  const session = await requireActiveSession();
   const userId = session.user.id;
 
   const result = await prisma.userSettings.upsert({
@@ -41,8 +41,7 @@ export async function upsertUserSettings(data: UserSettingsInput) {
 }
 
 export async function getUserSettings() {
-  const session = await getUserSession();
-  if (!session?.user?.id) return null;
+  const session = await requireActiveSession();
 
   return prisma.userSettings.findUnique({
     where: { userId: session.user.id },
@@ -50,10 +49,12 @@ export async function getUserSettings() {
 }
 
 export async function getListUserAccounts() {
-  return await auth.api.listUserAccounts({ headers: await headers() })
+  await requireActiveSession();
+  return await auth.api.listUserAccounts({ headers: await headers() });
 }
 
 export async function getListSessions() {
+  await requireActiveSession();
   return await auth.api.listSessions({
     headers: await headers(),
   });

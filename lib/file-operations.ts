@@ -38,7 +38,6 @@ export const getAbsolutePath = (relativePath: string): string => {
     return resolvedPath;
 };
 
-
 /**
  * Gets the relative path (from upload root) for a given absolute path.
  */
@@ -47,15 +46,62 @@ export const getRelativePath = (absolutePath: string) => {
 };
 
 /**
- * Uploads a file to a specific location.
+ * Validates file buffer against known file format magic bytes.
+ * Prevents disguised executable uploads (e.g. .exe renamed to .png).
+ */
+export function validateMagicBytes(buffer: Buffer, extension: string): boolean {
+    const ext = extension.toLowerCase().replace(/^\./, "");
+    if (buffer.length < 4) return false;
+
+    switch (ext) {
+        case "png":
+            return buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47;
+        case "jpg":
+        case "jpeg":
+            return buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff;
+        case "webp":
+            if (buffer.length < 12) return false;
+            return (
+                buffer.toString("ascii", 0, 4) === "RIFF" &&
+                buffer.toString("ascii", 8, 12) === "WEBP"
+            );
+        case "gif":
+            return buffer.toString("ascii", 0, 4) === "GIF8";
+        case "pdf":
+            return buffer.toString("ascii", 0, 4) === "%PDF";
+        default:
+            return false;
+    }
+}
+
+/**
+ * Uploads a file to a specific destination directory with containment guarantees.
  */
 export const uploadFile = async (file: File, destinationDir: string, fileName?: string): Promise<string> => {
     const buffer = Buffer.from(await file.arrayBuffer());
-    const finalFileName = fileName || `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+    const rawFileName = fileName || `${Date.now()}-${file.name.replace(/\s+/g, "_")}`;
+
+    // Forbid path traversal indicators in fileName
+    if (rawFileName.includes("/") || rawFileName.includes("\\") || rawFileName.includes("..")) {
+        throw new Error("Invalid file name: cannot contain path separators or parent directory references");
+    }
+
+    const safeFileName = path.basename(rawFileName);
+    if (!safeFileName || safeFileName === "." || safeFileName === "..") {
+        throw new Error("Invalid file name");
+    }
+
     const absoluteDir = getAbsolutePath(destinationDir);
     ensureDir(absoluteDir);
 
-    const absolutePath = path.join(absoluteDir, finalFileName);
+    const absolutePath = path.resolve(absoluteDir, safeFileName);
+    const rootWithSep = UPLOAD_ROOT.endsWith(path.sep) ? UPLOAD_ROOT : `${UPLOAD_ROOT}${path.sep}`;
+
+    // Verify absolutePath remains strictly inside absoluteDir and within UPLOAD_ROOT
+    if (!absolutePath.startsWith(rootWithSep) || path.dirname(absolutePath) !== absoluteDir) {
+        throw new Error("Access denied: Invalid file path traversal attempt");
+    }
+
     fs.writeFileSync(absolutePath, buffer);
 
     return getRelativePath(absolutePath);
@@ -74,7 +120,7 @@ export const deleteFile = async (relativePath: string) => {
 };
 
 /**
- * Moves a file from one location to another.
+ * Moves a file from one location to another with strict containment verification.
  */
 export const moveFile = async (sourcePath: string, destinationDir: string, newFileName?: string): Promise<string> => {
     const sourceAbs = getAbsolutePath(sourcePath);
@@ -82,11 +128,26 @@ export const moveFile = async (sourcePath: string, destinationDir: string, newFi
         throw new Error(`Source file not found: ${sourcePath}`);
     }
 
-    const fileName = newFileName || path.basename(sourceAbs);
+    const rawFileName = newFileName || path.basename(sourceAbs);
+    if (rawFileName.includes("/") || rawFileName.includes("\\") || rawFileName.includes("..")) {
+        throw new Error("Invalid destination file name: cannot contain path separators or parent directory references");
+    }
+
+    const safeFileName = path.basename(rawFileName);
+    if (!safeFileName || safeFileName === "." || safeFileName === "..") {
+        throw new Error("Invalid destination file name");
+    }
+
     const destAbsDir = getAbsolutePath(destinationDir);
     ensureDir(destAbsDir);
 
-    const destAbs = path.join(destAbsDir, fileName);
+    const destAbs = path.resolve(destAbsDir, safeFileName);
+    const rootWithSep = UPLOAD_ROOT.endsWith(path.sep) ? UPLOAD_ROOT : `${UPLOAD_ROOT}${path.sep}`;
+
+    if (!destAbs.startsWith(rootWithSep) || path.dirname(destAbs) !== destAbsDir) {
+        throw new Error("Access denied: Invalid file path traversal attempt");
+    }
+
     fs.renameSync(sourceAbs, destAbs);
 
     return getRelativePath(destAbs);
@@ -137,14 +198,20 @@ export const renameItem = async (oldRelativePath: string, newName: string) => {
         throw new Error("Invalid name: cannot contain path separators or parent directory references");
     }
 
+    const safeName = path.basename(newName);
+    if (!safeName || safeName === "." || safeName === "..") {
+        throw new Error("Invalid name");
+    }
+
     const oldAbsPath = getAbsolutePath(oldRelativePath);
     if (!fs.existsSync(oldAbsPath)) throw new Error("Item not found");
 
     const parentDir = path.dirname(oldAbsPath);
-    const newAbsPath = path.join(parentDir, newName);
+    const newAbsPath = path.resolve(parentDir, safeName);
+    const rootWithSep = UPLOAD_ROOT.endsWith(path.sep) ? UPLOAD_ROOT : `${UPLOAD_ROOT}${path.sep}`;
 
     // Verify destination remains in parent directory and within upload root
-    if (path.dirname(newAbsPath) !== parentDir) {
+    if (!newAbsPath.startsWith(rootWithSep) || path.dirname(newAbsPath) !== parentDir) {
         throw new Error("Invalid destination path");
     }
 

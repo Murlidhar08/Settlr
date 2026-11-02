@@ -66,9 +66,9 @@ export function parseRoles(roleString?: string | null): Role[] {
 
   const parsed = roleString
     .split(",")
-    .sort()
     .map((r) => r.trim().toLowerCase())
-    .filter((r): r is Role => ALL_ROLES.includes(r as Role));
+    .filter((r): r is Role => ALL_ROLES.includes(r as Role))
+    .sort();
 
   return parsed.length > 0 ? Array.from(new Set(parsed)) : [ROLES.USER];
 }
@@ -79,9 +79,9 @@ export function parseRoles(roleString?: string | null): Role[] {
 export function stringifyRoles(rolesInput: (Role | string)[] | string): string {
   if (Array.isArray(rolesInput)) {
     const validRoles = rolesInput
-      .sort()
       .map((r) => r.trim().toLowerCase())
-      .filter((r): r is Role => ALL_ROLES.includes(r as Role));
+      .filter((r): r is Role => ALL_ROLES.includes(r as Role))
+      .sort();
     const unique = Array.from(new Set(validRoles));
     return unique.length > 0 ? unique.join(",") : ROLES.USER;
   }

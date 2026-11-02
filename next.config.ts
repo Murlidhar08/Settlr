@@ -10,8 +10,19 @@ const withPWAConfig = withPWA({
   dest: 'public',                              // where to output SW file (in public/)
   disable: process.env.NODE_ENV === 'development', // disable in dev
   register: true,                              // auto-register SW
-  // skipWaiting: true,                           // activate SW immediately
-  // (you can add workboxOptions, runtimeCaching, fallbacks, etc. here)
+  workboxOptions: process.env.NODE_ENV === 'production' ?
+    {
+      // Disallow service worker caching for all dynamic API and file delivery routes
+      runtimeCaching: [
+        {
+          urlPattern: ({ url }: any) => url.pathname.startsWith('/api/'),
+          handler: 'NetworkOnly',
+          options: {
+            cacheName: 'apis',
+          },
+        },
+      ],
+    } : {},
 });
 
 const nextConfig: NextConfig = {
