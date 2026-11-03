@@ -3,33 +3,29 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { getFileUrl } from "@/lib/utils";
+import type { DeviceAccountItem } from "@/types";
 import { getInitials } from "@/utility/common-function";
 import { motion } from "framer-motion";
 import { Loader2, LogOut } from "lucide-react";
 
 interface SessionCardProps {
-    sessionToken: string;
-    isCurrent: boolean;
+    account: DeviceAccountItem;
     isLoading: boolean;
-    isSwitching?: boolean;
-    ds: any;
-    onSignOutSingle: (sessionToken: string, isCurrent: boolean) => Promise<void>;
+    onSignOutSingle: (account: DeviceAccountItem) => Promise<void>;
     disabled: boolean;
 }
 
 export default function SessionCard({
-    sessionToken,
-    isCurrent,
+    account,
     isLoading,
-    isSwitching,
-    ds,
     onSignOutSingle,
     disabled,
 }: SessionCardProps) {
-    const userName = ds.user?.name || ds.user?.username || "Account";
-    const userEmail = ds.user?.email || "";
-    const userImage = getFileUrl(ds.user?.image) || "";
+    const userName = account.name || "Account";
+    const userEmail = account.email || "";
+    const userImage = getFileUrl(account.image) || "";
     const initials = getInitials(userName);
+    const isCurrent = account.isCurrent;
 
     return (
         <motion.div
@@ -39,7 +35,7 @@ export default function SessionCard({
             exit={{ opacity: 0, scale: 0.96, height: 0 }}
             transition={{ duration: 0.2 }}
             className={`flex items-center justify-between p-4 sm:p-5 transition-all duration-200 ${isCurrent
-                ? "bg-primary/[0.03] dark:bg-primary/[0.06]"
+                ? "bg-primary/3 dark:bg-primary/6"
                 : "hover:bg-muted/30"
                 }`}
         >
@@ -62,7 +58,7 @@ export default function SessionCard({
 
                 <div className="flex flex-col min-w-0 space-y-0.5">
                     <div className="flex items-center gap-2 flex-wrap">
-                        <p className="text-sm sm:text-base font-bold text-foreground truncate max-w-[180px] sm:max-w-[220px]">
+                        <p className="text-sm sm:text-base font-bold text-foreground truncate max-w-45 sm:max-w-55">
                             {userName}
                         </p>
                         {isCurrent && (
@@ -71,8 +67,23 @@ export default function SessionCard({
                                 Active
                             </span>
                         )}
+                        {account.isBanned && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+                                Banned
+                            </span>
+                        )}
+                        {account.isSuspended && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 shrink-0">
+                                Suspended
+                            </span>
+                        )}
+                        {account.isPending && (
+                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 shrink-0">
+                                Pending
+                            </span>
+                        )}
                     </div>
-                    <p className="text-xs text-muted-foreground truncate max-w-[220px] sm:max-w-[260px]">
+                    <p className="text-xs text-muted-foreground truncate max-w-55 sm:max-w-65">
                         {userEmail}
                     </p>
                 </div>
@@ -82,9 +93,9 @@ export default function SessionCard({
                 <Button
                     variant="outline"
                     size="sm"
-                    disabled={disabled || isLoading || isSwitching}
-                    onClick={() => onSignOutSingle(sessionToken, isCurrent)}
-                    className="rounded-xl px-3.5 sm:px-4 font-semibold text-xs border-border/70 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all flex items-center gap-1.5 active:scale-[0.98]"
+                    disabled={disabled || isLoading}
+                    onClick={() => onSignOutSingle(account)}
+                    className="rounded-xl px-3.5 sm:px-4 font-semibold text-xs border-border/70 hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30 transition-all flex items-center gap-1.5 active:scale-[0.98] cursor-pointer"
                 >
                     {isLoading ? (
                         <>

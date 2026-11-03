@@ -18,7 +18,6 @@ import { FooterButtons } from "@/components/footer-buttons";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { containerVariants, itemVariants } from "@/lib/animations";
-import { signOut } from "@/lib/auth/auth-client";
 import { tran } from "@/lib/languages/i18n";
 import { cn, getFileUrl } from "@/lib/utils";
 import { useCurrentUser } from "@/tanstacks/user";

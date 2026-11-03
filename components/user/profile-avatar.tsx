@@ -1,14 +1,18 @@
 "use client";
 
-import { authClient } from "@/lib/auth/auth-client";
+import type { DeviceAccountItem } from "@/types";
+import { authClient, onIdentityChange, signOutThisAccount } from "@/lib/auth/auth-client";
 import { hasRole } from "@/lib/auth/permissions";
+import { MAX_ACCOUNTS } from "@/lib/config/constants";
 import { UserRole } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
 import { cn, getFileUrl } from "@/lib/utils";
-import { useDeviceSessions, useSetActiveSession } from "@/tanstacks/user";
+import { useDeviceAccounts, useSwitchAccount } from "@/hooks/queries/user";
 import { getInitials } from "@/utility/common-function";
-import { LayoutDashboard, LogOut, User as UserIcon, UserPlus, UserRoundCog } from "lucide-react";
+import { LayoutDashboard, LogOut, User as UserIcon, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { toast } from "sonner";
 import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import {
     DropdownMenu,
@@ -25,31 +29,57 @@ import {
 
 export default function ProfileAvatar() {
     const { data: session } = authClient.useSession();
-    const { data: deviceSessions } = useDeviceSessions();
+    const { data: deviceAccounts } = useDeviceAccounts();
     const isAdmin = hasRole(session?.user?.role, UserRole.admin);
     const canAccessAdmin = hasRole(session?.user?.role, UserRole.admin);
-    const { mutate: setActive } = useSetActiveSession();
+    const { mutate: switchAccount, isPending: isSwitching } = useSwitchAccount();
     const router = useRouter();
+    const [isSigningOut, setIsSigningOut] = useState(false);
 
-    const handleSwitchAccount = (sessionToken: string) => {
-        setActive(sessionToken, {
+    const isAtLimit = (deviceAccounts?.length ?? 0) >= MAX_ACCOUNTS;
+
+    const handleSwitchAccount = (sessionId: string, isBanned: boolean, isSuspended: boolean) => {
+        if (isBanned) {
+            toast.error("Cannot switch to a banned account.");
+            return;
+        }
+        if (isSuspended) {
+            toast.error("Cannot switch to a suspended account.");
+            return;
+        }
+
+        switchAccount(sessionId, {
             onSuccess: () => {
-                window.location.reload();
+                onIdentityChange();
+                window.location.assign("/dashboard");
+            },
+            onError: (err: any) => {
+                toast.error(err?.message || "Failed to switch account");
             }
         });
-    }
+    };
 
     const handleAddAccount = () => {
+        if (isAtLimit) {
+            toast.error(`Maximum accounts limit (${MAX_ACCOUNTS}) reached. Sign out of an account to add another.`);
+            return;
+        }
         router.push("/login?add_account=1");
-    }
+    };
 
     const handleManageProfile = () => {
         router.push("/settings/profile");
-    }
+    };
 
-    const handleLogout = () => {
-        router.push("/logout");
-    }
+    const handleSignOutSingle = async () => {
+        setIsSigningOut(true);
+        try {
+            await signOutThisAccount();
+        } catch (err: any) {
+            toast.error(err?.message || "Failed to sign out");
+            setIsSigningOut(false);
+        }
+    };
 
     return (
         <DropdownMenu>
@@ -80,7 +110,7 @@ export default function ProfileAvatar() {
                 }
             />
 
-            <DropdownMenuContent align="end" className="w-64 p-2">
+            <DropdownMenuContent align="end" className="w-68 p-2">
                 <DropdownMenuGroup>
                     <DropdownMenuSub>
                         <DropdownMenuSubTrigger className="w-full flex items-center justify-between p-2 rounded-md cursor-pointer hover:bg-accent focus:bg-accent transition-colors">
@@ -91,31 +121,52 @@ export default function ProfileAvatar() {
                                 </p>
                             </div>
                         </DropdownMenuSubTrigger>
-                        <DropdownMenuSubContent className="w-64 p-1.5 space-y-1">
-                            {deviceSessions && deviceSessions.length > 0 && (
+                        <DropdownMenuSubContent className="w-72 p-1.5 space-y-1">
+                            {deviceAccounts && deviceAccounts.length > 0 && (
                                 <>
                                     <DropdownMenuLabel className="text-[11px] font-semibold tracking-wider text-muted-foreground uppercase px-2 py-1">
                                         {tran("profile.switch_account")}
                                     </DropdownMenuLabel>
-                                    {deviceSessions.map((ds: any) => {
-                                        const isCurrent = ds.session?.token === session?.session?.token || ds.user?.id === session?.user?.id;
-                                        if (isCurrent) return null;
+                                    {deviceAccounts.map((account: DeviceAccountItem) => {
+                                        if (account.isCurrent) return null;
+
                                         return (
                                             <DropdownMenuItem
-                                                key={ds.session?.token || ds.user?.id}
-                                                onClick={() => handleSwitchAccount(ds.session?.token)}
-                                                className="cursor-pointer flex items-center justify-between p-2 rounded-lg transition-colors hover:bg-accent/80 focus:bg-accent gap-2"
+                                                key={account.sessionId}
+                                                disabled={account.isBanned || account.isSuspended || isSwitching}
+                                                onClick={() => handleSwitchAccount(account.sessionId, account.isBanned, account.isSuspended)}
+                                                className={cn(
+                                                    "cursor-pointer flex items-center justify-between p-2 rounded-lg transition-colors hover:bg-accent/80 focus:bg-accent gap-2",
+                                                    (account.isBanned || account.isSuspended) && "opacity-60 cursor-not-allowed hover:bg-transparent"
+                                                )}
                                             >
                                                 <div className="flex items-center gap-2.5 min-w-0">
                                                     <Avatar className="h-7 w-7 border border-border/60 shrink-0">
-                                                        <AvatarImage src={getFileUrl(ds.user?.image) || ''} className="object-cover" />
+                                                        <AvatarImage src={getFileUrl(account.image) || ''} className="object-cover" />
                                                         <AvatarFallback className="bg-primary/10 text-primary text-[10px] font-bold font-mono">
-                                                            {getInitials(ds.user?.name)}
+                                                            {getInitials(account.name)}
                                                         </AvatarFallback>
                                                     </Avatar>
                                                     <div className="flex flex-col min-w-0">
-                                                        <span className="text-xs font-semibold text-foreground truncate">{ds.user?.name}</span>
-                                                        <span className="text-[11px] text-muted-foreground truncate">{ds.user?.email}</span>
+                                                        <div className="flex items-center gap-1.5">
+                                                            <span className="text-xs font-semibold text-foreground truncate">{account.name}</span>
+                                                            {account.isBanned && (
+                                                                <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-destructive/10 text-destructive border border-destructive/20 shrink-0">
+                                                                    Banned
+                                                                </span>
+                                                            )}
+                                                            {account.isSuspended && (
+                                                                <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 shrink-0">
+                                                                    Suspended
+                                                                </span>
+                                                            )}
+                                                            {account.isPending && (
+                                                                <span className="px-1 py-0.2 rounded text-[9px] font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20 shrink-0">
+                                                                    Pending
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <span className="text-[11px] text-muted-foreground truncate">{account.email}</span>
                                                     </div>
                                                 </div>
                                             </DropdownMenuItem>
@@ -125,11 +176,23 @@ export default function ProfileAvatar() {
                                 </>
                             )}
                             <DropdownMenuItem
+                                disabled={isAtLimit}
                                 onClick={handleAddAccount}
-                                className="cursor-pointer flex items-center gap-2 py-2 px-2.5 rounded-lg bg-muted/60 hover:bg-muted text-foreground font-medium text-xs transition-colors"
+                                title={isAtLimit ? `Maximum accounts limit (${MAX_ACCOUNTS}) reached. Sign out of an account to add another.` : undefined}
+                                className={cn(
+                                    "flex items-center gap-2 py-2 px-2.5 rounded-lg font-medium text-xs transition-colors",
+                                    isAtLimit
+                                        ? "opacity-50 cursor-not-allowed bg-muted/30 text-muted-foreground"
+                                        : "cursor-pointer bg-muted/60 hover:bg-muted text-foreground"
+                                )}
                             >
                                 <UserPlus className="h-4 w-4 text-muted-foreground" />
-                                <span>{tran("profile.add_account")}</span>
+                                <div className="flex flex-col">
+                                    <span>{tran("profile.add_account")}</span>
+                                    {isAtLimit && (
+                                        <span className="text-[10px] text-muted-foreground">Limit reached ({MAX_ACCOUNTS}/{MAX_ACCOUNTS})</span>
+                                    )}
+                                </div>
                             </DropdownMenuItem>
                         </DropdownMenuSubContent>
                     </DropdownMenuSub>
@@ -142,19 +205,28 @@ export default function ProfileAvatar() {
                 </DropdownMenuItem>
 
                 {canAccessAdmin ? (
-                    <>
-                        <DropdownMenuItem onClick={() => router.push("/admin/dashboard")} className="cursor-pointer py-2">
-                            <LayoutDashboard className="h-4 w-4 mr-2" />
-                            <span>{tran("admin.dashboard.title")}</span>
-                        </DropdownMenuItem>
-                    </>
+                    <DropdownMenuItem onClick={() => router.push("/admin/dashboard")} className="cursor-pointer py-2">
+                        <LayoutDashboard className="h-4 w-4 mr-2" />
+                        <span>{tran("admin.dashboard.title")}</span>
+                    </DropdownMenuItem>
                 ) : null}
 
-                <DropdownMenuItem onClick={handleLogout} className="cursor-pointer focus:text-destructive py-2">
+                <DropdownMenuItem onClick={() => router.push("/logout")} className="cursor-pointer py-2 text-muted-foreground">
+                    <Users className="h-4 w-4 mr-2" />
+                    <span>Manage accounts</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuSeparator />
+
+                <DropdownMenuItem
+                    onClick={handleSignOutSingle}
+                    disabled={isSigningOut}
+                    className="cursor-pointer focus:text-destructive py-2 text-destructive font-medium"
+                >
                     <LogOut className="h-4 w-4 mr-2" />
-                    <span>{tran("profile.logout")}</span>
+                    <span>{isSigningOut ? "Signing out..." : "Sign out"}</span>
                 </DropdownMenuItem>
             </DropdownMenuContent>
         </DropdownMenu>
-    )
+    );
 }

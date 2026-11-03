@@ -7,25 +7,20 @@ export default async function TwoFactorPage() {
   const reqHeaders = await headers();
   const session = await auth.api.getSession({ headers: reqHeaders });
 
-  // 1. If user is already fully authenticated -> redirect to dashboard
-  if (session) {
-    redirect("/dashboard");
-  }
-
-  // 2. Check for temporary 2FA token cookie on the SERVER (Server Components CAN read HttpOnly cookies)
+  // 1. Check for pending 2FA token cookie on the SERVER first (F3)
   const cookieStore = await cookies();
   const allCookies = cookieStore.getAll();
 
-  const has2faCookie = allCookies.some(
-    (c) =>
-      c.name.startsWith("better-auth.two_factor") ||
-      c.name.startsWith("__Secure-better-auth.two_factor")
-  );
+  const has2faCookie = allCookies.some((c) => /two_factor/.test(c.name));
 
-  // 3. If no 2FA token cookie exists -> user hasn't entered credentials -> redirect to login
+  // 2. If no 2FA pending challenge cookie exists -> redirect away
   if (!has2faCookie) {
+    if (session) {
+      redirect("/dashboard");
+    }
     redirect("/login", RedirectType.replace);
   }
 
+  // 3. 2FA challenge is present: render verification client
   return <TwoFactorClient />;
 }
