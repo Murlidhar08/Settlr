@@ -9,6 +9,7 @@ export const QUERY_KEYS = {
     current: ["current-user"] as const,
     detail: (id: string) => ["user", id] as const,
     deviceSessions: ["device-sessions"] as const,
+    deviceAccounts: ["device-accounts"] as const,
     documents: (userId: string) => ["user-documents", userId] as const,
   },
   admin: {

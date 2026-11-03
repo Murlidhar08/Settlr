@@ -3,6 +3,8 @@ import { Currency, ThemeMode } from "@/lib/generated/prisma/enums";
 /**
  * Standard user preferences fallback defaults.
  */
+export const MAX_ACCOUNTS = 5;
+
 export const DEFAULT_USER_SETTINGS = {
   dateFormat: "dd MMM, yyyy",
   timeFormat: "hh:mm a",

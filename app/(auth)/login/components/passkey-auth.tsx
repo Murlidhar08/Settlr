@@ -2,7 +2,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient, onIdentityChange } from "@/lib/auth/auth-client";
 import { Fingerprint } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -21,7 +21,8 @@ export default function PasskeyAuth({ lastLogin, loading, setLoading }: { lastLo
             if (error) {
                 toast.error(error.message || "Passkey authentication failed");
             } else {
-                router.push("/dashboard");
+                onIdentityChange();
+                window.location.assign("/dashboard");
             }
         } catch (err) {
             toast.error("An unexpected error occurred during passkey sign in");

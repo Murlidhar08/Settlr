@@ -42,3 +42,23 @@ export interface UserStats {
   bannedUsers: number;
   adminUsers: number;
 }
+
+/**
+ * Opaque device account descriptor for safe multi-session switching.
+ */
+export interface DeviceAccountItem {
+  sessionId: string;
+  userId: string;
+  name: string;
+  email: string;
+  image?: string | null;
+  status: UserStatus;
+  role: string;
+  isCurrent: boolean;
+  isBanned: boolean;
+  isSuspended: boolean;
+  isPending: boolean;
+  isImpersonated: boolean;
+  createdAt: Date;
+  expiresAt: Date;
+}

@@ -1,12 +1,11 @@
 "use client";
 
 import { KeyRound } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient, onIdentityChange } from "@/lib/auth/auth-client";
 import { toast } from "sonner";
 
 type TotpFormValues = {
@@ -14,8 +13,6 @@ type TotpFormValues = {
 };
 
 export function TotpForm() {
-  const router = useRouter();
-
   const {
     register,
     handleSubmit,
@@ -28,7 +25,8 @@ export function TotpForm() {
       {
         onSuccess: () => {
           toast.success("Identity verified successfully!");
-          router.push("/");
+          onIdentityChange();
+          window.location.assign("/dashboard");
         },
         onError: (error) => {
           toast.error(error?.error?.message ?? "Invalid code");

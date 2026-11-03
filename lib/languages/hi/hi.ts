@@ -204,7 +204,7 @@ export default {
         email_address: "ईमेल पता",
         phone_number: "फ़ोन नंबर",
         not_set: "सेट नहीं है",
-        manage_profile: "प्रोफ़ाइल प्रबंधित करें",
+        manage_profile: "प्रोफ़ाइल",
         switch_account: "खाता बदलें",
         add_account: "खाता जोड़ें",
         logout: "लॉग आउट",

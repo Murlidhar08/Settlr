@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { Skeleton } from "@/components/ui/skeleton";
 import { containerVariants, itemVariants } from '@/lib/animations';
-import { authClient, useSession } from "@/lib/auth/auth-client";
+import { authClient, signOutThisAccount, useSession } from "@/lib/auth/auth-client";
 import { tran } from "@/lib/languages/i18n";
 import { cn, getFileUrl } from "@/lib/utils";
 import { getInitials } from "@/utility/common-function";
@@ -31,8 +31,8 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 
 export default function DangerPage() {
-    const { data: session, isPending } = useSession();
     const confirm = useConfirm();
+    const { data: session, isPending } = useSession();
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [emailSent, setEmailSent] = useState(false);
 
@@ -64,6 +64,7 @@ export default function DangerPage() {
             } else {
                 setEmailSent(true);
                 toast.success(tran("danger.msg.delete_confirmation_email_sent"));
+                await signOutThisAccount();
             }
         } catch (err: any) {
             toast.error(err?.message || "Failed to initiate deletion");

@@ -8,9 +8,10 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 // Lib
-import { authClient, signIn } from "@/lib/auth/auth-client";
+import { authClient, onIdentityChange, signIn } from "@/lib/auth/auth-client";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { tran } from "@/lib/languages/i18n";
+import { UserStatus } from "@/lib/generated/prisma/enums";
 
 // Components
 import AuthCenterLayout from "@/components/auth-layout";
@@ -64,13 +65,21 @@ export default function LoginForm({ providers }: LoginFormProps) {
       return;
     }
 
-    // Redirect to banned
+    // Redirect based on active session status
     authClient.getSession()
       .then((session) => {
-        if (session.data) {
-          if (session.data.user.banned)
-            router.push(`/banned?reason=${encodeURIComponent(session.data.user.banReason || "")}`);
-          else router.push("/dashboard");
+        if (session?.data?.user) {
+          const user = session.data.user;
+          const isBanned = user.banned || user.status === UserStatus.banned;
+          if (isBanned) {
+            router.push(`/banned?reason=${encodeURIComponent(user.banReason || "")}`);
+          } else if (user.status === UserStatus.suspended) {
+            router.push("/suspended");
+          } else if (user.status === UserStatus.pendingapproval) {
+            router.push("/pending-approval");
+          } else {
+            router.push("/dashboard");
+          }
         }
       });
 
@@ -112,12 +121,20 @@ export default function LoginForm({ providers }: LoginFormProps) {
         turnstileRef.current?.reset();
         setCaptchaToken(null);
         if (result.error.code === "BANNED_USER") {
-          router.push(`/banned?reason=${encodeURIComponent(result.error.message || "")}`);
+          const isAdd = isAddAccount || searchParams.get("add_account") === "1";
+          router.push(`/banned?reason=${encodeURIComponent(result.error.message || "")}${isAdd ? "&add_account=1" : ""}`);
+          return;
+        }
+        if (result.error.code === "SUSPENDED_USER") {
+          const isAdd = isAddAccount || searchParams.get("add_account") === "1";
+          router.push(`/suspended?reason=${encodeURIComponent(result.error.message || "")}${isAdd ? "&add_account=1" : ""}`);
           return;
         }
         setError(result.error.message || "Sign in failed");
+      } else {
+        onIdentityChange();
+        window.location.assign("/dashboard");
       }
-      else router.push("/dashboard");
     } catch (err) {
       turnstileRef.current?.reset();
       setCaptchaToken(null);

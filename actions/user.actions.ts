@@ -1,6 +1,7 @@
 "use server";
 
-import { requireActiveSession, requireSelfOrPermission, assertNotLastAdmin } from "@/lib/auth/dal";
+import { requireActiveSession, requireValidSession, requireSelfOrPermission, assertNotLastAdmin } from "@/lib/auth/dal";
+import type { DeviceAccountItem } from "@/types";
 import { requirePermission } from "@/lib/auth/guard";
 import { auth } from "@/lib/auth/auth";
 import { parseRoles, stringifyRoles } from "@/lib/auth/permissions";
@@ -19,37 +20,37 @@ const ALLOWED_IMAGE_EXTENSIONS = new Set(["png", "jpg", "jpeg", "webp"]);
 const ALLOWED_DOCUMENT_EXTENSIONS = new Set(["pdf", "png", "jpg", "jpeg", "webp"]);
 
 const adminCreateUserSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters"),
-  email: z.string().email("Invalid email address"),
-  emailVerified: z.union([z.boolean(), z.string()]).transform((val) => {
-    if (typeof val === "boolean") return val;
-    return val === "true" || val === "yes";
-  }).default(false),
-  contactNo: z.string().nullable().optional(),
-  username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain alphanumeric characters, underscores, and dashes").nullable().optional(),
-  status: z.nativeEnum(UserStatus).default(UserStatus.pendingapproval),
-  occupation: z.string().nullable().optional(),
-  address: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  role: z.string().optional(),
-  roles: z.union([z.string(), z.array(z.string())]).optional(),
+    name: z.string().min(2, "Name must be at least 2 characters"),
+    email: z.string().email("Invalid email address"),
+    emailVerified: z.union([z.boolean(), z.string()]).transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true" || val === "yes";
+    }).default(false),
+    contactNo: z.string().nullable().optional(),
+    username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain alphanumeric characters, underscores, and dashes").nullable().optional(),
+    status: z.nativeEnum(UserStatus).default(UserStatus.pendingapproval),
+    occupation: z.string().nullable().optional(),
+    address: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    role: z.string().optional(),
+    roles: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
 const adminUpdateUserSchema = z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").optional(),
-  email: z.string().email("Invalid email address").optional(),
-  emailVerified: z.union([z.boolean(), z.string()]).transform((val) => {
-    if (typeof val === "boolean") return val;
-    return val === "true" || val === "yes";
-  }).optional(),
-  contactNo: z.string().nullable().optional(),
-  username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain alphanumeric characters, underscores, and dashes").nullable().optional(),
-  status: z.nativeEnum(UserStatus).optional(),
-  occupation: z.string().nullable().optional(),
-  address: z.string().nullable().optional(),
-  description: z.string().nullable().optional(),
-  role: z.string().optional(),
-  roles: z.union([z.string(), z.array(z.string())]).optional(),
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().email("Invalid email address").optional(),
+    emailVerified: z.union([z.boolean(), z.string()]).transform((val) => {
+        if (typeof val === "boolean") return val;
+        return val === "true" || val === "yes";
+    }).optional(),
+    contactNo: z.string().nullable().optional(),
+    username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain alphanumeric characters, underscores, and dashes").nullable().optional(),
+    status: z.nativeEnum(UserStatus).optional(),
+    occupation: z.string().nullable().optional(),
+    address: z.string().nullable().optional(),
+    description: z.string().nullable().optional(),
+    role: z.string().optional(),
+    roles: z.union([z.string(), z.array(z.string())]).optional(),
 });
 
 export async function getCurrentUser() {
@@ -96,6 +97,175 @@ export async function revokeSession(sessionToken: string) {
         body: { sessionToken },
         headers: await headers(),
     });
+}
+
+/**
+ * Returns opaque device account descriptors without exposing raw session tokens.
+ * Enrich entries with real-time account status and bans directly from database (F8, F11).
+ * Filters out impersonated sessions so admin impersonation cannot be switched into (F12).
+ */
+export async function listDeviceAccounts(): Promise<DeviceAccountItem[]> {
+    const currentSession = await requireValidSession();
+
+    const rawSessions = await auth.api.listDeviceSessions({
+        headers: await headers(),
+    });
+
+    if (!rawSessions || rawSessions.length === 0) {
+        return [];
+    }
+
+    const userIds = rawSessions.map((s) => s.user.id);
+    const dbUsers = await prisma.user.findMany({
+        where: { id: { in: userIds } },
+        select: {
+            id: true,
+            status: true,
+            banned: true,
+            role: true,
+        },
+    });
+    const dbUserMap = new Map(dbUsers.map((u) => [u.id, u]));
+
+    return rawSessions
+        .filter((entry) => !(entry.session as any).impersonatedBy)
+        .map((entry) => {
+            const dbUser = dbUserMap.get(entry.user.id);
+            const status = dbUser?.status ?? (entry.user as any).status ?? UserStatus.pendingapproval;
+            const isBanned = Boolean(dbUser?.banned ?? (entry.user as any).banned ?? status === UserStatus.banned);
+            const isSuspended = status === UserStatus.suspended;
+            const isPending = status === UserStatus.pendingapproval;
+
+            return {
+                sessionId: entry.session.id,
+                userId: entry.user.id,
+                name: entry.user.name,
+                email: entry.user.email,
+                image: entry.user.image,
+                status,
+                role: dbUser?.role ?? (entry.user as any).role ?? "user",
+                isCurrent: entry.user.id === currentSession.user.id,
+                isBanned,
+                isSuspended,
+                isPending,
+                isImpersonated: Boolean((entry.session as any).impersonatedBy),
+                createdAt: new Date(entry.session.createdAt),
+                expiresAt: new Date(entry.session.expiresAt),
+            };
+        });
+}
+
+/**
+ * Safely switch active account on this device using opaque sessionId.
+ * Resolves sessionToken securely server-side and logs audit trail (F8, F14).
+ */
+export async function switchAccount(sessionId: string) {
+    const currentSession = await requireValidSession();
+
+    const rawSessions = await auth.api.listDeviceSessions({
+        headers: await headers(),
+    });
+
+    const target = rawSessions.find((s) => s.session.id === sessionId);
+    if (!target) {
+        throw new NotFoundError("Selected account session was not found on this device");
+    }
+
+    if ((target.session as any).impersonatedBy) {
+        throw new ForbiddenError("Cannot switch directly into an impersonated session");
+    }
+
+    const targetUserDb = await prisma.user.findUnique({
+        where: { id: target.user.id },
+        select: { id: true, email: true, banned: true, status: true },
+    });
+
+    if (targetUserDb?.banned || targetUserDb?.status === UserStatus.banned) {
+        throw new ForbiddenError("Cannot switch to a banned account");
+    }
+
+    if (targetUserDb?.status === UserStatus.suspended) {
+        throw new ForbiddenError("Cannot switch to a suspended account");
+    }
+
+    await auth.api.setActiveSession({
+        body: { sessionToken: target.session.token },
+        headers: await headers(),
+    });
+
+    await logAudit({
+        actorId: currentSession.user.id,
+        actorEmail: currentSession.user.email,
+        action: "ACCOUNT_SWITCH",
+        targetId: target.user.id,
+        metadata: {
+            fromEmail: currentSession.user.email,
+            toEmail: target.user.email,
+            targetSessionId: target.session.id,
+        },
+    });
+
+    return { success: true };
+}
+
+/**
+ * Revokes a specific inactive device session using opaque sessionId (F8, F14).
+ */
+export async function revokeDeviceAccount(sessionId: string) {
+    const currentSession = await requireValidSession();
+
+    const rawSessions = await auth.api.listDeviceSessions({
+        headers: await headers(),
+    });
+
+    const target = rawSessions.find((s) => s.session.id === sessionId);
+    if (!target) {
+        throw new NotFoundError("Session not found on this device");
+    }
+
+    await auth.api.revokeDeviceSession({
+        body: { sessionToken: target.session.token },
+        headers: await headers(),
+    });
+
+    await logAudit({
+        actorId: currentSession.user.id,
+        actorEmail: currentSession.user.email,
+        action: "ACCOUNT_REVOKE",
+        targetId: target.user.id,
+        metadata: {
+            targetEmail: target.user.email,
+            revokedSessionId: target.session.id,
+        },
+    });
+
+    return { success: true };
+}
+
+/**
+ * Revokes only the active session on this device and logs audit trail (F1, F14).
+ * Multi-session plugin automatically promotes the next valid session or clears session cookie.
+ */
+export async function signOutCurrentAccount() {
+    const currentSession = await requireValidSession();
+    const token = currentSession.session.token;
+
+    await auth.api.revokeDeviceSession({
+        body: { sessionToken: token },
+        headers: await headers(),
+    });
+
+    await logAudit({
+        actorId: currentSession.user.id,
+        actorEmail: currentSession.user.email,
+        action: "ACCOUNT_SIGNOUT_SINGLE",
+        targetId: currentSession.user.id,
+        metadata: {
+            sessionId: currentSession.session.id,
+        },
+    });
+
+    return { success: true };
 }
 
 export async function uploadProfileImage(formData: FormData, userId?: string) {
@@ -397,7 +567,7 @@ export async function updateUser(id: string, data: any) {
     if (isBanning || isSuspension) {
         await prisma.session.deleteMany({
             where: { userId: id }
-        }).catch(() => {});
+        }).catch(() => { });
     }
 
     // N-6: Structured audit log
@@ -495,7 +665,7 @@ export async function uploadUserDocument(userId: string, formData: FormData) {
         // Atomic cleanup: delete written file if DB record insertion fails
         try {
             await deleteFile(relativePath);
-        } catch {}
+        } catch { }
         throw dbError;
     }
 }

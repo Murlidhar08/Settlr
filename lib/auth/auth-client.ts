@@ -73,3 +73,6 @@ export const signInWithSocial = async (provider: SocialProvider) => {
 export const signInWithGoogle = async () => await signInWithSocial("google");
 export const signInWithDiscord = async () => await signInWithSocial("discord");
 export const signInWithFacebook = async () => await signInWithSocial("facebook");
+
+export * from "./logout";
+export * from "./identity-sync";

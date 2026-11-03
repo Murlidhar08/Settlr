@@ -68,13 +68,7 @@ function ResetPasswordForm() {
       if (result.error) {
         setError(result.error.message || "Failed to reset password.");
       } else {
-        if (revokeSessions) {
-          try {
-            await authClient.signOut();
-          } catch {
-            // ignore if not logged in
-          }
-        }
+        // Note: The server automatically revokes all active sessions for this specific user in DB (F1)
         setSuccessMsg("Password successfully reset! Redirecting...");
         setTimeout(() => {
           router.push("/login");

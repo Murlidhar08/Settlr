@@ -1,12 +1,11 @@
 "use client";
 
 import { ShieldCheck } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient, onIdentityChange } from "@/lib/auth/auth-client";
 import { toast } from "sonner";
 
 type BackupCodeFormValues = {
@@ -14,8 +13,6 @@ type BackupCodeFormValues = {
 };
 
 export function BackupCodeTab() {
-  const router = useRouter();
-
   const {
     register,
     handleSubmit,
@@ -28,7 +25,8 @@ export function BackupCodeTab() {
       {
         onSuccess: () => {
           toast.success("Security bypass successful!");
-          router.push("/");
+          onIdentityChange();
+          window.location.assign("/dashboard");
         },
         onError: (error) => {
           toast.error(error?.error?.message ?? "Invalid backup code");

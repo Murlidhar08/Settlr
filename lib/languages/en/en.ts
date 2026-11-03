@@ -204,7 +204,7 @@ export default {
         email_address: "Email Address",
         phone_number: "Phone Number",
         not_set: "Not set",
-        manage_profile: "Manage Profile",
+        manage_profile: "Profile",
         switch_account: "Switch Account",
         add_account: "Add Account",
         logout: "Logout",

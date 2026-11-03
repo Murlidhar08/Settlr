@@ -4,6 +4,9 @@ import {
   deleteUserDocument,
   getCurrentUser,
   getDeviceSessions,
+  listDeviceAccounts,
+  switchAccount,
+  revokeDeviceAccount,
   getUserById,
   getUserDocuments,
   removeUserProfile,
@@ -24,6 +27,13 @@ export const useCurrentUser = () => {
   return useQuery({
     queryKey: QUERY_KEYS.user.current,
     queryFn: () => getCurrentUser(),
+  });
+};
+
+export const useDeviceAccounts = () => {
+  return useQuery({
+    queryKey: QUERY_KEYS.user.deviceAccounts,
+    queryFn: () => listDeviceAccounts(),
   });
 };
 
@@ -110,6 +120,29 @@ export const useRemoveUserProfile = () => {
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.current });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.detail(userId) });
       queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.users });
+    },
+  });
+};
+
+export const useSwitchAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => switchAccount(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.deviceAccounts });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.deviceSessions });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.current });
+    },
+  });
+};
+
+export const useRevokeDeviceAccount = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (sessionId: string) => revokeDeviceAccount(sessionId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.deviceAccounts });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.user.deviceSessions });
     },
   });
 };
