@@ -22,7 +22,7 @@ The project follows a clean, modular layer-based architecture designed for scala
 │   ├── (app)/                # Authenticated application route group
 │   │   ├── admin/            # Administrative dashboard and user management UI
 │   │   ├── dashboard/        # Main user landing and summary views
-│   │   ├── logout/           # Active session termination page
+│   │   ├── signout/          # Active session termination page
 │   │   └── settings/         # User profile, security, and preferences pages
 │   ├── (auth)/               # Unauthenticated authentication routes
 │   │   ├── login/            # Sign-in page (Email, Username, OAuth, Passkey)

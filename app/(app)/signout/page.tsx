@@ -10,7 +10,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import SessionList from "./session-list";
 
-export default function LogoutPage() {
+export default function SignOutPage() {
     const confirm = useConfirm();
     const [isSigningOutAll, setIsSigningOutAll] = useState(false);
 

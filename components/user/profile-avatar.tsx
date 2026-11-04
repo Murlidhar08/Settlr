@@ -211,7 +211,7 @@ export default function ProfileAvatar() {
                     </DropdownMenuItem>
                 ) : null}
 
-                <DropdownMenuItem onClick={() => router.push("/logout")} className="cursor-pointer py-2 text-muted-foreground">
+                <DropdownMenuItem onClick={() => router.push("/signout")} className="cursor-pointer py-2 text-muted-foreground">
                     <Users className="h-4 w-4 mr-2" />
                     <span>Manage accounts</span>
                 </DropdownMenuItem>

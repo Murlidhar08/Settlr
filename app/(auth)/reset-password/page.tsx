@@ -174,7 +174,7 @@ function ResetPasswordForm() {
                 End all active sessions
               </label>
               <p className="text-xs text-muted-foreground font-medium">
-                Log out of all devices and active sessions after resetting password
+                Sign out of all devices and active sessions after resetting password
               </p>
             </div>
           </div>
