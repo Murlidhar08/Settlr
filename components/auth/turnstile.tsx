@@ -50,7 +50,7 @@ export const TurnstileWidget = forwardRef<TurnstileInstance, TurnstileWidgetProp
       <div
         className={`w-full ${isInvisible
           ? "hidden"
-          : "flex items-center justify-center min-h-[65px] my-2 transition-all duration-200"
+          : "flex items-center justify-center min-h-16.25 my-2 transition-all duration-200"
           } ${className}`}
       >
         <Turnstile

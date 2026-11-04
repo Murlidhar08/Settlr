@@ -1,6 +1,6 @@
 import { BuildVersion } from "@/components/auth/build-version";
 import { TurnstileProvider } from "@/components/providers/turnstile-provider";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { isSetupRequired } from "@/lib/setup";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";

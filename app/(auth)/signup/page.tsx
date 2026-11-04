@@ -1,7 +1,7 @@
 "use client";
 
 // Lib
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

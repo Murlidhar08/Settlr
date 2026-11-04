@@ -74,8 +74,8 @@ export default function SettingsPage() {
   if (isPending)
     return <SettingsSkeleton />;
 
-  const handleLogout = () => {
-    router.push("/logout");
+  const handleSignOut = () => {
+    router.push("/signout");
   };
 
   return (
@@ -350,7 +350,7 @@ export default function SettingsPage() {
               href="/settings/danger"
             />
           </Section>
-        </motion.div >
+        </motion.div>
 
         {/* App Version */}
         <motion.div
@@ -363,10 +363,10 @@ export default function SettingsPage() {
       </motion.div >
 
       <FooterButtons bottomSpace={true}>
-        <Button onClick={handleLogout} variant="destructive" className="h-14 w-14 md:w-auto md:px-12 rounded-full md:gap-3 font-semibold uppercase bg-rose-500 hover:bg-rose-500/70 text-white shadow-lg shadow-rose-500/50 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 p-0 md:py-2">
+        <Button onClick={handleSignOut} variant="destructive" className="h-14 w-14 md:w-auto md:px-12 rounded-full md:gap-3 font-semibold uppercase bg-rose-500 hover:bg-rose-500/70 text-white shadow-lg shadow-rose-500/50 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 p-0 md:py-2">
           <LogOut className="size-5 md:size-6" />
           <span className="hidden md:block text-center font-black tracking-[0.2em] text-sm">
-            {tran("settings.logout")}
+            {tran("settings.signout")}
           </span>
         </Button>
       </FooterButtons>

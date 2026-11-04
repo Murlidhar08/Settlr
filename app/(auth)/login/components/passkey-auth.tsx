@@ -2,14 +2,12 @@
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { authClient } from "@/lib/auth/auth-client";
+import { authClient, onIdentityChange } from "@/lib/auth/auth-client";
 import { Fingerprint } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 
 export default function PasskeyAuth({ lastLogin, loading, setLoading }: { lastLogin: string, loading: boolean, setLoading: (loading: boolean) => void }) {
-    const router = useRouter();
     const [passkeyLoading, setPasskeyLoading] = useState(false);
 
     const handlePasskeySignIn = async () => {
@@ -20,13 +18,15 @@ export default function PasskeyAuth({ lastLogin, loading, setLoading }: { lastLo
             const { error } = await authClient.signIn.passkey();
             if (error) {
                 toast.error(error.message || "Passkey authentication failed");
+                setLoading(false);
+                setPasskeyLoading(false);
             } else {
-                router.push("/dashboard");
+                onIdentityChange();
+                window.location.assign("/dashboard");
             }
         } catch (err) {
             toast.error("An unexpected error occurred during passkey sign in");
             console.error(err);
-        } finally {
             setLoading(false);
             setPasskeyLoading(false);
         }

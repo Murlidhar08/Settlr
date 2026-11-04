@@ -2,11 +2,11 @@
 
 import { Card } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { authClient, useSession } from "@/lib/auth/auth-client";
-import { useDeviceSessions, useRevokeSession, useSetActiveSession } from "@/tanstacks/user";
+import { signOutThisAccount } from "@/lib/auth/auth-client";
+import { useDeviceAccounts, useRevokeDeviceAccount } from "@/hooks/queries/user";
+import type { DeviceAccountItem } from "@/types";
 import { AnimatePresence } from "framer-motion";
 import { UserX } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import SessionCard from "./session-card";
@@ -16,62 +16,44 @@ interface SessionListProps {
 }
 
 export default function SessionList({ isSigningOutAll = false }: SessionListProps) {
-    const router = useRouter();
-    const { data: currentSessionData, isPending: isSessionPending } = useSession();
-    const { data: deviceSessions, isLoading: isListLoading, refetch } = useDeviceSessions();
-    const { mutateAsync: revokeSession } = useRevokeSession();
-    const { mutateAsync: setActive } = useSetActiveSession();
+    const { data: deviceAccounts, isLoading: isListLoading, refetch } = useDeviceAccounts();
+    const { mutateAsync: revokeDeviceAccount } = useRevokeDeviceAccount();
 
-    const [loadingToken, setLoadingToken] = useState<string | null>(null);
-    const [switchingToken, setSwitchingToken] = useState<string | null>(null);
+    const [loadingSessionId, setLoadingSessionId] = useState<string | null>(null);
 
-    const handleSignOutSingle = async (sessionToken: string, isCurrent: boolean) => {
-        setLoadingToken(sessionToken);
+    const handleSignOutSingle = async (account: DeviceAccountItem) => {
+        setLoadingSessionId(account.sessionId);
         try {
-            if (isCurrent) {
-                const remaining = (deviceSessions || []).filter(
-                    (ds: any) => ds.session?.token !== sessionToken
-                );
-                if (remaining.length > 0 && remaining[0]?.session?.token) {
-                    await revokeSession(sessionToken);
-                    await setActive(remaining[0].session.token);
-                    toast.success(
-                        `Switched to ${remaining[0].user?.name || remaining[0].user?.email || "next account"}`
-                    );
-                    router.push("/dashboard");
-                    window.location.reload();
-                    return;
-                } else {
-                    await authClient.signOut();
-                    toast.success("Signed out successfully");
-                    router.push("/login");
-                    return;
-                }
+            if (account.isCurrent) {
+                // Active session sign out (F1, F5)
+                // signOutThisAccount revokes the active session and Better Auth promotes
+                // the next session or clears the cookie.
+                await signOutThisAccount();
+                return;
             } else {
-                await revokeSession(sessionToken);
-                toast.success("Account signed out");
+                // Inactive session revoke (F5, F8)
+                await revokeDeviceAccount(account.sessionId);
+                toast.success(`Signed out ${account.name || account.email}`);
                 await refetch();
             }
         } catch (error: any) {
             console.error("Failed to sign out session:", error);
-            toast.error(error?.message || "Failed to sign out session");
+            toast.error(error?.message || "Failed to sign out account");
         } finally {
-            setLoadingToken(null);
+            setLoadingSessionId(null);
         }
     };
 
-    if (isSessionPending || isListLoading) {
+    if (isListLoading) {
         return <SessionListSkeleton />;
     }
 
-    const currentToken = currentSessionData?.session?.token;
-    const currentUserId = currentSessionData?.user?.id;
-    const sessionsList = deviceSessions || [];
+    const accountsList = deviceAccounts || [];
 
     return (
         <Card className="p-0 overflow-hidden border border-border/60 shadow-lg rounded-3xl bg-card/80 backdrop-blur-sm">
             <div className="divide-y divide-border/50">
-                {sessionsList.length === 0 ? (
+                {accountsList.length === 0 ? (
                     <div className="p-10 text-center space-y-3">
                         <div className="w-12 h-12 rounded-2xl bg-muted/50 flex items-center justify-center mx-auto text-muted-foreground">
                             <UserX className="w-6 h-6" />
@@ -83,22 +65,14 @@ export default function SessionList({ isSigningOutAll = false }: SessionListProp
                     </div>
                 ) : (
                     <AnimatePresence mode="popLayout">
-                        {sessionsList.map((ds: any, index: number) => {
-                            const sessionToken = ds.session?.token;
-                            const isCurrent =
-                                Boolean(sessionToken && sessionToken === currentToken) ||
-                                Boolean(ds.user?.id && ds.user.id === currentUserId);
-                            const isLoading = loadingToken === sessionToken;
-                            const isSwitching = switchingToken === sessionToken;
+                        {accountsList.map((account: DeviceAccountItem) => {
+                            const isLoading = loadingSessionId === account.sessionId;
 
                             return (
                                 <SessionCard
-                                    key={sessionToken || ds.session?.id || index}
-                                    sessionToken={sessionToken}
-                                    isCurrent={isCurrent}
+                                    key={account.sessionId}
+                                    account={account}
                                     isLoading={isLoading}
-                                    isSwitching={isSwitching}
-                                    ds={ds}
                                     onSignOutSingle={handleSignOutSingle}
                                     disabled={isSigningOutAll}
                                 />

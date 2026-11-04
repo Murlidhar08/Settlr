@@ -1,12 +1,138 @@
+import crypto from "node:crypto";
+import { envServer } from "./config/env";
 import { prisma } from "./prisma/prisma";
+
+let lastLoggedToken: string | null = null;
+
+/**
+ * Formats a prominent console log banner displaying the setup token.
+ */
+function printSetupTokenLog(token: string, source: string) {
+  const line = "═".repeat(68);
+  console.log(`\n╔${line}╗`);
+  console.log(`║                    FIRST-TIME INSTANCE SETUP                       ║`);
+  console.log(`║                                                                    ║`);
+  console.log(`║  A setup token is required to initialize the administrator account.║`);
+  console.log(`║  SETUP_TOKEN (${source.padEnd(28)}):               ║`);
+  console.log(`║  >>> ${token.padEnd(58)} <<< ║`);
+  console.log(`║                                                                    ║`);
+  console.log(`║  Navigate to /setup and paste this token to complete installation.  ║`);
+  console.log(`╚${line}╝\n`);
+}
+
+/**
+ * Retrieves the existing setup token or generates and persists a new random one.
+ * Logs the token to stdout when generated or requested.
+ */
+export async function getOrGenerateSetupToken(): Promise<string> {
+  // 1. If SETUP_TOKEN is explicitly configured in environment, prioritize it
+  if (envServer.SETUP_TOKEN && envServer.SETUP_TOKEN.trim().length > 0) {
+    const envToken = envServer.SETUP_TOKEN.trim();
+    if (lastLoggedToken !== envToken) {
+      lastLoggedToken = envToken;
+      printSetupTokenLog(envToken, "environment variable");
+    }
+    return envToken;
+  }
+
+  // 2. Check if a random token has already been generated and persisted in Verification table
+  try {
+    const existing = await prisma.verification.findUnique({
+      where: { id: "setup_token" },
+    });
+
+    if (existing && existing.value && new Date(existing.expiresAt) > new Date()) {
+      if (lastLoggedToken !== existing.value) {
+        lastLoggedToken = existing.value;
+        printSetupTokenLog(existing.value, "active setup session");
+      }
+      return existing.value;
+    }
+
+    // 3. Generate a secure, user-friendly 32-character random hex token
+    const generatedToken = crypto.randomBytes(16).toString("hex");
+
+    await prisma.verification.upsert({
+      where: { id: "setup_token" },
+      update: {
+        value: generatedToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 hours validity
+      },
+      create: {
+        id: "setup_token",
+        identifier: "setup_token",
+        value: generatedToken,
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      },
+    });
+
+    lastLoggedToken = generatedToken;
+    printSetupTokenLog(generatedToken, "randomly generated");
+    return generatedToken;
+  } catch (error) {
+    console.error("[SETUP] Failed to persist generated setup token in database:", error);
+    // In-memory fallback if DB write fails temporarily
+    const fallbackToken = crypto.randomBytes(16).toString("hex");
+    if (lastLoggedToken !== fallbackToken) {
+      lastLoggedToken = fallbackToken;
+      printSetupTokenLog(fallbackToken, "in-memory fallback");
+    }
+    return fallbackToken;
+  }
+}
+
+/**
+ * Validates provided token against the current active setup token using timing-safe comparison.
+ */
+export async function validateSetupToken(providedToken?: string | null): Promise<boolean> {
+  if (!providedToken || typeof providedToken !== "string") {
+    return false;
+  }
+
+  const expectedToken = await getOrGenerateSetupToken();
+  const trimmedProvided = providedToken.trim();
+  const trimmedExpected = expectedToken.trim();
+
+  if (trimmedProvided.length !== trimmedExpected.length) {
+    return false;
+  }
+
+  try {
+    return crypto.timingSafeEqual(
+      Buffer.from(trimmedProvided),
+      Buffer.from(trimmedExpected)
+    );
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Clears setup tokens from database after setup completes.
+ */
+export async function clearSetupToken(): Promise<void> {
+  lastLoggedToken = null;
+  try {
+    await prisma.verification.delete({
+      where: { id: "setup_token" },
+    }).catch(() => {});
+  } catch {
+    // Ignore cleanup error
+  }
+}
 
 export async function isSetupRequired() {
   try {
     const userCount = await prisma.user.count();
-    return userCount === 0;
+    const required = userCount === 0;
+    if (required) {
+      // Ensure token is generated and logged to console
+      await getOrGenerateSetupToken();
+    }
+    return required;
   } catch (error: any) {
     // Only log errors that aren't connection issues (common during build)
-    if (error.code !== 'ECONNREFUSED') {
+    if (error.code !== "ECONNREFUSED") {
       console.error("Error checking setup status:", error);
     }
     return false; // Default to false to avoid redirect loops on DB error

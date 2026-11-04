@@ -1,32 +1,32 @@
 "use server";
 
 import { auth, getSetupSignature } from "@/lib/auth/auth";
-import { envServer } from "@/lib/config/env";
 import { ForbiddenError } from "@/lib/errors/app-error";
 import { UserRole, UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
+import { clearSetupToken, validateSetupToken } from "@/lib/setup";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 const setupSchema = z.object({
-  name: z.string().min(2),
-  email: z.string().email(),
-  password: z.string().min(8),
+  name: z.string().min(2, "Full name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
   username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain letters, numbers, underscores, and hyphens"),
+  setupToken: z.string().min(1, "Setup token is required"),
   token: z.string().optional(),
-  setupToken: z.string().optional(),
 });
 
 export async function setupAdmin(formData: FormData) {
   const rawData = Object.fromEntries(formData.entries());
+  const token = ((rawData.setupToken || rawData.token || "") as string).trim();
+  rawData.setupToken = token;
   const validatedData = setupSchema.parse(rawData);
 
-  // N-3: Enforce SETUP_TOKEN from environment if configured
-  if (envServer.SETUP_TOKEN) {
-    const providedToken = validatedData.token || validatedData.setupToken;
-    if (!providedToken || providedToken !== envServer.SETUP_TOKEN) {
-      throw new ForbiddenError("Invalid setup token");
-    }
+  // Validate the SETUP_TOKEN against generated/configured token
+  const isValidToken = await validateSetupToken(token);
+  if (!isValidToken) {
+    throw new ForbiddenError("Invalid setup token. Please check the token printed in your server logs.");
   }
 
   // 1. Initial check: verify no users exist
@@ -35,7 +35,7 @@ export async function setupAdmin(formData: FormData) {
     redirect("/login");
   }
 
-  // 2. N-3: Atomic claim in PostgreSQL using unique primary key in verification table.
+  // 2. Atomic claim in PostgreSQL using unique primary key in verification table.
   // Exactly one concurrent setup transaction can succeed; others fail immediately with a unique constraint violation.
   try {
     await prisma.verification.create({
@@ -85,6 +85,9 @@ export async function setupAdmin(formData: FormData) {
       where: { id: "setup_admin_claim" },
       data: { value: "completed" },
     }).catch(() => {});
+
+    // Clean up temporary setup token
+    await clearSetupToken();
   } catch (error) {
     // On failure during user creation, clean up claim to allow legitimate administrator to fix inputs and retry
     if (!user) {
