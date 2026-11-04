@@ -1,39 +1,59 @@
 "use client";
 
+import { useConfirm } from "@/components/providers/confirm-provider";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
 import { useSystemUpdate } from "@/hooks/use-system-update";
 import { cn } from "@/lib/utils";
 import {
-  AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   GitBranch,
-  GitCommit,
   Loader2,
   RefreshCw,
-  RotateCcw,
-  Sparkles,
-  Terminal,
+  Sparkles
 } from "lucide-react";
 
 export function SystemUpdateCard() {
+  const confirm = useConfirm();
   const {
     status,
     isLoading,
     isChecking,
+    isUpdating,
     isUpToDate,
     hasUpdate,
+    hasWebhook,
     handleCheckUpdates,
+    handleApplyUpdate,
   } = useSystemUpdate();
+
+  const handleApplicationUpdate = async () => {
+    // setIsConfirmOpen(true)
+    const isConfirmed = await confirm({
+      title: "Update Application",
+      description: (
+        <div className="space-y-3 py-2 text-xs text-muted-foreground">
+          <p>
+            Are you sure you want to trigger the application update?
+          </p>
+          <div className="rounded-xl border border-border/60 bg-muted/40 p-3 space-y-1 font-mono text-[11px] text-foreground">
+            <div>Current Version: v{status?.currentVersion || "-"}</div>
+            <div>Target Version: v{status?.latestVersion || "-"}</div>
+          </div>
+          <p>
+            An API call will be made to the configured update webhook URL to pull and apply the latest release.
+          </p>
+        </div>
+      ),
+      confirmText: "Update"
+    });
+
+    if (!isConfirmed) return;
+
+    // Make API Call
+    handleApplyUpdate();
+  }
 
   return (
     <>
@@ -70,7 +90,7 @@ export function SystemUpdateCard() {
               variant="outline"
               size="sm"
               onClick={handleCheckUpdates}
-              disabled={isChecking}
+              disabled={isChecking || isUpdating}
               className="h-9 px-3 text-xs font-semibold rounded-xl border-border/60 hover:bg-muted/60 transition-all cursor-pointer"
             >
               <RefreshCw
@@ -81,6 +101,27 @@ export function SystemUpdateCard() {
               />
               {isChecking ? "Checking..." : "Check for Updates"}
             </Button>
+
+            {hasUpdate && hasWebhook && (
+              <Button
+                size="sm"
+                onClick={handleApplicationUpdate}
+                disabled={isUpdating}
+                className="h-9 px-3.5 text-xs font-bold rounded-xl bg-primary text-primary-foreground shadow-sm hover:shadow-md transition-all active:scale-95 cursor-pointer"
+              >
+                {isUpdating ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" />
+                    Updating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3.5 w-3.5 mr-1.5" />
+                    Update Application
+                  </>
+                )}
+              </Button>
+            )}
           </div>
         </div>
 
@@ -97,11 +138,14 @@ export function SystemUpdateCard() {
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-sm font-bold text-foreground">
-                  {status?.hasUpdate
-                    ? `Update available: v${status.currentVersion} → v${status.latestVersion}`
-                    : `You're running the latest version`}
+                  Update available: v{status?.currentVersion || "-"} → v{status?.latestVersion || "-"}
                 </span>
               </div>
+              <p className="text-xs text-muted-foreground pl-8">
+                {hasWebhook
+                  ? "Click Update Application to trigger the deployment webhook."
+                  : "An update is available, but no update webhook URL is configured in the environment (UPDATE_WEBHOOK_URL)."}
+              </p>
             </div>
           </div>
         ) : isUpToDate ? (

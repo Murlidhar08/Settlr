@@ -1,4 +1,4 @@
-import type { SystemUpdateStatus } from "@/types/admin-dashboard";
+import type { SystemUpdateStatus, TriggerUpdateResult } from "@/types/admin-dashboard";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
@@ -80,8 +80,6 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
   }
 
   let latestVersion = currentVersion;
-  let releaseTitle: string | undefined;
-  let releaseNotes: string | undefined;
   let publishedAt: string | undefined;
 
   // 1. Check GitHub Latest Release
@@ -95,8 +93,6 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
       const release = await releaseRes.json();
       if (release.tag_name) {
         latestVersion = release.tag_name.replace(/^v/, "").trim();
-        releaseTitle = release.name || release.tag_name;
-        releaseNotes = release.body;
         publishedAt = release.published_at;
       }
     }
@@ -127,6 +123,7 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
   }
 
   const hasUpdate = compareSemver(currentVersion, latestVersion) > 0;
+  const hasWebhook = Boolean(process.env.UPDATE_WEBHOOK_URL?.trim().length);
 
   return {
     currentVersion,
@@ -134,5 +131,56 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
     hasUpdate,
     publishedAt,
     checkedAt: new Date().toISOString(),
+    hasWebhook,
   };
+}
+
+/**
+ * Triggers the update webhook URL to deploy or update the application.
+ */
+export async function triggerUpdateWebhook(): Promise<TriggerUpdateResult> {
+  const webhookUrl = process.env.UPDATE_WEBHOOK_URL?.trim();
+
+  if (!webhookUrl) {
+    throw new Error("Update webhook URL is not configured. Please set UPDATE_WEBHOOK_URL in your environment variables.");
+  }
+
+  let parsedUrl: URL;
+  try {
+    parsedUrl = new URL(webhookUrl);
+  } catch {
+    throw new Error("Configured UPDATE_WEBHOOK_URL is not a valid URL. Please check your environment variables.");
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+  try {
+    let response = await fetch(parsedUrl.toString(), {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => "");
+      throw new Error(`Update webhook returned error status ${response.status}${errorText ? `: ${errorText.slice(0, 100)}` : ""}`);
+    }
+
+    return {
+      success: true,
+      message: "Application update triggered successfully. Deployment started.",
+      statusCode: response.status,
+    };
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    if (error.name === "AbortError") {
+      throw new Error("Update webhook request timed out after 15 seconds.");
+    }
+    throw error;
+  }
 }
