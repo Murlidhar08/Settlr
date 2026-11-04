@@ -105,6 +105,13 @@ export interface SystemUpdateStatus {
   hasUpdate: boolean;
   publishedAt?: string;
   checkedAt: string;
+  hasWebhook?: boolean;
+}
+
+export interface TriggerUpdateResult {
+  success: boolean;
+  message: string;
+  statusCode?: number;
 }
 
 

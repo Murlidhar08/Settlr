@@ -7,15 +7,16 @@ import { UserStatus } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import {
   checkForUpdates,
+  triggerUpdateWebhook,
 } from "@/lib/system/app-updater";
 import type {
   AdminDashboardSummary,
-  ApplyUpdateResult,
   GrowthDataPoint,
   RecentSession,
   RecentUser,
   SystemHealth,
   SystemUpdateStatus,
+  TriggerUpdateResult,
 } from "@/types/admin-dashboard";
 
 export async function getAdminDashboardSummary() {
@@ -374,6 +375,20 @@ export async function checkSystemUpdateAction(): Promise<{
   return safeAction(async () => {
     await requirePermission("config", "read");
     return checkForUpdates();
+  });
+}
+
+/**
+ * Triggers an application update by making an API call to the configured update webhook URL.
+ */
+export async function triggerSystemUpdateAction(): Promise<{
+  success: boolean;
+  data?: TriggerUpdateResult;
+  error?: string;
+}> {
+  return safeAction(async () => {
+    await requirePermission("config", "update");
+    return triggerUpdateWebhook();
   });
 }
 
