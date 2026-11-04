@@ -3,7 +3,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
 import { BackupCodeTab } from "./backup-code-tab";

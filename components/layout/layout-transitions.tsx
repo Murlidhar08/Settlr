@@ -13,6 +13,5 @@ export function LayoutTransitions({ children }: { children: React.ReactNode }) {
         >
             {children}
         </motion.main>
-
     );
 }

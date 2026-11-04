@@ -2,7 +2,7 @@
 
 // Lib
 import { setupAdmin } from "@/actions/auth/setup";
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";

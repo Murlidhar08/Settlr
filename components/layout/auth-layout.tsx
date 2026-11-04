@@ -242,11 +242,11 @@ export function AuthCenterLayout({
 
   const theme = isCustomClass
     ? {
-        leftBg: "bg-linear-to-b from-primary/12 via-background to-background",
-        logoGlow: "bg-primary/10 group-hover:bg-primary/20",
-        logoBorderHover: "group-hover:border-primary/50",
-        rightBg: activeColorKey,
-      }
+      leftBg: "bg-linear-to-b from-primary/12 via-background to-background",
+      logoGlow: "bg-primary/10 group-hover:bg-primary/20",
+      logoBorderHover: "group-hover:border-primary/50",
+      rightBg: activeColorKey,
+    }
     : THEME_STYLES[activeColorKey.toLowerCase()] || THEME_STYLES.primary;
 
   // Resolve footer: explicit prop, or labelsList.footer if string or React element

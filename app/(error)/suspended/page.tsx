@@ -5,7 +5,7 @@ import { AlertTriangle, LogOut, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
 import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";

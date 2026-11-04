@@ -4,7 +4,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Compass } from "lucide-react";
 import Link from "next/link";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 
