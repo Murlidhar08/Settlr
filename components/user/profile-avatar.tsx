@@ -1,13 +1,13 @@
 "use client";
 
-import type { DeviceAccountItem } from "@/types";
+import { useDeviceAccounts, useSwitchAccount } from "@/hooks/queries/user";
 import { authClient, onIdentityChange, signOutThisAccount } from "@/lib/auth/auth-client";
 import { hasRole } from "@/lib/auth/permissions";
 import { MAX_ACCOUNTS } from "@/lib/config/constants";
 import { UserRole } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
 import { cn, getFileUrl } from "@/lib/utils";
-import { useDeviceAccounts, useSwitchAccount } from "@/hooks/queries/user";
+import type { DeviceAccountItem } from "@/types";
 import { getInitials } from "@/utility/common-function";
 import { LayoutDashboard, LogOut, User as UserIcon, UserPlus, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -211,7 +211,7 @@ export default function ProfileAvatar() {
                     </DropdownMenuItem>
                 ) : null}
 
-                <DropdownMenuItem onClick={() => router.push("/logout")} className="cursor-pointer py-2 text-muted-foreground">
+                <DropdownMenuItem onClick={() => router.push("/signout")} className="cursor-pointer py-2 text-muted-foreground">
                     <Users className="h-4 w-4 mr-2" />
                     <span>Manage accounts</span>
                 </DropdownMenuItem>

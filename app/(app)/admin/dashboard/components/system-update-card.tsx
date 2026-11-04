@@ -30,16 +30,9 @@ export function SystemUpdateCard() {
     status,
     isLoading,
     isChecking,
-    isRestarting,
     isUpToDate,
     hasUpdate,
-    updateResult,
-    checkError,
     handleCheckUpdates,
-    isConfirmOpen,
-    setIsConfirmOpen,
-    isLogsOpen,
-    setIsLogsOpen,
   } = useSystemUpdate();
 
   return (
@@ -65,7 +58,7 @@ export function SystemUpdateCard() {
               <span>
                 Current Version:{" "}
                 <strong className="text-foreground font-mono">
-                  v{status?.currentVersion || "0.0.1"}
+                  v{status?.currentVersion || "-"}
                 </strong>
               </span>
             </p>
@@ -73,18 +66,6 @@ export function SystemUpdateCard() {
 
           {/* Action buttons */}
           <div className="flex items-center flex-wrap gap-2 shrink-0">
-            {updateResult && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setIsLogsOpen(true)}
-                className="h-9 px-3 text-xs font-semibold rounded-xl border-border/60 hover:bg-muted/60 transition-all cursor-pointer"
-              >
-                <Terminal className="h-3.5 w-3.5 mr-1.5 text-muted-foreground" />
-                View Logs
-              </Button>
-            )}
-
             <Button
               variant="outline"
               size="sm"
@@ -104,30 +85,7 @@ export function SystemUpdateCard() {
         </div>
 
         {/* Content body based on status */}
-        {isRestarting ? (
-          <div className="p-4 rounded-xl border border-primary/30 bg-primary/5 dark:bg-primary/10 flex items-center justify-between gap-3 animate-pulse">
-            <div className="flex items-center gap-3">
-              <Loader2 className="h-5 w-5 animate-spin text-primary shrink-0" />
-              <div>
-                <div className="text-xs font-bold text-foreground">
-                  Restarting Application Server...
-                </div>
-                <div className="text-[11px] text-muted-foreground">
-                  Waiting for the server to finish rebooting. The page will reconnect and reload automatically.
-                </div>
-              </div>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => window.location.reload()}
-              className="text-xs h-8 rounded-xl shrink-0 cursor-pointer"
-            >
-              <RotateCcw className="h-3 w-3 mr-1" />
-              Reload Page
-            </Button>
-          </div>
-        ) : isLoading ? (
+        {isLoading ? (
           <div className="h-16 rounded-xl bg-muted/20 animate-pulse border border-border/40 flex items-center justify-center">
             <span className="text-xs text-muted-foreground">Checking update status...</span>
           </div>
@@ -139,9 +97,9 @@ export function SystemUpdateCard() {
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-sm font-bold text-foreground">
-                  {status?.hasVersionUpdate
-                    ? `New version available: v${status.currentVersion} → v${status.latestVersion}`
-                    : `New commits available on branch ${status?.branch} (${status?.currentCommit})`}
+                  {status?.hasUpdate
+                    ? `Update available: v${status.currentVersion} → v${status.latestVersion}`
+                    : `You're running the latest version`}
                 </span>
               </div>
             </div>
@@ -160,107 +118,8 @@ export function SystemUpdateCard() {
               </span>
             )}
           </div>
-        ) : checkError ? (
-          <div className="p-3.5 rounded-xl border border-rose-500/20 bg-rose-500/5 dark:bg-rose-500/10 flex items-center justify-between gap-2 text-xs text-rose-600 dark:text-rose-400">
-            <div className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>
-                Unable to check updates: {checkError instanceof Error ? checkError.message : "GitHub API request failed"}
-              </span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleCheckUpdates}
-              className="h-7 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-500/10"
-            >
-              Retry
-            </Button>
-          </div>
         ) : null}
       </div>
-
-      {/* Execution Logs Dialog */}
-      <Dialog open={isLogsOpen} onOpenChange={setIsLogsOpen}>
-        <DialogContent className="max-w-2xl rounded-2xl">
-          <DialogHeader>
-            <div className="flex items-center gap-2">
-              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                <Terminal className="h-4 w-4" />
-              </div>
-              <div>
-                <DialogTitle className="text-base font-bold">
-                  Update Execution Report
-                </DialogTitle>
-                <DialogDescription className="text-xs text-muted-foreground">
-                  {updateResult?.success
-                    ? "Update applied successfully to your server."
-                    : "Update execution log and diagnostic details."}
-                </DialogDescription>
-              </div>
-            </div>
-          </DialogHeader>
-
-          <div className="space-y-3 pt-2">
-            {updateResult?.success ? (
-              <div className="p-3 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs font-semibold flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 shrink-0" />
-                <span>
-                  Updated to v{updateResult.updatedVersion} ({updateResult.updatedCommit}).
-                </span>
-              </div>
-            ) : updateResult ? (
-              <div className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 text-rose-600 dark:text-rose-400 text-xs font-semibold flex items-center gap-2">
-                <AlertTriangle className="h-4 w-4 shrink-0" />
-                <span>Update status: {updateResult.message}</span>
-              </div>
-            ) : null}
-
-            {/* Terminal log window */}
-            <div className="p-4 rounded-xl bg-slate-950 text-slate-100 font-mono text-[11px] leading-relaxed max-h-80 overflow-y-auto border border-border/40 select-text">
-              {updateResult?.logs && updateResult.logs.length > 0 ? (
-                updateResult.logs.map((line, idx) => (
-                  <div
-                    key={idx}
-                    className={cn(
-                      "py-0.5",
-                      line.startsWith("►") && "text-cyan-400 font-semibold",
-                      line.startsWith("✔") && "text-emerald-400 font-semibold",
-                      line.startsWith("✖") && "text-rose-400 font-semibold",
-                      line.startsWith("ℹ") && "text-amber-400",
-                      line.startsWith("⚠") && "text-amber-300 font-medium"
-                    )}
-                  >
-                    {line}
-                  </div>
-                ))
-              ) : (
-                <div className="text-slate-400">No logs captured yet.</div>
-              )}
-            </div>
-          </div>
-
-          <DialogFooter className="mt-4 gap-2 flex-wrap sm:flex-nowrap">
-            {updateResult?.success && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => window.location.reload()}
-                className="rounded-xl text-xs font-semibold cursor-pointer"
-              >
-                Reload Page
-              </Button>
-            )}
-            <Button
-              size="sm"
-              onClick={() => setIsLogsOpen(false)}
-              className="rounded-xl text-xs font-semibold bg-primary text-primary-foreground cursor-pointer"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </>
   );
 }

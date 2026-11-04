@@ -14,7 +14,7 @@ import { tran } from "@/lib/languages/i18n";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 
 // Components
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
 import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";

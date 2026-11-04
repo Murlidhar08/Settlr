@@ -100,17 +100,9 @@ export interface AdminDashboardSummary {
 }
 
 export interface SystemUpdateStatus {
-  repo: string;
-  branch: string;
   currentVersion: string;
   latestVersion: string;
-  currentCommit: string;
-  updateAvailable: boolean;
-  hasVersionUpdate: boolean;
-  hasCommitUpdate: boolean;
   hasUpdate: boolean;
-  releaseTitle?: string;
-  releaseNotes?: string;
   publishedAt?: string;
   checkedAt: string;
 }

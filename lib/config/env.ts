@@ -4,7 +4,6 @@ import { z } from "zod";
  * Known placeholder / development secrets that must never be used in production.
  */
 const KNOWN_DEFAULT_SECRETS = new Set([
-  "lMD1eol2MrTxIZixGYyjwT0G0DQJ6oLJ",
   "your-secret-key-must-be-changed",
 ]);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { confirmDeleteAccountWithToken } from "@/actions/user.actions";
-import AuthCenterLayout, { type AuthLayoutColorTheme } from "@/components/auth-layout";
+import AuthCenterLayout, { type AuthLayoutColorTheme } from "@/components/layout/auth-layout";
 import { LoadingSwap } from "@/components/ui/loading-swap";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";

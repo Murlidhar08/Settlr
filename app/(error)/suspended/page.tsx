@@ -5,7 +5,7 @@ import { AlertTriangle, LogOut, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { authClient } from "@/lib/auth/auth-client";
 import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
@@ -29,7 +29,7 @@ export default function AccountSuspendedPage() {
         });
     }, [router]);
 
-    const handleLogout = async () => {
+    const handleSignOut = async () => {
         if (loading) return;
 
         setLoading(true);
@@ -75,7 +75,7 @@ export default function AccountSuspendedPage() {
                         </a>
 
                         <motion.button
-                            onClick={handleLogout}
+                            onClick={handleSignOut}
                             disabled={loading}
                             whileTap={{ scale: loading ? 1 : 0.98 }}
                             className={`w-full h-13 flex items-center justify-center gap-3 rounded-2xl font-black uppercase tracking-widest text-xs transition-all duration-300 active:scale-98 shadow-lg shadow-black/5

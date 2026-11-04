@@ -1,6 +1,6 @@
 "use client";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -174,7 +174,7 @@ function ResetPasswordForm() {
                 End all active sessions
               </label>
               <p className="text-xs text-muted-foreground font-medium">
-                Log out of all devices and active sessions after resetting password
+                Sign out of all devices and active sessions after resetting password
               </p>
             </div>
           </div>

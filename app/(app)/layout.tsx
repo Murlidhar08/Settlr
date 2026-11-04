@@ -9,7 +9,7 @@ import { setActiveLanguage } from "@/lib/languages/i18n";
 
 // Components
 import { ImpersonationIndicator } from "@/components/auth/impersonation-indicator";
-import { LayoutTransitions } from "@/components/layout-transitions";
+import { LayoutTransitions } from "@/components/layout/layout-transitions";
 import { NavBar } from "@/components/navbar/nav-bar";
 import { AppHeader, HeaderProvider } from "@/components/header";
 import { AppContentScrollArea } from "@/components/app-content-scroll-area";
