@@ -41,6 +41,9 @@ const serverEnvSchema = z.object({
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   TURNSTILE_SECRET_KEY: z.string().optional(),
 
+  // Application Update Webhook (Optional)
+  UPDATE_WEBHOOK_URL: z.string().optional(),
+
   // Bundle analysis
   ANALYZE: z.string().optional(),
 });

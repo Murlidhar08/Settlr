@@ -167,7 +167,7 @@ export function ConfirmProvider({ children }: { children: ReactNode }) {
                     : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
                 )}
               >
-                {options.confirmText ?? options.destructive ? "Delete" : "Confirm"}
+                {options.confirmText ? options.confirmText : options.destructive ? "Delete" : "Confirm"}
               </AlertDialogAction>
             </AlertDialogFooter>
           </div>
