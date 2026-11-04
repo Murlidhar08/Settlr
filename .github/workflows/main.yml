@@ -1,4 +1,3 @@
-
 name: Build and Push Docker Image
 
 on:
@@ -53,6 +52,12 @@ jobs:
           tags: |
             ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:${{ steps.version.outputs.version }}
             ${{ env.DOCKERHUB_USERNAME }}/${{ env.IMAGE_NAME }}:latest
+          build-args: |
+            NEXT_PUBLIC_APP_NAME=Settlr
+            NEXT_PUBLIC_APP_DESCRIPTION=Settlr for managing personal finance
+            BETTER_AUTH_URL=http://localhost:3000
+            BETTER_AUTH_SECRET=build_dummy_secret_for_docker_build_only_32_chars
+            DATABASE_URL=postgresql://postgres:postgres@localhost:5432/settlr?schema=public
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

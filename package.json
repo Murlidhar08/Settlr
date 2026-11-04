@@ -15,7 +15,7 @@
     "production-deploy": "npm run postinstall && prisma7 migrate deploy && npm run build",
     "production-build": "npm run postinstall && npm run build",
     "analyze": "cross-env ANALYZE=true next build --webpack",
-    "db:deploy": "npx prisma7 migrate deploy && npx prisma7 generate",
+    "db:deploy": "prisma7 migrate deploy && prisma7 generate",
     "db:generate": "prisma7 generate",
     "db:studio": "prisma7 studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",

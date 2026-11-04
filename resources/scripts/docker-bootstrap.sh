@@ -4,7 +4,7 @@
 set -e
 
 echo "Running database migrations..."
-npx prisma migrate deploy
+npm run db:deploy
 
 echo "Starting the application..."
 exec "$@"
