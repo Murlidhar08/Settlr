@@ -10,12 +10,12 @@ import { useEffect, useRef, useState } from "react";
 // Lib
 import { authClient, onIdentityChange, signIn } from "@/lib/auth/auth-client";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
-import { tran } from "@/lib/languages/i18n";
 import { UserStatus } from "@/lib/generated/prisma/enums";
+import { tran } from "@/lib/languages/i18n";
 
 // Components
-import AuthCenterLayout from "@/components/layout/auth-layout";
 import { TurnstileWidget, type TurnstileInstance } from "@/components/auth/turnstile";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";
 import DiscordAuth from "./discord-auth";
@@ -118,6 +118,8 @@ export default function LoginForm({ providers }: LoginFormProps) {
         : await signIn.username({ username: emailOrUsername, password }, fetchOptions);
 
       if (result.error) {
+        setLoading(false);
+
         turnstileRef.current?.reset();
         setCaptchaToken(null);
         if (result.error.code === "BANNED_USER") {
@@ -136,12 +138,12 @@ export default function LoginForm({ providers }: LoginFormProps) {
         window.location.assign("/dashboard");
       }
     } catch (err) {
+      setLoading(false);
+
       turnstileRef.current?.reset();
       setCaptchaToken(null);
       setError("An error occurred during sign in");
       console.error(err);
-    } finally {
-      setLoading(false);
     }
   };
 
