@@ -1,7 +1,8 @@
 import {
   adminRevokeSession,
   checkSystemUpdateAction,
-  getAdminDashboardSummary
+  getAdminDashboardSummary,
+  triggerSystemUpdateAction,
 } from "@/actions/admin-dashboard.actions";
 import { updateUserStatus } from "@/actions/admin.actions";
 import { UserStatus } from "@/lib/generated/prisma/enums";
@@ -71,5 +72,23 @@ export const useSystemUpdateStatus = () => {
     },
     staleTime: 0,
     refetchOnWindowFocus: false,
+  });
+};
+
+export const useTriggerSystemUpdate = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const result = await triggerSystemUpdateAction();
+      if (!result.success || !result.data) {
+        throw new Error(result.error || "Failed to trigger system update");
+      }
+      return result.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.systemUpdate });
+      queryClient.invalidateQueries({ queryKey: QUERY_KEYS.admin.dashboard });
+    },
   });
 };
