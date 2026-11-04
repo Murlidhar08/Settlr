@@ -88,7 +88,7 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
     title: formattedTitle,
     showBack: isNested,
     backUrl: isNested ? parentPath : undefined,
-    showMobileNav: !isNested,
+    showMobileNav: false,
     showProfile: true,
   };
 }
