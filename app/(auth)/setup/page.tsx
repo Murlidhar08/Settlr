@@ -2,20 +2,23 @@
 
 // Lib
 import { setupAdmin } from "@/actions/auth/setup";
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY, formatCopy } from "@/lib/config/auth-error-copy";
 import { usernameRegex } from "@/lib/constants/regex-list";
 import { AnimatePresence, motion } from "framer-motion";
-import { AtSign, Eye, EyeOff, Mail, ShieldCheck, User } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { AtSign, Eye, EyeOff, KeyRound, Mail, ShieldCheck, User } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-export default function SetupPage() {
+function SetupForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  const [setupToken, setSetupToken] = useState("");
   const [name, setName] = useState("");
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
@@ -26,9 +29,21 @@ export default function SetupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
+  useEffect(() => {
+    const urlToken = searchParams.get("token") || searchParams.get("setupToken");
+    if (urlToken && !setupToken) {
+      setSetupToken(urlToken);
+    }
+  }, [searchParams, setupToken]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+
+    if (!setupToken.trim()) {
+      setError("Setup token is required. Check your server terminal logs.");
+      return;
+    }
 
     if (!usernameRegex.test(username)) {
       setError("Username can only contain letters, numbers, underscores, and hyphens");
@@ -51,6 +66,7 @@ export default function SetupPage() {
     }
 
     const formData = new FormData();
+    formData.append("setupToken", setupToken.trim());
     formData.append("name", name);
     formData.append("username", username);
     formData.append("email", email);
@@ -112,6 +128,29 @@ export default function SetupPage() {
           </AnimatePresence>
 
           <div className="space-y-4">
+            {/* Setup Token */}
+            <div className="space-y-1.5">
+              <div className="flex items-center justify-between ml-1">
+                <label className="text-sm font-semibold text-foreground/70">
+                  Setup Token
+                </label>
+                <span className="text-[11px] text-muted-foreground font-medium">
+                  Printed in server logs
+                </span>
+              </div>
+              <div className="relative group">
+                <Input
+                  type="text"
+                  placeholder="Paste setup token..."
+                  className="h-13 rounded-2xl pl-4 pr-12 transition-all duration-300 bg-muted/40 border-border/50 focus:bg-background focus:ring-4 focus:ring-primary/10 focus:border-primary shadow-sm font-mono text-sm"
+                  value={setupToken}
+                  onChange={(e) => setSetupToken(e.target.value)}
+                  required
+                />
+                <KeyRound className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground group-focus-within:text-primary transition-colors w-5 h-5" />
+              </div>
+            </div>
+
             {/* Name */}
             <div className="space-y-1.5">
               <label className="text-sm font-semibold ml-1 text-foreground/70">
@@ -231,5 +270,19 @@ export default function SetupPage() {
         </motion.form>
       </div>
     </AuthCenterLayout>
+  );
+}
+
+export default function SetupPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen w-full flex items-center justify-center bg-background">
+          <div className="w-8 h-8 border-4 border-primary/30 border-t-primary rounded-full animate-spin" />
+        </div>
+      }
+    >
+      <SetupForm />
+    </Suspense>
   );
 }

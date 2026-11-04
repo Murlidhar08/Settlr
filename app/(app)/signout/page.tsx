@@ -3,16 +3,14 @@
 import { Button } from "@/components/ui/button";
 import { useConfirm } from "@/components/providers/confirm-provider";
 import { containerVariants, itemVariants } from "@/lib/animations";
-import { authClient } from "@/lib/auth/auth-client";
+import { signOutAllAccounts } from "@/lib/auth/auth-client";
 import { motion } from "framer-motion";
 import { Loader2, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import SessionList from "./session-list";
 
-export default function LogoutPage() {
-    const router = useRouter();
+export default function SignOutPage() {
     const confirm = useConfirm();
     const [isSigningOutAll, setIsSigningOutAll] = useState(false);
 
@@ -29,9 +27,8 @@ export default function LogoutPage() {
 
         setIsSigningOutAll(true);
         try {
-            await authClient.signOut();
-            toast.success("Signed out from all accounts");
-            router.push("/login");
+            toast.success("Signing out from all accounts...");
+            await signOutAllAccounts();
         } catch (error) {
             console.error("Failed to sign out all accounts:", error);
             toast.error("Failed to sign out from all accounts");
@@ -68,7 +65,7 @@ export default function LogoutPage() {
                         variant="outline"
                         disabled={isSigningOutAll}
                         onClick={handleSignOutAll}
-                        className="w-full h-14 rounded-2xl border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/40 font-bold text-sm sm:text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 group active:scale-[0.99]"
+                        className="w-full h-14 rounded-2xl border-rose-500/20 text-rose-600 dark:text-rose-400 hover:bg-rose-500/10 hover:border-rose-500/40 font-bold text-sm sm:text-base shadow-sm hover:shadow-md transition-all flex items-center justify-center gap-2 group active:scale-[0.99] cursor-pointer"
                     >
                         {isSigningOutAll ? (
                             <>

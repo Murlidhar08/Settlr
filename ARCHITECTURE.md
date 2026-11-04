@@ -31,7 +31,7 @@ The project follows a clean, modular layer-based architecture designed for scala
 │   │   ├── business/         # Business profiles and active business switcher
 │   │   ├── cashbook/         # Daily income/expense transactions ledger
 │   │   ├── dashboard/        # Main dashboard, summary cards, and cashflow charts
-│   │   ├── logout/           # Active session termination page
+│   │   ├── signout/          # Active session termination page
 │   │   ├── parties/          # Customer and supplier counterparty ledgers
 │   │   ├── settings/         # User profile, security, and preferences pages
 │   │   └── transactions/     # Transaction detail inspection & actions

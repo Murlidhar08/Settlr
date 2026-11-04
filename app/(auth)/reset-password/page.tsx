@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -68,13 +68,7 @@ function ResetPasswordForm() {
       if (result.error) {
         setError(result.error.message || "Failed to reset password.");
       } else {
-        if (revokeSessions) {
-          try {
-            await authClient.signOut();
-          } catch {
-            // ignore if not logged in
-          }
-        }
+        // Note: The server automatically revokes all active sessions for this specific user in DB (F1)
         setSuccessMsg("Password successfully reset! Redirecting...");
         setTimeout(() => {
           router.push("/login");
@@ -180,7 +174,7 @@ function ResetPasswordForm() {
                 End all active sessions
               </label>
               <p className="text-xs text-muted-foreground font-medium">
-                Log out of all devices and active sessions after resetting password
+                Sign out of all devices and active sessions after resetting password
               </p>
             </div>
           </div>

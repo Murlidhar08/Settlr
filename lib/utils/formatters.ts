@@ -197,3 +197,13 @@ export function getCurrencySymbol(currency?: Currency): string {
   const active = getActivePreferences();
   return (active.currency && CURRENCY_SYMBOLS[active.currency]) || CURRENCY_SYMBOLS[Currency.INR];
 }
+
+/**
+ * Converts a string to a slug.
+ */
+export function toSlug(value: string): string {
+  return value
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_|_$/g, "");
+}

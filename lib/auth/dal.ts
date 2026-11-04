@@ -10,6 +10,23 @@ import { prisma } from "@/lib/prisma/prisma";
  * Retrieves current server session and enforces that the account is active:
  * not banned, not suspended, and not pending approval.
  */
+
+/**
+ * Retrieves the current session safely and ensures the user is authenticated.
+ * Unlike requireActiveSession, this does NOT reject banned, suspended, or pending accounts.
+ * Required for account-management workflows (e.g., account switching, device session revoking,
+ * and single-account sign-out) so users in non-active states can still switch to a healthy account.
+ */
+export async function requireValidSession() {
+  const session = await getServerSession();
+
+  if (!session?.user?.id) {
+    throw new UnauthorizedError("You must be logged in to perform this action");
+  }
+
+  return session;
+}
+
 export async function requireActiveSession() {
   const session = await getServerSession();
 

@@ -1,6 +1,5 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
 import {
   ArrowLeft,
   Check,
@@ -19,8 +18,7 @@ import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { ThemeToggle } from "@/components/theme-toggle";
-import { Badge } from "@/components/ui/badge";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { envClient } from "@/lib/env.client";
@@ -127,8 +125,8 @@ export function LegalPageLayout({
               <Link
                 href={"/privacy-policy" as any}
                 className={`px-3 py-1.5 rounded-lg transition-all ${type === "privacy"
-                    ? "bg-background text-foreground shadow-xs font-bold"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
               >
                 Privacy Policy
@@ -136,8 +134,8 @@ export function LegalPageLayout({
               <Link
                 href={"/terms-and-services" as any}
                 className={`px-3 py-1.5 rounded-lg transition-all ${type === "terms"
-                    ? "bg-background text-foreground shadow-xs font-bold"
-                    : "text-muted-foreground hover:text-foreground"
+                  ? "bg-background text-foreground shadow-xs font-bold"
+                  : "text-muted-foreground hover:text-foreground"
                   }`}
               >
                 Terms &amp; Services
@@ -244,8 +242,8 @@ export function LegalPageLayout({
                           }
                         }}
                         className={`group flex items-center justify-between px-3 py-2 rounded-xl font-medium transition-all ${isActive
-                            ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
+                          ? "bg-primary/10 text-primary font-bold shadow-xs border border-primary/20"
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                           }`}
                       >
                         <span className="truncate pr-2">
@@ -256,8 +254,8 @@ export function LegalPageLayout({
                         </span>
                         <ChevronRight
                           className={`w-3.5 h-3.5 shrink-0 transition-transform ${isActive
-                              ? "text-primary opacity-100 translate-x-0.5"
-                              : "opacity-0 group-hover:opacity-60 -translate-x-1 group-hover:translate-x-0"
+                            ? "text-primary opacity-100 translate-x-0.5"
+                            : "opacity-0 group-hover:opacity-60 -translate-x-1 group-hover:translate-x-0"
                             }`}
                         />
                       </a>

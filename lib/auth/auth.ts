@@ -18,10 +18,12 @@ import { createDefaultAccountsForBusiness } from "@/actions/business.actions";
 import { headers } from "next/headers";
 import { envServer } from "../env.server";
 import { Currency, ThemeMode, UserStatus } from "../generated/prisma/enums";
+import { MAX_ACCOUNTS } from "../config/constants";
 import { getDeleteAccountEmailHtml } from "../templates/email-delete-account";
 import { getPasswordResetSuccessEmailHtml } from "../templates/email-password-reseted";
 import { getResetPasswordEmailHtml } from "../templates/email-reset-password";
 import { getVerificationEmailHtml } from "../templates/email-verification";
+import { toSlug } from "../utils";
 
 /**
  * Generates an HMAC signature for authenticating internal admin setup calls.
@@ -58,6 +60,7 @@ export const auth = betterAuth({
     },
   },
   advanced: {
+    cookiePrefix: toSlug(envServer.NEXT_PUBLIC_APP_NAME),
     ipAddress: {
       ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"],
       trustedProxies: [
@@ -254,8 +257,11 @@ export const auth = betterAuth({
   },
   session: {
     cookieCache: {
-      enabled: false
-    }
+      enabled: false,
+    },
+    expiresIn: 60 * 60 * 24 * 3, // 3 days
+    updateAge: 60 * 60 * 12,     // 12 hours
+    freshAge: 60 * 15,           // 15 minutes
   },
   plugins: [
     adminPlugin({
@@ -367,7 +373,7 @@ export const auth = betterAuth({
       }
     }),
     multiSession({
-      maximumSessions: 5,
+      maximumSessions: MAX_ACCOUNTS,
     }),
     haveIBeenPwned({
       enabled: envServer.ADVANCE_PASS_CHECK?.toLowerCase() == "true",

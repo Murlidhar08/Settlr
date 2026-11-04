@@ -35,7 +35,7 @@ export const authClient = createAuthClient({
 export * from "./permissions";
 
 /**
- * Safely purge client-side service worker caches upon logout (N-8)
+ * Safely purge client-side service worker caches upon signout (N-8)
  */
 export const purgeClientCaches = async () => {
   if (typeof window !== "undefined" && "caches" in window) {
@@ -73,3 +73,6 @@ export const signInWithSocial = async (provider: SocialProvider) => {
 export const signInWithGoogle = async () => await signInWithSocial("google");
 export const signInWithDiscord = async () => await signInWithSocial("discord");
 export const signInWithFacebook = async () => await signInWithSocial("facebook");
+
+export * from "./signout";
+export * from "./identity-sync";

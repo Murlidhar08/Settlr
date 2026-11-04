@@ -5,7 +5,7 @@ import { ArrowLeft, RefreshCw, ServerCrash } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 
-import AuthCenterLayout from "@/components/auth-layout";
+import AuthCenterLayout from "@/components/layout/auth-layout";
 import { itemVariants } from "@/lib/animations";
 import { ERROR_PAGES_COPY } from "@/lib/config/auth-error-copy";
 
