@@ -1,9 +1,15 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { useEffect, useState } from "react";
 import { AUTH_CHANNEL_NAME, AUTH_STORAGE_KEY, getTabId } from "@/lib/auth/identity-sync";
+
+// Dynamically load React Query Devtools only in development
+const ReactQueryDevtools = process.env.NODE_ENV === "development"
+  ? dynamic(() => import("@tanstack/react-query-devtools").then((mod) => mod.ReactQueryDevtools),
+    { ssr: false }
+  ) : () => null;
 
 export function QueryProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(
