@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "engines": {
-    "node": ">=22"
+    "node": ">=24"
   },
   "scripts": {
     "dev": "next dev --turbopack",
@@ -11,11 +11,10 @@
     "build": "next build --webpack",
     "start": "node server.js",
     "lint": "eslint",
-    "postinstall": "prisma7 generate",
     "production-deploy": "npm run postinstall && prisma7 migrate deploy && npm run build",
     "production-build": "npm run postinstall && npm run build",
     "analyze": "cross-env ANALYZE=true next build --webpack",
-    "db:deploy": "npx prisma7 migrate deploy && npx prisma7 generate",
+    "db:deploy": "prisma7 migrate deploy",
     "db:generate": "prisma7 generate",
     "db:studio": "prisma7 studio",
     "auth:generate": "npx @better-auth/cli@latest generate --config ./lib/auth/auth.ts --yes",
@@ -31,8 +30,6 @@
     "@hookform/resolvers": "^7.0.2",
     "@marsidev/react-turnstile": "^1.6.3",
     "@tanstack/react-query": "^5.105.3",
-    "@tanstack/react-query-devtools": "^5.105.3",
-    "@types/pg": "^8.23.1",
     "better-auth": "^1.7.16",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
@@ -61,8 +58,10 @@
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@tailwindcss/postcss": "^4.3.4",
+    "@tanstack/react-query-devtools": "^5.105.3",
     "@types/node": "^26.6.6",
     "@types/nodemailer": "^8.0.2",
+    "@types/pg": "^8.23.1",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.3.0",
     "cross-env": "^10.1.0",
