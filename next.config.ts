@@ -43,6 +43,13 @@ const nextConfig: NextConfig = {
     "pg",
     "jimp",
   ],
+  outputFileTracingIncludes: {
+    "/*": [
+      "./prisma/**/*",
+      "./prisma7.config.ts",
+      "./scripts/reset-password.js",
+    ],
+  },
   compiler: {
     removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
   },
