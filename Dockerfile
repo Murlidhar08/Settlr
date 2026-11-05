@@ -13,12 +13,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build arguments for Next.js and environment verification
-ARG NEXT_PUBLIC_APP_NAME
-ARG NEXT_PUBLIC_APP_DESCRIPTION
-ARG BETTER_AUTH_URL
-ARG BETTER_AUTH_SECRET
-ARG DATABASE_URL
+# Build arguments with production defaults to prevent build-time missing env validation errors
+ARG NEXT_PUBLIC_APP_NAME="App Name"
+ARG NEXT_PUBLIC_APP_DESCRIPTION="This is the application description"
+ARG BETTER_AUTH_URL=http://localhost:3000
+ARG BETTER_AUTH_SECRET=build_dummy_secret_for_docker_build_only_32_chars
+ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/settlr"
 
 # Environment variables for build process
 ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
