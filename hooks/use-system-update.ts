@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   useSystemUpdateStatus,
   useTriggerSystemUpdate,
@@ -25,15 +24,30 @@ export function useSystemUpdate() {
    */
   const handleCheckUpdates = async () => {
     try {
-      toast.loading("Checking GitHub for updates...", { id: "check-update" });
+      toast.loading("Checking for updates...", { id: "check-update" });
       const res = await refetch();
-      if (res.data?.hasUpdate) {
+      const data = res.data;
+
+      if (!data) {
+        toast.error("Failed to retrieve update status", { id: "check-update" });
+        return;
+      }
+
+      if (data.error) {
+        toast.error(`Check failed: ${data.error}`, { id: "check-update" });
+        return;
+      }
+
+      if (data.hasUpdate) {
         toast.info(
-          `New version available: v${res.data.latestVersion}`,
+          `New version available: v${data.latestVersion} (Current: v${data.currentVersion})`,
           { id: "check-update" }
         );
       } else {
-        toast.success("Application is up to date!", { id: "check-update" });
+        toast.success(
+          `Application is up to date! (v${data.currentVersion})`,
+          { id: "check-update" }
+        );
       }
     } catch (err) {
       toast.error(
@@ -61,8 +75,11 @@ export function useSystemUpdate() {
     }
   };
 
-  const hasUpdate = Boolean(status?.hasUpdate);
-  const isUpToDate = Boolean(status && !status.hasUpdate);
+  const hasError = Boolean(status?.error);
+  const hasUpdate = Boolean(status?.hasUpdate && !status?.error);
+  const isUpToDate = Boolean(
+    status && !status.hasUpdate && !status.error && status.latestVersion
+  );
   const hasWebhook = Boolean(status?.hasWebhook);
 
   return {
@@ -72,6 +89,7 @@ export function useSystemUpdate() {
     isUpdating,
     isUpToDate,
     hasUpdate,
+    hasError,
     hasWebhook,
     handleCheckUpdates,
     handleApplyUpdate,

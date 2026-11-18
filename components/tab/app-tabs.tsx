@@ -3,9 +3,10 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
-import { Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { LoadingScreen } from "../loading-screen";
 import { TabItem } from "../navbar/tab-item";
+import { useMobileTabActionsContext, useSetMobileTabConfig } from "../providers/mobile-tab-provider";
 import MobileNav from "./mobile-tab";
 
 interface AppTabsProps {
@@ -39,10 +40,36 @@ export default function AppTabs({ tabs, defaultTab, className = "w-full" }: AppT
         return () => window.removeEventListener("hashchange", handleHashChange);
     }, [tabs]);
 
-    const handleTabChange = (value: string) => {
+    const handleTabChange = useCallback((value: string) => {
         setActiveTab(value);
         window.history.replaceState(null, "", `#${value}`);
-    };
+    }, []);
+
+    const mobileTabActions = useMobileTabActionsContext();
+    const hasMobileTab = Boolean(mobileTabActions);
+
+    const tabNavItems = useMemo(
+        () =>
+            tabs.map((tab) => ({
+                id: tab.id,
+                label: tab.label,
+                icon: tab.icon,
+                badgeCount: tab.badgeCount,
+                hidden: tab.hidden,
+                href: `#${tab.id}`,
+                active: activeTab === tab.id,
+            })),
+        [tabs, activeTab]
+    );
+
+    useSetMobileTabConfig(
+        hasMobileTab
+            ? {
+                  navItems: tabNavItems,
+                  onChange: handleTabChange,
+              }
+            : {}
+    );
 
     // Drag to scroll logic
     const tabsListRef = useRef<HTMLDivElement>(null);
@@ -125,15 +152,13 @@ export default function AppTabs({ tabs, defaultTab, className = "w-full" }: AppT
                 </TabsList>
             </div>
 
-            {/* Mobile Nav */}
-            <MobileNav
-                onChange={handleTabChange}
-                navItems={tabs.map(tab => ({
-                    ...tab,
-                    href: `#${tab.id}`,
-                    active: activeTab === tab.id
-                }))}
-            />
+            {/* Mobile Nav: rendered standalone only when outside MobileTabProvider */}
+            {!hasMobileTab && (
+                <MobileNav
+                    onChange={handleTabChange}
+                    navItems={tabNavItems}
+                />
+            )}
 
             {/* Tab content */}
             {tabs.map((tab) => (

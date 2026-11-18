@@ -20,6 +20,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 # Build arguments with production defaults to prevent build-time missing env validation errors
+ARG NODE_ENV="production"
 ARG NEXT_PUBLIC_APP_NAME=Settlr
 ARG NEXT_PUBLIC_APP_DESCRIPTION="Settlr for managing personal finance"
 ARG BETTER_AUTH_URL=http://localhost:3000
@@ -27,6 +28,7 @@ ARG BETTER_AUTH_SECRET=build_dummy_secret_for_docker_build_only_32_chars
 ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/settlr"
 
 # Environment variables for build process
+ENV NODE_ENV=production
 ENV NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
 ENV NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION}
 ENV BETTER_AUTH_URL=${BETTER_AUTH_URL}
@@ -36,10 +38,12 @@ ENV NEXT_TELEMETRY_DISABLED=1
 
 RUN npm run db:generate
 RUN npm run build
+RUN rm -f /app/.next/standalone/.env*
+RUN sed -i "s/process.env.NODE_ENV = 'production'/process.env.NODE_ENV = process.env.NODE_ENV || 'production'/" /app/.next/standalone/server.js
 
 # Stage 4: Minimal Production Runner
 FROM node:24-alpine AS runner
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat su-exec
 WORKDIR /app
 
 ENV NODE_ENV=production
@@ -57,10 +61,10 @@ COPY --from=builder --chown=node:node /app/.next/static ./.next/static
 COPY --from=builder --chown=node:node /app/lib/generated ./lib/generated
 COPY --from=pro-deps --chown=node:node /app/node_modules ./node_modules
 
-# Ensure uploads directory exists with non-root node ownership without duplicating layer data
-RUN mkdir -p /app/uploads && chown node:node /app/uploads
-
-USER node
+# Ensure uploads directory and common subdirectories exist with non-root node ownership and 775 permissions
+RUN mkdir -p /app/uploads/profile /app/uploads/document \
+    && chown -R node:node /app/uploads \
+    && chmod -R 775 /app/uploads
 
 EXPOSE 3000
 

@@ -1,3 +1,4 @@
+import { AdminNavBar } from "./components/admin-nav-bar";
 import { getUserSession } from "@/lib/auth/auth";
 import { hasAnyRole } from "@/lib/auth/permissions";
 import { UserRole } from "@/lib/generated/prisma/enums";
@@ -15,5 +16,11 @@ export default async function AdminLayout({
     return <Restricted />;
   }
 
-  return <>{children}</>;
+  return (
+    <div className="flex-1 flex flex-col lg:flex-row min-w-0 h-full overflow-hidden">
+      <AdminNavBar />
+
+      <div className="flex-1 overflow-y-auto">{children}</div>
+    </div>
+  );
 }

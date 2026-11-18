@@ -12,6 +12,7 @@ import { ImpersonationIndicator } from "@/components/auth/impersonation-indicato
 import { LayoutTransitions } from "@/components/layout/layout-transitions";
 import { NavBar } from "@/components/navbar/nav-bar";
 import { AppHeader, HeaderProvider } from "@/components/header";
+import { AppMobileTab, MobileTabProvider } from "@/components/tab";
 import { AppContentScrollArea } from "@/components/app-content-scroll-area";
 import { UserConfigProvider } from "@/components/providers/user-config-provider";
 import { UserStatus } from "@/lib/generated/prisma/enums";
@@ -43,27 +44,33 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   return (
     <UserConfigProvider config={userConfig}>
       <HeaderProvider>
-        <div className="h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden">
-          <div className="flex h-full">
-            <NavBar />
+        <MobileTabProvider>
+          <div className="h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden">
+            <div className="flex h-full">
+              {/* Desktop NavBar */}
+              <NavBar />
 
-            {/* Main Content Area */}
-            <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
-              {/* Header is persistent and always visible on all pages and loading screens */}
-              <AppHeader />
+              {/* Main Content Area */}
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+                {/* Header is persistent and always visible on all pages and loading screens */}
+                <AppHeader />
 
-              {/* Scrollable Center Content Area */}
-              <AppContentScrollArea>
-                <LayoutTransitions>
-                  {children}
-                </LayoutTransitions>
-              </AppContentScrollArea>
+                {/* Scrollable Center Content Area */}
+                <AppContentScrollArea>
+                  <LayoutTransitions>
+                    {children}
+                  </LayoutTransitions>
+                </AppContentScrollArea>
+              </div>
             </div>
-          </div>
 
-          {/* Only when admin is impersonating */}
-          <ImpersonationIndicator />
-        </div>
+            {/* Persistent Mobile Tab */}
+            <AppMobileTab />
+
+            {/* Only when admin is impersonating */}
+            <ImpersonationIndicator />
+          </div>
+        </MobileTabProvider>
       </HeaderProvider>
     </UserConfigProvider>
   );

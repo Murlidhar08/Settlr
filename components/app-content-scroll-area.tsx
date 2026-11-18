@@ -15,7 +15,7 @@ export function AppContentScrollArea({ children }: { children: React.ReactNode }
   return (
     <div
       ref={scrollRef}
-      className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden flex flex-col relative"
+      className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden flex flex-col relative px-2 md:px-12 lg:px-20 pb-10 md:pb-20 lg:pb-10"
     >
       {children}
     </div>
