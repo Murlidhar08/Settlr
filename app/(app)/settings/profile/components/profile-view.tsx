@@ -1,13 +1,13 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Edit3, LogOut } from "lucide-react";
-import { useRouter } from "next/navigation";
 import { FooterButtons } from "@/components/footer-buttons";
 import { Button } from "@/components/ui/button";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import { tran } from "@/lib/languages/i18n";
 import { useCurrentUser } from "@/tanstacks/user";
+import { motion } from "framer-motion";
+import { Edit3, LogOut } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { ProfileCard } from "./profile-card";
 import { ProfileDetailsList } from "./profile-details-list";
 import { ProfileSkeleton } from "./profile-skeleton";
@@ -28,7 +28,7 @@ export function ProfileView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-4xl mt-6 space-y-6 sm:space-y-8 px-4 sm:px-6"
+        className="mx-auto max-w-3xl space-y-8"
       >
         {/* Profile Card */}
         <motion.div variants={itemVariants}>

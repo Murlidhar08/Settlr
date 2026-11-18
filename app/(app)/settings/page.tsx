@@ -1,7 +1,6 @@
-import type { Metadata } from "next";
 import { Suspense } from "react";
-import { SettingsView } from "./components/settings-view";
 import { SettingsSkeleton } from "./components/settings-skeleton";
+import { SettingsView } from "./components/settings-view";
 
 export default function SettingsPage() {
   return (

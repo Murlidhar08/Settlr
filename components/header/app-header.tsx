@@ -81,7 +81,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "sticky top-0 z-30 h-14 sm:h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-3 sm:px-6 border-b border-border shadow-sm gap-2 sm:gap-4",
+        "sticky top-0 z-30 h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-3 sm:px-6 border-b border-border shadow-sm gap-2 sm:gap-4",
         config.className
       )}
     >
@@ -93,7 +93,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
           variant="ghost"
           size="icon"
           aria-label="Toggle navigation menu"
-          className="h-8 w-8 sm:h-9 sm:w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/50 cursor-pointer shrink-0 transition-colors"
+          className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 dark:hover:bg-accent/40 cursor-pointer shrink-0 transition-colors flex items-center justify-center"
         >
           <PanelLeft className="h-4.5 w-4.5" />
         </Button>

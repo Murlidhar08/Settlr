@@ -30,10 +30,10 @@ const NavBar = () => {
                 {/* Header: Logo + App Name + Version with clean divider border */}
                 <div
                     className={clsx(
-                        "flex items-center border-b border-sidebar-border shrink-0 transition-all duration-300",
+                        "flex items-center h-14.5 border-b border-sidebar-border shrink-0 transition-all duration-300",
                         collapsed
-                            ? "justify-center px-2 py-3.5 min-h-[60px]"
-                            : "gap-3 px-4 py-3.5 min-h-[60px]"
+                            ? "justify-center px-2"
+                            : "gap-3 px-4 "
                     )}
                 >
                     <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-lg bg-sidebar-accent/10 border border-sidebar-border/40">

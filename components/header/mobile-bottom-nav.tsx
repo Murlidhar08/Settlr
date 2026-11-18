@@ -42,55 +42,53 @@ export default function MobileBottomNav({ navPropItems }: MobileBottomNavProps) 
             <SheetContent
                 side="left"
                 showCloseButton={false}
-                className="w-full sm:max-w-xs border-r p-4 px-5 flex flex-col overflow-hidden bg-background/95 backdrop-blur-md"
+                className="w-full sm:max-w-xs border-r border-sidebar-border p-0 flex flex-col overflow-hidden bg-sidebar text-sidebar-foreground shadow-2xl"
             >
-                {/* Header: Logo + App Name + Version + Close */}
-                <SheetHeader className="mb-4 px-0 p-0 border-b border-border/80 pb-3">
-                    <SheetTitle className="flex items-center justify-between gap-3 text-sidebar-foreground">
-                        <div className="flex items-center gap-3">
-                            <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-lg bg-sidebar-accent/10 border border-border/40">
-                                <Image
-                                    src="/images/logo/light_logo.png"
-                                    alt="Logo"
-                                    width={24}
-                                    height={24}
-                                    className="dark:hidden"
-                                />
-                                <Image
-                                    src="/images/logo/dark_logo.png"
-                                    alt="Logo"
-                                    width={24}
-                                    height={24}
-                                    className="hidden dark:block"
-                                />
-                            </div>
-                            <div className="flex flex-col text-left">
-                                <span className="text-sm font-bold text-foreground tracking-tight leading-tight">
-                                    {envClient.NEXT_PUBLIC_APP_NAME}
-                                </span>
-                                <span className="text-xs text-muted-foreground font-normal leading-tight mt-0.5">
-                                    {displayVersion}
-                                </span>
-                            </div>
+                {/* Header: Logo + App Name + Version + Close aligned with AppHeader */}
+                <SheetHeader className="h-14 sm:h-16 px-3 sm:px-6 border-b border-sidebar-border flex flex-row items-center justify-between shrink-0 m-0 space-y-0">
+                    <SheetTitle className="flex items-center gap-3 text-sidebar-foreground m-0 p-0 font-normal">
+                        <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-lg bg-sidebar-accent/10 border border-sidebar-border/40">
+                            <Image
+                                src="/images/logo/light_logo.png"
+                                alt="Logo"
+                                width={24}
+                                height={24}
+                                className="dark:hidden"
+                            />
+                            <Image
+                                src="/images/logo/dark_logo.png"
+                                alt="Logo"
+                                width={24}
+                                height={24}
+                                className="hidden dark:block"
+                            />
                         </div>
-                        <SheetClose
-                            render={
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={() => setIsMobileOpen(false)}
-                                    className="hover:bg-accent hover:text-sidebar-accent-foreground rounded-lg h-8 w-8 shrink-0 cursor-pointer"
-                                >
-                                    <X size={18} />
-                                    <span className="sr-only">Close</span>
-                                </Button>
-                            }
-                        />
+                        <div className="flex flex-col text-left">
+                            <span className="text-sm font-bold text-sidebar-foreground tracking-tight leading-tight">
+                                {envClient.NEXT_PUBLIC_APP_NAME}
+                            </span>
+                            <span className="text-xs text-muted-foreground font-normal leading-tight mt-0.5">
+                                {displayVersion}
+                            </span>
+                        </div>
                     </SheetTitle>
+                    <SheetClose
+                        render={
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => setIsMobileOpen(false)}
+                                className="h-9 w-9 rounded-lg text-muted-foreground hover:text-sidebar-foreground hover:bg-sidebar-accent/20 shrink-0 cursor-pointer"
+                            >
+                                <X className="h-4.5 w-4.5" />
+                                <span className="sr-only">Close</span>
+                            </Button>
+                        }
+                    />
                 </SheetHeader>
 
-                {/* Flat nav list without groups */}
-                <nav className="space-y-1 overflow-y-auto">
+                {/* Flat nav list matching desktop sidebar */}
+                <nav className="flex-1 py-3 px-2 space-y-1 overflow-y-auto custom-scrollbar">
                     {navItems.map((item) => {
                         const active =
                             pathname === item.href ||
@@ -104,13 +102,22 @@ export default function MobileBottomNav({ navPropItems }: MobileBottomNavProps) 
                                         href={item.href as any}
                                         onClick={() => setIsMobileOpen(false)}
                                         className={clsx(
-                                            "group flex items-center gap-3 rounded-lg px-3 py-2.5 font-normal transition-all duration-200 cursor-pointer text-sm",
+                                            "group relative flex items-center gap-3 rounded-lg text-sm transition-all duration-200 px-3 py-2.5 h-10 cursor-pointer",
                                             active
                                                 ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium shadow-xs"
-                                                : "text-sidebar-foreground/75 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground"
+                                                : "text-sidebar-foreground/75 hover:bg-sidebar-accent/10 hover:text-sidebar-foreground font-normal"
                                         )}
                                     >
-                                        <span className="shrink-0">{item.icon}</span>
+                                        <div
+                                            className={clsx(
+                                                "shrink-0 transition-transform duration-200",
+                                                active
+                                                    ? "text-sidebar-accent-foreground"
+                                                    : "text-sidebar-foreground/70 group-hover:text-sidebar-foreground"
+                                            )}
+                                        >
+                                            {item.icon}
+                                        </div>
                                         <span className="leading-none">{item.label}</span>
                                     </Link>
                                 }

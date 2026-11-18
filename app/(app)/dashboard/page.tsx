@@ -14,7 +14,7 @@ export default async function Page() {
   const userRole = session?.user.role || "user";
 
   return (
-    <div className="flex-1 px-4 space-y-6 sm:space-y-8 pb-34 max-w-5xl mx-auto w-full">
+    <div className=" space-y-6 sm:space-y-8 pb-34 max-w-4xl mx-auto w-full">
       <DashboardClient firstName={firstName} email={session?.user.email} />
 
       {/* Permission Gate Testing Suite */}
