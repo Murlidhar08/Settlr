@@ -78,7 +78,7 @@ export function SecurityView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-4xl p-4 sm:p-6 mt-4"
+        className="mx-auto max-w-4xl p-4 sm:p-6"
       >
         <AppTabs defaultTab="password" tabs={tabs} />
       </motion.div>
