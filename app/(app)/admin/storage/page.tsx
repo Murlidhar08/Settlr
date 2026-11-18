@@ -1,4 +1,3 @@
-import type { Metadata } from "next";
 import { StorageView } from "./components/storage-view";
 
 export default function AdminStoragePage() {

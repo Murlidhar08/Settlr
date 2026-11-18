@@ -11,10 +11,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 function SidePanelLayoutSkeleton() {
   return (
     <div className="w-full flex flex-col md:flex-row gap-6 animate-pulse">
-      <div className="w-full md:w-72 lg:w-80 space-y-4">
-        <Skeleton className="h-8 w-32 rounded-lg" />
+      <div className="w-full md:w-64 lg:w-72 space-y-4">
+        <Skeleton className="h-6 w-28 rounded-lg" />
         <Skeleton className="h-44 w-full rounded-2xl" />
-        <Skeleton className="h-8 w-24 rounded-lg" />
+        <Skeleton className="h-6 w-24 rounded-lg" />
         <Skeleton className="h-56 w-full rounded-2xl" />
       </div>
       <div className="flex-1 space-y-4">
@@ -29,7 +29,7 @@ function SidePanelLayoutContent({
   groups,
   items,
   defaultPart,
-  backLabel = "Settings",
+  backLabel = "Admin",
   paramName = "part",
   className,
   sidePanelClassName,
@@ -66,14 +66,18 @@ function SidePanelLayoutContent({
   // Current query parameter value from URL
   const currentPartParam = searchParams?.get(paramName);
 
-  // Active item resolution
+  // Active item resolution (supports id matching & alias matching)
   const activeItem = useMemo<SidePanelItem | undefined>(() => {
     if (currentPartParam) {
-      const match = allItems.find((i) => i.id === currentPartParam);
+      const match = allItems.find(
+        (i) => i.id === currentPartParam || i.aliases?.includes(currentPartParam)
+      );
       if (match) return match;
     }
     if (defaultPart) {
-      const match = allItems.find((i) => i.id === defaultPart);
+      const match = allItems.find(
+        (i) => i.id === defaultPart || i.aliases?.includes(defaultPart)
+      );
       if (match) return match;
     }
     return allItems[0];
@@ -143,7 +147,7 @@ function SidePanelLayoutContent({
                 return (
                   <div key={group.id || group.title || groupIdx} className="space-y-2">
                     {group.title && (
-                      <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-2">
+                      <h3 className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest px-2.5 mb-1.5">
                         {group.title}
                       </h3>
                     )}
@@ -153,7 +157,7 @@ function SidePanelLayoutContent({
                         <div
                           key={item.id}
                           onClick={() => handleSelectPart(item.id)}
-                          className="flex items-center justify-between p-2.5 rounded-xl transition-colors hover:bg-secondary/60 dark:hover:bg-zinc-800/60 active:scale-[0.99] cursor-pointer pt-2.5 first:border-none"
+                          className="flex items-center justify-between p-3 rounded-xl transition-colors hover:bg-secondary/60 dark:hover:bg-zinc-800/60 active:scale-[0.99] cursor-pointer first:border-none min-h-14"
                         >
                           {/* Left: Icon in box + Title */}
                           <div className="flex items-center gap-3 min-w-0">
@@ -172,7 +176,7 @@ function SidePanelLayoutContent({
                             {item.badge && (
                               <span
                                 className={cn(
-                                  "text-xs text-muted-foreground font-medium",
+                                  "text-xs px-2 py-0.5 rounded-full font-medium bg-muted text-muted-foreground border border-border/40",
                                   item.badgeClassName
                                 )}
                               >
@@ -202,27 +206,42 @@ function SidePanelLayoutContent({
               <button
                 type="button"
                 onClick={handleBackToMobileList}
-                className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer px-2 py-1.5 -ml-2 rounded-lg hover:bg-secondary/60 dark:hover:bg-zinc-800/60 active:scale-95"
+                className="inline-flex items-center gap-2 text-sm font-semibold text-foreground hover:text-primary transition-colors cursor-pointer px-2.5 py-1.5 -ml-1 rounded-lg hover:bg-secondary/60 dark:hover:bg-zinc-800/60 active:scale-95"
               >
                 <ArrowLeft className="h-4 w-4" />
                 <span>{backLabel}</span>
               </button>
 
-              {/* Main Content Card */}
+              {/* Main Content Card with Border and Proper Title Separator */}
               {activeItem && (
-                <div className="rounded-2xl border border-border/80 bg-card p-5 sm:p-6 shadow-xs space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground">
-                      {activeItem.title}
-                    </h2>
-                    {activeItem.description && (
-                      <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                        {activeItem.description}
-                      </p>
-                    )}
-                  </div>
+                <div className="rounded-2xl border border-border/80 dark:border-zinc-800/80 bg-card p-5 sm:p-6 shadow-xs space-y-6">
+                  {!activeItem.hideHeader && (
+                    <div className="pb-4 border-b border-border/70 dark:border-zinc-800 space-y-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <h2 className="text-lg sm:text-xl font-bold tracking-tight text-foreground">
+                          {activeItem.title}
+                        </h2>
+                        {activeItem.badge && (
+                          <span
+                            className={cn(
+                              "text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0",
+                              activeItem.badgeClassName ||
+                                "bg-secondary text-foreground border-border/60"
+                            )}
+                          >
+                            {activeItem.badge}
+                          </span>
+                        )}
+                      </div>
+                      {activeItem.description && (
+                        <p className="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                          {activeItem.description}
+                        </p>
+                      )}
+                    </div>
+                  )}
 
-                  <div className="pt-2">{activeItem.content}</div>
+                  <div className="pt-1">{activeItem.content}</div>
                 </div>
               )}
             </motion.div>
@@ -234,11 +253,11 @@ function SidePanelLayoutContent({
       {/* DESKTOP VIEW (>= md)                                      */}
       {/* Image 1: Sidepanel (left) + Main Content (right)           */}
       {/* ========================================================= */}
-      <div className="hidden md:flex flex-row items-start gap-8 lg:gap-10">
+      <div className="hidden md:flex flex-row items-start gap-6 lg:gap-8">
         {/* Left Sidepanel */}
         <aside
           className={cn(
-            "w-72 lg:w-80 shrink-0 space-y-6 py-1",
+            "w-64 lg:w-72 shrink-0 space-y-6 py-1",
             sidePanelClassName
           )}
         >
@@ -248,14 +267,16 @@ function SidePanelLayoutContent({
             return (
               <div key={group.id || group.title || groupIdx} className="space-y-2">
                 {group.title && (
-                  <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-3">
+                  <h3 className="text-[11px] font-bold text-muted-foreground/80 uppercase tracking-widest px-3 mb-2">
                     {group.title}
                   </h3>
                 )}
 
-                <div className="space-y-1">
+                <div className="space-y-1.5">
                   {group.items.map((item) => {
-                    const isActive = activeItem?.id === item.id;
+                    const isActive =
+                      activeItem?.id === item.id ||
+                      (currentPartParam ? item.aliases?.includes(currentPartParam) : false);
 
                     return (
                       <button
@@ -263,10 +284,11 @@ function SidePanelLayoutContent({
                         key={item.id}
                         onClick={() => handleSelectPart(item.id)}
                         className={cn(
-                          "w-full flex items-center justify-between gap-3 px-3.5 py-2.5 rounded-xl text-sm transition-all cursor-pointer text-left select-none",
+                          /* Fixed height h-11 and permanent 1px border prevents shrink/grow jitter on select */
+                          "group w-full h-11 flex items-center justify-between gap-3 px-3.5 rounded-xl text-sm transition-all duration-150 border cursor-pointer text-left select-none",
                           isActive
-                            ? "bg-secondary dark:bg-zinc-800 text-foreground font-semibold border border-border/60 dark:border-zinc-700/60 shadow-xs"
-                            : "text-muted-foreground/80 hover:text-foreground font-medium hover:bg-secondary/50 dark:hover:bg-zinc-800/40"
+                            ? "bg-card dark:bg-zinc-800/90 text-foreground font-semibold border-border/80 dark:border-zinc-700/80 shadow-xs"
+                            : "border-transparent text-muted-foreground/80 hover:text-foreground hover:bg-muted/60 dark:hover:bg-zinc-800/40 font-medium"
                         )}
                       >
                         {/* Icon & Label */}
@@ -276,8 +298,8 @@ function SidePanelLayoutContent({
                               className={cn(
                                 "shrink-0 [&>svg]:size-4.5 transition-colors",
                                 isActive
-                                  ? "text-foreground"
-                                  : "text-muted-foreground/80 group-hover:text-foreground"
+                                  ? "text-primary dark:text-zinc-100"
+                                  : "text-muted-foreground/70 group-hover:text-foreground"
                               )}
                             >
                               {item.icon}
@@ -290,8 +312,11 @@ function SidePanelLayoutContent({
                         {item.badge && (
                           <span
                             className={cn(
-                              "text-xs font-medium shrink-0",
-                              item.badgeClassName || "text-muted-foreground"
+                              "text-xs px-2 py-0.5 rounded-full font-semibold shrink-0 transition-colors",
+                              item.badgeClassName ||
+                                (isActive
+                                  ? "bg-primary/10 text-primary border border-primary/20 dark:bg-zinc-700/60 dark:text-zinc-200 dark:border-zinc-600/60"
+                                  : "bg-muted/70 text-muted-foreground border border-transparent")
                             )}
                           >
                             {item.badge}
@@ -307,24 +332,46 @@ function SidePanelLayoutContent({
         </aside>
 
         {/* Vertical Divider Line */}
-        <div className="hidden md:block w-px self-stretch bg-border/60" aria-hidden="true" />
+        <div className="hidden md:block w-px self-stretch bg-border/40" aria-hidden="true" />
 
-        {/* Right Main Content Window */}
+        {/* Right Main Content Window with Attractive Border and Header Separator */}
         <main className={cn("flex-1 min-w-0 py-1", contentClassName)}>
           {activeItem && (
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-bold tracking-tight text-foreground">
-                  {activeItem.title}
-                </h2>
-                {activeItem.description && (
-                  <p className="text-sm text-muted-foreground mt-1 leading-relaxed">
-                    {activeItem.description}
-                  </p>
-                )}
-              </div>
+            <div className="rounded-2xl border border-border/80 dark:border-zinc-800/80 bg-card p-6 sm:p-8 shadow-xs space-y-6 transition-all">
+              {/* Header with Title, Description, and Proper Separator */}
+              {!activeItem.hideHeader && (
+                <div className="pb-5 border-b border-border/70 dark:border-zinc-800 space-y-1.5">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="space-y-1">
+                      <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                        {activeItem.title}
+                      </h2>
+                      {activeItem.description && (
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {activeItem.description}
+                        </p>
+                      )}
+                    </div>
 
-              <div className="pt-2">{activeItem.content}</div>
+                    {activeItem.badge && (
+                      <span
+                        className={cn(
+                          "text-xs font-semibold px-2.5 py-1 rounded-full border shrink-0",
+                          activeItem.badgeClassName ||
+                            "bg-secondary/70 text-foreground border-border/60"
+                        )}
+                      >
+                        {activeItem.badge}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Main Content Body */}
+              <div className={activeItem.hideHeader ? "" : "pt-1"}>
+                {activeItem.content}
+              </div>
             </div>
           )}
         </main>

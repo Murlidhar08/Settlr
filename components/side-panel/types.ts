@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 export interface SidePanelItem {
   id: string;
+  aliases?: string[];
   title: string;
   description?: string;
   icon?: ReactNode;
@@ -9,6 +10,7 @@ export interface SidePanelItem {
   badgeClassName?: string;
   content: ReactNode;
   hidden?: boolean;
+  hideHeader?: boolean;
 }
 
 export interface SidePanelGroup {

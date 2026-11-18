@@ -13,28 +13,25 @@ export function TwoFactorTab({ hasPasswordAccount, isTwoFactorEnabled }: { hasPa
             variants={itemVariants}
             className="space-y-4"
         >
-            <div className="flex items-center justify-between ml-2">
-                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                    {tran("security.two_factor.title")}
-                </h3>
-                <div className={cn(
-                    "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
-                    isTwoFactorEnabled ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-muted text-muted-foreground border-transparent"
-                )}>
-                    {isTwoFactorEnabled ? tran("security.two_factor.enabled") : tran("security.two_factor.disabled")}
-                </div>
-            </div>
-
-            <div className="rounded-[2.5rem] bg-card border shadow-xs p-8 space-y-6 relative overflow-hidden">
-                <div className="flex items-start gap-4 mb-2">
-                    <div className="h-12 w-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
-                        <ShieldCheck size={24} />
+            <div className="rounded-2xl bg-card border shadow-xs p-8 space-y-6 relative overflow-hidden">
+                <div className="flex items-start justify-between">
+                    <div className="flex items-start gap-4 mb-2">
+                        <div className="h-12 w-12 rounded-2xl bg-primary/5 text-primary flex items-center justify-center shrink-0">
+                            <ShieldCheck size={24} />
+                        </div>
+                        <div className="space-y-1">
+                            <p className="font-bold text-base">{tran("security.two_factor.authenticator_app")}</p>
+                            <p className="text-sm text-muted-foreground leading-relaxed">
+                                {tran("security.two_factor.authenticator_description")}
+                            </p>
+                        </div>
                     </div>
-                    <div className="space-y-1">
-                        <p className="font-bold text-base">{tran("security.two_factor.authenticator_app")}</p>
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                            {tran("security.two_factor.authenticator_description")}
-                        </p>
+
+                    <div className={cn(
+                        "px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border",
+                        isTwoFactorEnabled ? "bg-emerald-50 text-emerald-600 border-emerald-100" : "bg-muted text-muted-foreground border-transparent"
+                    )}>
+                        {isTwoFactorEnabled ? tran("security.two_factor.enabled") : tran("security.two_factor.disabled")}
                     </div>
                 </div>
 
