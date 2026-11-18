@@ -44,10 +44,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <MobileTabProvider>
           <div className="h-screen bg-background text-foreground transition-colors duration-300 overflow-hidden">
             <div className="flex h-full">
+              {/* Desktop NavBar */}
               <NavBar />
 
               {/* Main Content Area */}
-              <div className="flex-1 flex flex-col min-w-0 h-full overflow-hidden">
+              <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
                 {/* Header is persistent and always visible on all pages and loading screens */}
                 <AppHeader />
 

@@ -1,7 +1,9 @@
 "use client"
 
+import { envClient } from "@/lib/env.client"
 import { motion } from "framer-motion"
 import { ReactNode } from "react"
+import { boolean } from "zod"
 
 interface FooterButtonsProp {
   children: ReactNode
@@ -9,8 +11,9 @@ interface FooterButtonsProp {
 }
 
 const FooterButtons = ({ children, bottomSpace = false }: FooterButtonsProp) => {
+  const isSpaceNeed = envClient.NEXT_PUBLIC_BOTTOM_NAV == true && bottomSpace
   return (
-    <div className={`fixed right-5 ${bottomSpace ? "bottom-20" : "bottom-5"} lg:bottom-5 lg:right-10 z-50`}>
+    <div className={`fixed right-5 ${isSpaceNeed ? "bottom-20" : "bottom-5"} lg:bottom-5 lg:right-10 z-50`}>
       <motion.div
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}

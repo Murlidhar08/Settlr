@@ -38,23 +38,13 @@ export function SignOutView() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20 select-none">
+    <div className="flex-1 bg-background pb-20 select-none">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
         className="mx-auto max-w-lg p-4 sm:p-6 mt-4 space-y-6"
       >
-        {/* Header Title */}
-        <motion.div variants={itemVariants} className="text-center space-y-2 py-2">
-          <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground">
-            Select account to sign out
-          </h1>
-          <p className="text-xs sm:text-sm text-muted-foreground">
-            Manage your active device sessions or sign out from all accounts at once.
-          </p>
-        </motion.div>
-
         {/* Account List Card */}
         <motion.div variants={itemVariants}>
           <SessionList isSigningOutAll={isSigningOutAll} />
