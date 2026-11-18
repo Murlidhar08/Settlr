@@ -66,8 +66,7 @@ export interface MobileTabContextType extends MobileTabActionsContextType {
 }
 
 const MobileTabValueContext = createContext<MobileTabConfig>({});
-const MobileTabActionsContext =
-  createContext<MobileTabActionsContextType | null>(null);
+const MobileTabActionsContext = createContext<MobileTabActionsContextType | null>(null);
 
 export { MobileTabActionsContext, MobileTabValueContext };
 

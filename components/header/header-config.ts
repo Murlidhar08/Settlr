@@ -1,4 +1,6 @@
+import { envClient } from "@/lib/env.client";
 import { hasTranslationKey, tran } from "@/lib/languages/i18n";
+import { toTitleCase } from "@/utility/common-function";
 import type { Route } from "next";
 import { ReactNode } from "react";
 
@@ -64,7 +66,6 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
   // Fallback heuristic for unlisted paths inside (app)
   const segments = pathname.split("/").filter(Boolean);
   const isNested = segments.length > 1;
-  const parentPath = isNested ? `/${segments.slice(0, -1).join("/")}` : undefined;
   const rawTitle = segments[segments.length - 1];
   const slug = rawTitle.replace(/-/g, "_");
 
@@ -72,13 +73,13 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
   // or fallback to humanized text if not present in the dictionary.
   const formattedTitle = hasTranslationKey(`title.${slug}`)
     ? tran(`title.${slug}`)
-    : rawTitle.charAt(0).toUpperCase() + rawTitle.slice(1).replace(/-/g, " ");
+    : toTitleCase(rawTitle);
 
   return {
     title: formattedTitle,
     showBack: isNested,
-    backUrl: isNested ? parentPath : undefined,
-    showMobileNav: !isNested,
+    backUrl: undefined,
+    showMobileNav: envClient.NEXT_PUBLIC_SLIDE_NAV,
     showProfile: true,
   };
 }

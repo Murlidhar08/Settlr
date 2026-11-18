@@ -32,16 +32,19 @@ export function parseSemver(v: string): [number, number, number] {
 }
 
 /**
- * Compares two semver strings.
- * Returns: 1 if latest > current, -1 if latest < current, 0 if equal.
+ * Compares two semver strings a and b.
+ * Returns:
+ *   1 if a > b (a is newer than b)
+ *  -1 if a < b (a is older than b)
+ *   0 if a === b (equal versions)
  */
-export function compareSemver(current: string, latest: string): number {
-  const [cMajor, cMinor, cPatch] = parseSemver(current);
-  const [lMajor, lMinor, lPatch] = parseSemver(latest);
+export function compareSemver(a: string, b: string): number {
+  const [aMajor, aMinor, aPatch] = parseSemver(a);
+  const [bMajor, bMinor, bPatch] = parseSemver(b);
 
-  if (lMajor !== cMajor) return lMajor > cMajor ? 1 : -1;
-  if (lMinor !== cMinor) return lMinor > cMinor ? 1 : -1;
-  if (lPatch !== cPatch) return lPatch > cPatch ? 1 : -1;
+  if (aMajor !== bMajor) return aMajor > bMajor ? 1 : -1;
+  if (aMinor !== bMinor) return aMinor > bMinor ? 1 : -1;
+  if (aPatch !== bPatch) return aPatch > bPatch ? 1 : -1;
   return 0;
 }
 
@@ -74,12 +77,12 @@ interface VersionCandidate {
  * or defaulting to the current version.
  */
 export async function checkForUpdates(): Promise<SystemUpdateStatus> {
-  const repo = normalizeRepo(process.env.GITHUB_REPOSITORY || DEFAULT_REPO);
+  const repo = normalizeRepo(DEFAULT_REPO);
   const currentVersion = getLocalPackageVersion();
   const hasWebhook = Boolean(process.env.UPDATE_WEBHOOK_URL?.trim().length);
 
   const headers: Record<string, string> = {
-    "User-Agent": "Next-Template-AutoUpdate/1.0",
+    "User-Agent": "auth-template-AutoUpdate/1.0",
     Accept: "application/vnd.github.v3+json",
   };
 
@@ -147,7 +150,54 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
     // Ignore secondary tag check errors if other checks succeed
   }
 
-  // 3. Check GitHub Branches (version branches such as v0.0.2 created by CI/CD)
+  // 3. Check remote package.json on target branch (main) via GitHub API contents
+  try {
+    const contentsRes = await fetch(
+      `https://api.github.com/repos/${repo}/contents/package.json?ref=${encodeURIComponent(BRANCH)}`,
+      { headers, cache: "no-store" }
+    );
+
+    if (contentsRes.ok) {
+      const data = await contentsRes.json();
+      if (data?.content) {
+        const decoded = Buffer.from(data.content, "base64").toString("utf8");
+        const remotePkg = JSON.parse(decoded);
+        if (remotePkg.version) {
+          candidates.push({
+            version: remotePkg.version.replace(/^v/, "").trim(),
+            source: `${BRANCH} branch package.json`,
+          });
+        }
+      }
+    } else {
+      // Fallback to raw.githubusercontent.com
+      const rawHeaders: Record<string, string> = {
+        "User-Agent": "auth-template-AutoUpdate/1.0",
+      };
+      if (process.env.GITHUB_TOKEN) {
+        rawHeaders.Authorization = `token ${process.env.GITHUB_TOKEN}`;
+      }
+      const rawPkgRes = await fetch(
+        `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(BRANCH)}/package.json?t=${Date.now()}`,
+        { headers: rawHeaders, cache: "no-store" }
+      );
+      if (rawPkgRes.ok) {
+        const remotePkg = await rawPkgRes.json();
+        if (remotePkg.version) {
+          candidates.push({
+            version: remotePkg.version.replace(/^v/, "").trim(),
+            source: `${BRANCH} branch package.json`,
+          });
+        }
+      } else if (contentsRes.status !== 404 && rawPkgRes.status !== 404) {
+        errors.push(`Remote package.json returned status ${contentsRes.status}`);
+      }
+    }
+  } catch (err) {
+    errors.push(err instanceof Error ? err.message : "Failed to fetch remote package.json");
+  }
+
+  // 4. Check GitHub Branches (version branches such as v0.0.5 created by CI/CD)
   try {
     const branchesRes = await fetch(
       `https://api.github.com/repos/${repo}/branches?per_page=30`,
@@ -172,42 +222,37 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
     // Ignore secondary branch check errors
   }
 
-  // 4. Check remote package.json on target branch (main)
-  try {
-    const rawPkgRes = await fetch(
-      `https://raw.githubusercontent.com/${repo}/${encodeURIComponent(BRANCH)}/package.json?t=${Date.now()}`,
-      {
-        headers: { "User-Agent": "Next-Template-AutoUpdate/1.0" },
-        cache: "no-store",
-      }
-    );
-
-    if (rawPkgRes.ok) {
-      const remotePkg = await rawPkgRes.json();
-      if (remotePkg.version) {
-        candidates.push({
-          version: remotePkg.version.replace(/^v/, "").trim(),
-          source: `${BRANCH} branch package.json`,
-        });
-      }
-    } else if (rawPkgRes.status !== 404) {
-      errors.push(`Remote package.json returned status ${rawPkgRes.status}`);
-    }
-  } catch (err) {
-    errors.push(err instanceof Error ? err.message : "Failed to fetch remote package.json");
-  }
+  // Helper to determine source priority weight when semvers are equal
+  const getSourcePriority = (source: string): number => {
+    if (source.startsWith("GitHub Release")) return 4;
+    if (source.startsWith("Git Tag")) return 3;
+    if (source.includes("branch package.json")) return 2;
+    if (source.startsWith("Version Branch")) return 1;
+    return 0;
+  };
 
   // Determine latest version from collected candidates
   if (candidates.length > 0) {
-    // Sort descending by semver to find highest version
-    candidates.sort((a, b) => compareSemver(b.version, a.version));
+    // Sort descending by semver to find highest version; break ties by source priority
+    candidates.sort((a, b) => {
+      const cmp = compareSemver(b.version, a.version);
+      if (cmp !== 0) return cmp;
+      return getSourcePriority(b.source) - getSourcePriority(a.source);
+    });
+
     const highest = candidates[0];
 
-    const hasUpdate = compareSemver(currentVersion, highest.version) > 0;
+    // Is there a strictly newer version available on remote?
+    const hasUpdate = compareSemver(highest.version, currentVersion) > 0;
+
+    // Latest version cannot be older than current running version
+    const latestVersion = compareSemver(highest.version, currentVersion) >= 0
+      ? highest.version
+      : currentVersion;
 
     return {
       currentVersion,
-      latestVersion: highest.version,
+      latestVersion,
       hasUpdate,
       publishedAt: highest.publishedAt,
       checkedAt: new Date().toISOString(),
@@ -223,7 +268,7 @@ export async function checkForUpdates(): Promise<SystemUpdateStatus> {
 
   return {
     currentVersion,
-    latestVersion: "",
+    latestVersion: currentVersion,
     hasUpdate: false,
     checkedAt: new Date().toISOString(),
     hasWebhook,
@@ -252,7 +297,7 @@ export async function triggerUpdateWebhook(): Promise<TriggerUpdateResult> {
   const timeoutId = setTimeout(() => controller.abort(), 15000);
 
   try {
-    let response = await fetch(parsedUrl.toString(), {
+    const response = await fetch(parsedUrl.toString(), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",

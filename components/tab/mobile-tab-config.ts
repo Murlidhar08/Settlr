@@ -1,3 +1,4 @@
+import { envClient } from "@/lib/env.client";
 import { TabItem } from "../navbar/tab-item";
 
 export interface MobileTabConfig {
@@ -55,8 +56,12 @@ export function getMobileTabConfigForPath(
     }
   }
 
+  // Fallback heuristic for unlisted paths inside (app)
+  const segments = pathname.split("/").filter(Boolean);
+  const isNested = segments.length > 1;
+
   return {
-    hidden: false,
+    hidden: envClient.NEXT_PUBLIC_BOTTOM_NAV === false || isNested,
     showShade: true,
   };
 }

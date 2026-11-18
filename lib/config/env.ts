@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { boolean, z } from "zod";
 
 /**
  * Known placeholder / development secrets that must never be used in production.
@@ -18,6 +18,9 @@ const serverEnvSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1, "NEXT_PUBLIC_APP_NAME is required"),
   NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1, "NEXT_PUBLIC_APP_DESCRIPTION is required"),
   ADVANCE_PASS_CHECK: z.enum(["true", "false"]).default("false").optional(),
+
+  NEXT_PUBLIC_SLIDE_NAV: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  NEXT_PUBLIC_BOTTOM_NAV: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
 
   // Database Connection
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
@@ -55,6 +58,8 @@ const clientEnvSchema = z.object({
   NEXT_PUBLIC_APP_NAME: z.string().min(1, "NEXT_PUBLIC_APP_NAME is required"),
   NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1, "NEXT_PUBLIC_APP_DESCRIPTION is required"),
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
+  NEXT_PUBLIC_SLIDE_NAV: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
+  NEXT_PUBLIC_BOTTOM_NAV: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
 });
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
@@ -94,6 +99,9 @@ function validateClientEnv(): ClientEnv {
     NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
     NEXT_PUBLIC_APP_DESCRIPTION: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
+
+    NEXT_PUBLIC_SLIDE_NAV: process.env.NEXT_PUBLIC_SLIDE_NAV,
+    NEXT_PUBLIC_BOTTOM_NAV: process.env.NEXT_PUBLIC_BOTTOM_NAV,
   };
 
   const result = clientEnvSchema.safeParse(clientValues);
