@@ -65,9 +65,9 @@ export default function AppTabs({ tabs, defaultTab, className = "w-full" }: AppT
     useSetMobileTabConfig(
         hasMobileTab
             ? {
-                  navItems: tabNavItems,
-                  onChange: handleTabChange,
-              }
+                navItems: tabNavItems,
+                onChange: handleTabChange,
+            }
             : {}
     );
 
@@ -151,14 +151,6 @@ export default function AppTabs({ tabs, defaultTab, className = "w-full" }: AppT
                     })}
                 </TabsList>
             </div>
-
-            {/* Mobile Nav: rendered standalone only when outside MobileTabProvider */}
-            {!hasMobileTab && (
-                <MobileNav
-                    onChange={handleTabChange}
-                    navItems={tabNavItems}
-                />
-            )}
 
             {/* Tab content */}
             {tabs.map((tab) => (

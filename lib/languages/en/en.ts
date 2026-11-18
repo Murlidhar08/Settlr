@@ -206,6 +206,7 @@ export default {
         phone_number: "Phone Number",
         not_set: "Not set",
         manage_profile: "Profile",
+        accounts: "Accounts",
         switch_account: "Switch Account",
         add_account: "Add Account",
         signout: "Sign out",

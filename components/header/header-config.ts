@@ -34,13 +34,13 @@ export const headerRoutesConfig: HeaderRouteRule[] = [
   {
     pattern: /^\/admin\/user\/[^/]+$/,
     title: "User Details",
-    showBack: true,
+    showBack: false,
     backUrl: "/admin/user",
   },
   {
     pattern: /^\/admin\/user\/[^/]+\/edit$/,
     title: "Edit User (Admin)",
-    showBack: true,
+    showBack: false,
     backUrl: "/admin/user",
   },
 ];
@@ -65,7 +65,6 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
 
   // Fallback heuristic for unlisted paths inside (app)
   const segments = pathname.split("/").filter(Boolean);
-  const isNested = segments.length > 1;
   const rawTitle = segments[segments.length - 1];
   const slug = rawTitle.replace(/-/g, "_");
 
@@ -77,7 +76,7 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
 
   return {
     title: formattedTitle,
-    showBack: isNested,
+    showBack: false,
     backUrl: undefined,
     showMobileNav: envClient.NEXT_PUBLIC_SLIDE_NAV,
     showProfile: true,
