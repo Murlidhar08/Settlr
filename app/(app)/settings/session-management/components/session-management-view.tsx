@@ -16,7 +16,7 @@ export function SessionManagementView() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="bg-background">
       <motion.div
         variants={containerVariants}
         initial="hidden"

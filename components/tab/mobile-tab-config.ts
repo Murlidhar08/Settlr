@@ -56,12 +56,8 @@ export function getMobileTabConfigForPath(
     }
   }
 
-  // Fallback heuristic for unlisted paths inside (app)
-  const segments = pathname.split("/").filter(Boolean);
-  const isNested = segments.length > 1;
-
   return {
-    hidden: envClient.NEXT_PUBLIC_BOTTOM_NAV === false || isNested,
+    hidden: !envClient.NEXT_PUBLIC_BOTTOM_NAV,
     showShade: true,
   };
 }

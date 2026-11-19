@@ -88,15 +88,6 @@ export default function AppTabs({
         [tabs, activeTab]
     );
 
-    useSetMobileTabConfig(
-        hasMobileTab
-            ? {
-                navItems: tabNavItems,
-                onChange: handleTabChange,
-            }
-            : {}
-    );
-
     // Active tab item reference for mobile dropdown
     const activeTabItem = useMemo(
         () => tabs.find((t) => t.id === activeTab) || tabs[0],

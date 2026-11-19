@@ -18,6 +18,7 @@ import { AppContentScrollArea } from "@/components/app-content-scroll-area";
 import { UserConfigProvider } from "@/components/providers/user-config-provider";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { getDefaultConfig, getUserConfig } from "@/lib/user-config";
+import { envClient } from "@/lib/config/env";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Check if setup is needed
@@ -64,7 +65,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
 
               {/* Persistent Mobile Tab */}
-              <AppMobileTab />
+              {envClient.NEXT_PUBLIC_BOTTOM_NAV && <AppMobileTab />}
 
               {/* Only when admin is impersonating */}
               <ImpersonationIndicator />

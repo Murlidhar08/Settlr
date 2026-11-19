@@ -1,12 +1,15 @@
 "use client";
 
 import type { HeaderConfig } from "@/components/header/header-config";
+import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { EllipsisVertical, PanelLeft } from "lucide-react";
-import { useSidebar } from "../providers/sidebar-provider";
+import Image from "next/image";
+import Link from "next/link";
 import { useHeaderValue, useSetHeaderConfig } from "../providers/header-provider";
+import { useSidebar } from "../providers/sidebar-provider";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -69,6 +72,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
   const valueConfig = useHeaderValue();
   const config: HeaderConfig = standaloneProps || valueConfig || {};
   const { toggleSidebar } = useSidebar();
+  const showSidebar = envClient.NEXT_PUBLIC_SLIDE_NAV == true;
 
   // If hidden is true, do not render any header markup!
   if (config.hidden) {
@@ -93,13 +97,37 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
           variant="ghost"
           size="icon"
           aria-label="Toggle navigation menu"
-          className="h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent/60 dark:hover:bg-accent/40 cursor-pointer shrink-0 transition-colors flex items-center justify-center"
+          className={cn("h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/10 dark:hover:bg-accent/40 cursor-pointer shrink-0 transition-colors items-center justify-center",
+            showSidebar ? "flex" : "hidden md:flex"
+          )}
         >
           <PanelLeft className="h-4.5 w-4.5" />
         </Button>
 
+        {/* Show LOGO */}
+        {!showSidebar && (
+          <Link href="/dashboard" className="lg:hidden flex items-center">
+            <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-xl bg-accent/10 border border-border/50">
+              <Image
+                src="/images/logo/light_logo.png"
+                alt="Logo"
+                width={22}
+                height={22}
+                className="dark:hidden"
+              />
+              <Image
+                src="/images/logo/dark_logo.png"
+                alt="Logo"
+                width={22}
+                height={22}
+                className="hidden dark:block"
+              />
+            </div>
+          </Link>
+        )}
+
         {/* Vertical Separator */}
-        <div className="h-4 w-px bg-border/80 mx-1.5 sm:mx-2.5 shrink-0" aria-hidden="true" />
+        <div className={cn("h-4 w-px bg-border/80 mx-1.5 sm:mx-2.5 shrink-0 flex")} aria-hidden="true" />
 
         {/* URL-based Breadcrumb Navigation */}
         <HeaderBreadcrumb customTitle={config.title ? tran(config.title) : undefined} />

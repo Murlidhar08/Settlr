@@ -73,7 +73,7 @@ export function SecurityView() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="bg-background pb-20">
       <motion.div
         variants={containerVariants}
         initial="hidden"

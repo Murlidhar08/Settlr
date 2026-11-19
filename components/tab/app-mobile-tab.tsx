@@ -5,6 +5,7 @@ import {
   useMobileTabValue,
   useSetMobileTabConfig,
 } from "@/components/providers/mobile-tab-provider";
+import { envClient } from "@/lib/env.client";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -28,6 +29,10 @@ export interface AppMobileTabProps extends MobileTabConfig {
  * 3. When `standalone` is true, renders directly in place.
  */
 export function AppMobileTab(props: AppMobileTabProps = {}) {
+  if (!envClient.NEXT_PUBLIC_BOTTOM_NAV) {
+    return null;
+  }
+
   if (props.standalone) {
     return <MobileTabContent standaloneProps={props} />;
   }
@@ -60,7 +65,7 @@ function MobileTabContent({ standaloneProps }: { standaloneProps?: AppMobileTabP
 
   const config: MobileTabConfig = standaloneProps || valueConfig || {};
 
-  if (!mounted) return null;
+  if (!mounted || !envClient.NEXT_PUBLIC_BOTTOM_NAV) return null;
 
   // If hidden is true, do not render any mobile tab markup
   if (config.hidden) {
@@ -88,7 +93,8 @@ function MobileTabContent({ standaloneProps }: { standaloneProps?: AppMobileTabP
               item.active !== undefined
                 ? item.active
                 : item.href
-                ? pathname === item.href
+                ? pathname === item.href ||
+                  (item.href !== "/" && pathname.startsWith(`${item.href}/`))
                 : false;
 
             return (

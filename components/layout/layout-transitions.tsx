@@ -1,7 +1,6 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { usePathname } from "next/navigation";
 
 export function LayoutTransitions({ children }: { children: React.ReactNode }) {
     // const pathname = usePathname();
