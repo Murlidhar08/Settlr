@@ -1,6 +1,7 @@
 export { AppHeader, type AppHeaderProps } from "./app-header";
 export { PageHeader, type PageHeaderProps } from "./page-header";
 export { Header, type HeaderProps } from "./header";
+export { HeaderBreadcrumb, type HeaderBreadcrumbProps } from "./header-breadcrumb";
 export {
   getHeaderConfigForPath,
   type HeaderConfig,

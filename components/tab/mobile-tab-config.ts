@@ -1,3 +1,4 @@
+import { envClient } from "@/lib/env.client";
 import { TabItem } from "../navbar/tab-item";
 
 export interface MobileTabConfig {
@@ -56,7 +57,7 @@ export function getMobileTabConfigForPath(
   }
 
   return {
-    hidden: false,
+    hidden: !envClient.NEXT_PUBLIC_BOTTOM_NAV,
     showShade: true,
   };
 }

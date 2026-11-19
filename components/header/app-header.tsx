@@ -4,14 +4,12 @@ import type { HeaderConfig } from "@/components/header/header-config";
 import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
-import clsx from "clsx";
 import { motion } from "framer-motion";
-import { ArrowLeft, EllipsisVertical, Menu, X } from "lucide-react";
+import { EllipsisVertical, PanelLeft } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { useNavItems } from "../navbar/use-nav-items";
 import { useHeaderValue, useSetHeaderConfig } from "../providers/header-provider";
+import { useSidebar } from "../providers/sidebar-provider";
 import { Badge } from "../ui/badge";
 import { Button } from "../ui/button";
 import {
@@ -20,15 +18,9 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "../ui/dropdown-menu";
-import {
-  Sheet,
-  SheetClose,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "../ui/sheet";
 import ProfileAvatar from "../user/profile-avatar";
+import { HeaderBreadcrumb } from "./header-breadcrumb";
+import MobileBottomNav from "./mobile-bottom-nav";
 
 export interface AppHeaderProps extends HeaderConfig {
   /**
@@ -78,24 +70,14 @@ export function AppHeader(props: AppHeaderProps = {}) {
 
 function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProps }) {
   const valueConfig = useHeaderValue();
-  const router = useRouter();
-  const pathname = usePathname();
-  const navItems = useNavItems();
-
   const config: HeaderConfig = standaloneProps || valueConfig || {};
+  const { toggleSidebar } = useSidebar();
+  const showSidebar = envClient.NEXT_PUBLIC_SLIDE_NAV == true;
 
   // If hidden is true, do not render any header markup!
   if (config.hidden) {
     return null;
   }
-
-  const handleBack = () => {
-    if (config.backUrl) {
-      router.push(config.backUrl as any);
-    } else {
-      router.back();
-    }
-  };
 
   return (
     <motion.header
@@ -103,145 +85,68 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2 }}
       className={cn(
-        "sticky top-0 z-30 h-14 sm:h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-4 sm:px-6 border-b border-border shadow-sm",
+        "sticky top-0 z-30 h-16 flex items-center justify-between bg-background/80 backdrop-blur-md text-foreground px-3 sm:px-6 border-b border-border shadow-sm gap-2 sm:gap-4",
         config.className
       )}
     >
-      <div className="w-1/4 sm:w-1/3 flex items-center gap-2">
-        {/* Left Section: Back Button or Mobile Logo */}
-        {config.showBack ? (
-          <motion.div whileHover={{ x: -3 }} whileTap={{ scale: 0.92 }}>
-            <Button
-              onClick={handleBack}
-              size="icon"
-              variant="secondary"
-              aria-label="Go back"
-              className="h-9 w-9 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/50 shadow-sm transition-all text-foreground cursor-pointer"
-            >
-              <ArrowLeft className="h-5 w-5" />
-            </Button>
-          </motion.div>
-        ) :
-          config.showMobileNav ? (
-            <div className="lg:hidden">
-              <Sheet>
-                <SheetTrigger
-                  render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      aria-label="Open menu"
-                      className="hover:bg-accent hover:text-sidebar-accent-foreground rounded-xl"
-                    >
-                      <Menu size={22} />
-                    </Button>
-                  }
-                />
-                <SheetContent
-                  side="left"
-                  showCloseButton={false}
-                  className="w-full sm:max-w-xs border-r p-4 px-6 flex flex-col overflow-hidden bg-background/95 backdrop-blur-md"
-                >
-                  <SheetHeader className="mb-6 px-0 p-0">
-                    <SheetTitle className="flex items-center justify-between gap-3 text-sidebar-foreground font-black tracking-tighter text-2xl">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 shrink-0 flex items-center justify-center relative rounded-xl bg-sidebar-accent/10">
-                          <Image src="/images/logo/light_logo.png" alt="Logo" width={28} height={28} className="dark:hidden" />
-                          <Image src="/images/logo/dark_logo.png" alt="Logo" width={28} height={28} className="hidden dark:block" />
-                        </div>
-                        <span>{envClient.NEXT_PUBLIC_APP_NAME}</span>
-                      </div>
-                      <SheetClose
-                        render={
-                          <Button variant="ghost" size="icon" className="hover:bg-accent hover:text-sidebar-accent-foreground rounded-xl h-9 w-9 shrink-0">
-                            <X size={20} />
-                            <span className="sr-only">Close</span>
-                          </Button>
-                        }
-                      />
-                    </SheetTitle>
-                  </SheetHeader>
+      {/* Left Section: PanelLeft Toggle Icon | Divider | Breadcrumbs */}
+      <div className="flex items-center min-w-0 flex-1 overflow-hidden mr-2">
+        {/* Toggle Button for mobile menu / desktop sidebar */}
+        <Button
+          onClick={toggleSidebar}
+          variant="ghost"
+          size="icon"
+          aria-label="Toggle navigation menu"
+          className={cn("h-9 w-9 rounded-lg text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/10 dark:hover:bg-accent/40 cursor-pointer shrink-0 transition-colors items-center justify-center",
+            showSidebar ? "flex" : "hidden md:flex"
+          )}
+        >
+          <PanelLeft className="h-4.5 w-4.5" />
+        </Button>
 
-                  <nav className="space-y-1">
-                    {navItems.map((item) => {
-                      const active =
-                        pathname === item.href ||
-                        pathname?.startsWith(`${item.href}/`);
-                      return (
-                        <SheetClose
-                          key={item.href}
-                          render={
-                            <Link
-                              key={item.href}
-                              href={item.href as any}
-                              className={clsx(
-                                "group flex items-center gap-4 rounded-xl px-4 py-3 font-semibold transition-all duration-200",
-                                active
-                                  ? "bg-sidebar-accent text-sidebar-accent-foreground shadow-lg shadow-indigo-500/10"
-                                  : "text-sidebar-foreground/60 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground"
-                              )}
-                            >
-                              <span>{item.icon}</span>
-                              <span className="text-sm tracking-wide">{item.label}</span>
-                            </Link>
-                          }
-                        />
-                      );
-                    })}
-                  </nav>
-                </SheetContent>
-              </Sheet>
+        {/* Show LOGO */}
+        {!showSidebar && (
+          <Link href="/dashboard" className="lg:hidden flex items-center">
+            <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-xl bg-accent/10 border border-border/50">
+              <Image
+                src="/images/logo/light_logo.png"
+                alt="Logo"
+                width={22}
+                height={22}
+                className="dark:hidden"
+              />
+              <Image
+                src="/images/logo/dark_logo.png"
+                alt="Logo"
+                width={22}
+                height={22}
+                className="hidden dark:block"
+              />
             </div>
-          ) : (
-            <Link href="/dashboard" className="lg:hidden flex items-center">
-              <div className="h-9 w-9 shrink-0 flex items-center justify-center relative rounded-xl bg-accent/10 border border-border/50">
-                <Image
-                  src="/images/logo/light_logo.png"
-                  alt="Logo"
-                  width={22}
-                  height={22}
-                  className="dark:hidden"
-                />
-                <Image
-                  src="/images/logo/dark_logo.png"
-                  alt="Logo"
-                  width={22}
-                  height={22}
-                  className="hidden dark:block"
-                />
-              </div>
-            </Link>
-          )}
-      </div>
+          </Link>
+        )}
 
-      {/* Center Section: Gradient Title & Subtitle Badge or Custom Children */}
-      <div className="flex-1 flex flex-col items-center justify-center min-w-0 mx-2 sm:mx-4">
-        <>
-          <div className="flex-1 flex justify-center overflow-hidden">
-            <h1 className="text-xl font-black tracking-normal sm:text-2xl lg:text-3xl bg-linear-to-br from-foreground to-primary/80 bg-clip-text text-transparent truncate">
-              {config.title ? tran(config.title) : ""}
-            </h1>
-          </div>
+        {/* Vertical Separator */}
+        <div className={cn("h-4 w-px bg-border/80 mx-1.5 sm:mx-2.5 shrink-0 flex")} aria-hidden="true" />
 
-          {config.description && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.92 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="mt-0.5"
+        {/* URL-based Breadcrumb Navigation */}
+        <HeaderBreadcrumb customTitle={config.title ? tran(config.title) : undefined} />
+
+        {/* Optional Description Badge */}
+        {config.description && (
+          <div className="hidden md:flex ml-2 shrink-0">
+            <Badge
+              variant="secondary"
+              className="h-5 rounded-full px-2 text-[9px] font-bold uppercase tracking-wider bg-primary/10 text-primary border-primary/20"
             >
-              <Badge
-                variant="secondary"
-                className="h-5 rounded-full px-2.5 text-[9px] font-black uppercase tracking-[0.2em] bg-primary/10 text-primary border-primary/20"
-              >
-                {tran(config.description)}
-              </Badge>
-            </motion.div>
-          )}
-        </>
+              {tran(config.description)}
+            </Badge>
+          </div>
+        )}
       </div>
 
-      {/* Right Section: Actions Dropdown, Custom Right Action, Profile Avatar & Mobile Drawer */}
-      <div className="w-1/4 sm:w-1/3 flex items-center justify-end gap-2">
+      {/* Right Section: Actions Dropdown & Profile Avatar */}
+      <div className="flex items-center justify-end gap-2 shrink-0">
         {/* Menu Items Dropdown */}
         {config.menuItems && config.menuItems.length > 0 && (
           <DropdownMenu>
@@ -251,7 +156,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
                   variant="secondary"
                   size="icon"
                   aria-label="Actions"
-                  className="h-9 w-9 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/50 shadow-sm transition-all text-foreground flex items-center justify-center cursor-pointer"
+                  className="h-8 w-8 sm:h-9 sm:w-9 rounded-xl bg-secondary/80 hover:bg-secondary border border-border/50 shadow-sm transition-all text-foreground flex items-center justify-center cursor-pointer"
                 >
                   <EllipsisVertical className="h-4 w-4" />
                 </Button>
@@ -291,6 +196,9 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
         {/* Profile Avatar */}
         {config.showProfile !== false && <ProfileAvatar />}
       </div>
-    </motion.header >
+
+      {/* Mobile Navigation Drawer Sheet (controlled via isMobileOpen) */}
+      <MobileBottomNav />
+    </motion.header>
   );
 }

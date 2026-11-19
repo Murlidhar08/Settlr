@@ -21,6 +21,7 @@ export {
   useSetMobileTabConfig,
   useMobileTabValue,
   useMobileTabActions,
+  useMobileTabActionsContext,
   type MobileTabContextType,
   type MobileTabActionsContextType,
 } from "../providers/mobile-tab-provider";

@@ -42,7 +42,7 @@ export function AdminDashboardContent() {
 
   if (isError || !data) {
     return (
-      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center space-y-6 max-w-md mx-auto my-16">
+      <div className="flex-1 flex flex-col items-center justify-center text-center space-y-6 max-w-md mx-auto my-16">
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-500">
           <AlertCircle className="h-10 w-10" />
         </div>
@@ -64,7 +64,7 @@ export function AdminDashboardContent() {
   }
 
   return (
-    <div className="flex-1 px-4 space-y-8 pb-34 pt-6 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+    <div className="flex-1 space-y-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
       {/* Pending Approvals Warning Banner */}
       <PendingApprovalsAlert
         pendingCount={data.userMetrics.pendingApproval}

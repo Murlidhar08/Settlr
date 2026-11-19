@@ -123,14 +123,6 @@ export function PasskeyTab() {
             className="space-y-6"
         >
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 ml-2">
-                <div className="space-y-1">
-                    <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground">
-                        {tran("security.passkeys.title")}
-                    </h3>
-                    <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-                        {tran("security.passkeys.description")}
-                    </p>
-                </div>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger>
                         <FooterButtons bottomSpace={true}>
@@ -303,7 +295,7 @@ export function PasskeyTab() {
                         </div>
                     ))
                 ) : (
-                    <div className="rounded-[2.5rem] bg-muted/20 border border-dashed p-12 text-center space-y-4">
+                    <div className="rounded-2xl bg-muted/20 border border-dashed p-8 text-center space-y-4">
                         <div className="h-16 w-16 rounded-3xl bg-muted/50 flex items-center justify-center mx-auto text-muted-foreground">
                             <Key size={32} />
                         </div>
@@ -324,7 +316,6 @@ export function PasskeyTab() {
                 )}
             </div>
 
-            <div className="absolute bottom-0 left-0 w-full h-1 bg-linear-to-r from-transparent via-primary/10 to-transparent" />
         </motion.section>
     );
 }

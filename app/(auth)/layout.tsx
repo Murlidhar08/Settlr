@@ -23,12 +23,12 @@ export default async function AuthLayout({ children }: { children: React.ReactNo
 
   return (
     <TurnstileProvider>
-      <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
+      <div className="min-h-dvh bg-background text-foreground transition-colors duration-300">
         <div className="absolute top-4 right-4 z-50">
           <ThemeToggle />
         </div>
 
-        <main className="w-full h-screen overflow-hidden">
+        <main className="w-full h-dvh overflow-hidden">
           {children}
         </main>
 

@@ -51,7 +51,6 @@ function areConfigsEqual(
     a.hidden === b.hidden &&
     a.className === b.className &&
     a.showShade === b.showShade &&
-    a.onChange === b.onChange &&
     areNavItemsEqual(a.navItems, b.navItems)
   );
 }
@@ -67,8 +66,9 @@ export interface MobileTabContextType extends MobileTabActionsContextType {
 }
 
 const MobileTabValueContext = createContext<MobileTabConfig>({});
-const MobileTabActionsContext =
-  createContext<MobileTabActionsContextType | null>(null);
+const MobileTabActionsContext = createContext<MobileTabActionsContextType | null>(null);
+
+export { MobileTabActionsContext, MobileTabValueContext };
 
 /**
  * Access the active mobile tab configuration values (consumed by AppMobileTab in layout).
@@ -86,6 +86,14 @@ export function useMobileTabActions(): MobileTabActionsContextType {
     throw new Error("useMobileTabActions must be used within a MobileTabProvider");
   }
   return ctx;
+}
+
+/**
+ * Safely access mobile tab actions without throwing if provider is absent.
+ * Does not re-render caller on mobile tab value updates.
+ */
+export function useMobileTabActionsContext(): MobileTabActionsContextType | null {
+  return useContext(MobileTabActionsContext);
 }
 
 /**
@@ -179,7 +187,6 @@ export function useSetMobileTabConfig(props: Partial<MobileTabConfig>) {
       prev.hidden !== props.hidden ||
       prev.className !== props.className ||
       prev.showShade !== props.showShade ||
-      prev.onChange !== props.onChange ||
       !areNavItemsEqual(prev.navItems, props.navItems);
 
     if (hasChanged) {
@@ -188,14 +195,18 @@ export function useSetMobileTabConfig(props: Partial<MobileTabConfig>) {
         const next = { ...(curr || {}), ...props };
         return areConfigsEqual(curr, next) ? curr : next;
       });
+    } else if (prev && prev.onChange !== props.onChange) {
+      prevRef.current = props;
+      actions.setOverrideConfig((curr) => {
+        if (!curr) return curr;
+        return { ...curr, onChange: props.onChange };
+      });
     }
   }, [
     actions,
     props.hidden,
     props.className,
     props.showShade,
-    props.onChange,
     props.navItems,
   ]);
 }
-

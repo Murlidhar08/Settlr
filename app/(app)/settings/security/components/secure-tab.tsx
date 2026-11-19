@@ -23,10 +23,7 @@ export function SecureTab({ email, hasPasswordAccount }: { email: string, hasPas
             variants={itemVariants}
             className="space-y-4"
         >
-            <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">
-                {tran("security.access.title")}
-            </h3>
-            <div className="rounded-[2.5rem] bg-card border shadow-xs p-8 relative overflow-hidden group">
+            <div className="rounded-2xl border shadow-xs p-8 relative overflow-hidden group">
                 <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-primary/10 transition-colors" />
 
                 {hasPasswordAccount === undefined ? (
