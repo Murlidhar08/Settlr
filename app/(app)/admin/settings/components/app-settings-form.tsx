@@ -241,7 +241,7 @@ function ConfigCard({ title, description, icon, children, hidden = false }: {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="group relative bg-card p-6 sm:p-10 transition-all"
+            className="group relative bg-card transition-all"
         >
             <div className="flex items-center gap-4 mb-8">
                 <div className="h-12 w-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center transition-transform group-hover:rotate-12">

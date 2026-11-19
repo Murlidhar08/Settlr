@@ -64,7 +64,7 @@ export function AdminDashboardContent() {
   }
 
   return (
-    <div className="flex-1 space-y-8 pb-34 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
+    <div className="flex-1 space-y-8 max-w-7xl mx-auto w-full animate-in fade-in duration-500">
       {/* Pending Approvals Warning Banner */}
       <PendingApprovalsAlert
         pendingCount={data.userMetrics.pendingApproval}
