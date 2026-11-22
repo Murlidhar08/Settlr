@@ -85,22 +85,52 @@ export async function GET(
     // 1. Profile avatars (profile/<filename>) are accessible to active authenticated users
     // Strictly match single-level profile avatars (e.g. profile/user123.png)
     const isAvatar = /^profile\/[^/]+$/.test(canonicalRelativePath);
+    const isInvoiceFile = canonicalRelativePath.startsWith("invoice/transaction/file/");
 
     if (!isAvatar) {
-      // 2. KYC & user documents: require ownership via exact database record or storage:read permission
-      // Exact match only against canonical path; drop endsWith and unverified owner folder guessing
-      const doc = await prisma.userDocument.findFirst({
-        where: {
-          OR: [
-            { documentRelativePath: canonicalRelativePath },
-            { documentRelativePath: `/api/files/${canonicalRelativePath}` },
-          ],
-        },
-        select: { userId: true },
-      });
+      let isOwner = false;
+
+      if (isInvoiceFile) {
+        // Transaction invoices & reference documents
+        const txDoc = await prisma.transactionDocument.findFirst({
+          where: {
+            OR: [
+              { documentRelativePath: canonicalRelativePath },
+              { documentRelativePath: `/api/files/${canonicalRelativePath}` },
+            ],
+          },
+          include: {
+            transaction: {
+              select: { businessId: true, userId: true },
+            },
+          },
+        });
+
+        if (txDoc) {
+          isOwner =
+            txDoc.transaction.businessId === session.user.activeBusinessId ||
+            txDoc.transaction.userId === session.user.id;
+        } else {
+          // Newly uploaded file during current active session before transaction creation
+          isOwner = true;
+        }
+      } else {
+        // 2. KYC & user documents: require ownership via exact database record or storage:read permission
+        // Exact match only against canonical path; drop endsWith and unverified owner folder guessing
+        const doc = await prisma.userDocument.findFirst({
+          where: {
+            OR: [
+              { documentRelativePath: canonicalRelativePath },
+              { documentRelativePath: `/api/files/${canonicalRelativePath}` },
+            ],
+          },
+          select: { userId: true },
+        });
+
+        isOwner = doc?.userId === session.user.id;
+      }
 
       const hasStorageRead = await hasPermission("storage", "read");
-      const isOwner = doc?.userId === session.user.id;
 
       if (!isOwner && !hasStorageRead) {
         // Return identical 404 to avoid leaking file existence to unauthorized users

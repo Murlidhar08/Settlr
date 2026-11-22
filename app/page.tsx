@@ -1,4 +1,3 @@
-import { getUserSession } from "@/lib/auth/auth";
 import { isSetupRequired } from "@/lib/setup";
 import { redirect } from "next/navigation";
 
@@ -10,12 +9,6 @@ export default async function Home() {
         redirect("/setup" as any);
     }
 
-    // Get session on the server
-    const session = await getUserSession();
-
-    if (session.user.banned) {
-        redirect("/banned" as any);
-    }
-
-    redirect("/dashboard" as any);
+    // Always redirect to /welcome where users can view application details and proceed to login
+    redirect("/welcome" as any);
 }

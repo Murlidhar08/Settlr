@@ -8,12 +8,14 @@ import { useDeleteTransaction } from "@/tanstacks/cashbook"
 import { TransactionDirection } from "@/types/transaction/TransactionDirection"
 import { formatAmount, formatDate, formatTime } from "@/utility/transaction"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock, Hash, History, Pencil, PenSquareIcon, Phone, Trash2, User } from "lucide-react"
+import { ArrowDownLeft, ArrowRight, ArrowUpRight, CalendarDays, Check, Clock, Eye, FileImage, Hash, History, Pencil, PenSquareIcon, Phone, Receipt, Trash2, User } from "lucide-react"
 import { toast } from "sonner"
 
 import { AppHeader } from "@/components/header"
+import { DocumentPreview } from "@/components/document-preview"
 import { tran } from "@/lib/languages/i18n"
 import { cn } from "@/lib/utils"
+import { getFileUrl } from "@/lib/utils/file"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -28,6 +30,8 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
     const confirm = useConfirm()
     const router = useRouter()
     const [isEditOpen, setIsEditOpen] = useState(false)
+    const [previewDoc, setPreviewDoc] = useState<{ url: string; fileName: string } | null>(null)
+    const [previewOpen, setPreviewOpen] = useState(false)
 
     const deleteTransactionMutation = useDeleteTransaction()
 
@@ -306,6 +310,69 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
                                 </div>
                             </motion.section>
                         )}
+
+                        {/* Attached Documents & Invoices */}
+                        {transaction.documents && transaction.documents.length > 0 && (
+                            <motion.section
+                                initial={{ opacity: 0, scale: 0.99 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{ delay: 0.25, duration: 0.3 }}
+                                className="group relative"
+                            >
+                                <div className="relative rounded-[2.5rem] border border-border/40 bg-card/60 backdrop-blur-md p-6 sm:p-8 shadow-md">
+                                    <div className="mb-4 flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                            <Receipt className="h-4 w-4 text-primary" />
+                                            <p className="text-[10px] font-black uppercase tracking-[0.4em] text-foreground/70">Invoices & Documents</p>
+                                        </div>
+                                        <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/60 bg-muted px-2.5 py-1 rounded-full">
+                                            {transaction.documents.length} {transaction.documents.length === 1 ? "File" : "Files"}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                        {transaction.documents.map((doc: any) => {
+                                            const isPdf = doc.fileName?.toLowerCase().endsWith(".pdf") || doc.fileType === "application/pdf";
+                                            return (
+                                                <div
+                                                    key={doc.id}
+                                                    onClick={() => {
+                                                        setPreviewDoc({
+                                                            url: getFileUrl(doc.documentRelativePath),
+                                                            fileName: doc.fileName,
+                                                        });
+                                                        setPreviewOpen(true);
+                                                    }}
+                                                    className="flex items-center gap-3 p-3.5 rounded-2xl border border-border/50 bg-background/50 hover:bg-background/80 hover:border-primary/40 cursor-pointer transition-all group/item shadow-xs"
+                                                >
+                                                    <div className={cn(
+                                                        "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-[10px] uppercase shadow-xs transition-transform group-hover/item:scale-105",
+                                                        isPdf ? "bg-rose-500/10 text-rose-600 border border-rose-500/20" : "bg-primary/10 text-primary border border-primary/20"
+                                                    )}>
+                                                        {isPdf ? (
+                                                            <span className="font-black">PDF</span>
+                                                        ) : (
+                                                            <FileImage size={18} />
+                                                        )}
+                                                    </div>
+                                                    <div className="flex-1 min-w-0">
+                                                        <p className="text-sm font-bold text-foreground truncate group-hover/item:text-primary transition-colors">
+                                                            {doc.fileName}
+                                                        </p>
+                                                        <p className="text-[10px] font-semibold text-muted-foreground/60">
+                                                            {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(1)} MB` : isPdf ? "PDF Document" : "Image File"}
+                                                        </p>
+                                                    </div>
+                                                    <div className="p-2 rounded-xl text-muted-foreground/50 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">
+                                                        <Eye size={16} />
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </div>
+                            </motion.section>
+                        )}
                     </div>
                 </div>
             </main>
@@ -320,6 +387,19 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
             >
                 <></>
             </AddTransactionModal>
+
+            {/* Document Preview Lightbox */}
+            {previewDoc && (
+                <DocumentPreview
+                    isOpen={previewOpen}
+                    onClose={() => {
+                        setPreviewOpen(false);
+                        setPreviewDoc(null);
+                    }}
+                    url={previewDoc.url}
+                    fileName={previewDoc.fileName}
+                />
+            )}
         </div>
     )
 }

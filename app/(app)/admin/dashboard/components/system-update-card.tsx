@@ -6,12 +6,13 @@ import { Button } from "@/components/ui/button";
 import { useSystemUpdate } from "@/hooks/use-system-update";
 import { cn } from "@/lib/utils";
 import {
+  AlertTriangle,
   ArrowUpRight,
   CheckCircle2,
   GitBranch,
   Loader2,
   RefreshCw,
-  Sparkles
+  Sparkles,
 } from "lucide-react";
 
 export function SystemUpdateCard() {
@@ -23,13 +24,13 @@ export function SystemUpdateCard() {
     isUpdating,
     isUpToDate,
     hasUpdate,
+    hasError,
     hasWebhook,
     handleCheckUpdates,
     handleApplyUpdate,
   } = useSystemUpdate();
 
   const handleApplicationUpdate = async () => {
-    // setIsConfirmOpen(true)
     const isConfirmed = await confirm({
       title: "Update Application",
       description: (
@@ -46,14 +47,13 @@ export function SystemUpdateCard() {
           </p>
         </div>
       ),
-      confirmText: "Update"
+      confirmText: "Update",
     });
 
     if (!isConfirmed) return;
 
-    // Make API Call
     handleApplyUpdate();
-  }
+  };
 
   return (
     <>
@@ -74,13 +74,21 @@ export function SystemUpdateCard() {
                 </Badge>
               )}
             </div>
-            <p className="text-xs text-muted-foreground flex items-center flex-wrap gap-2 pt-0.5">
+            <p className="text-xs text-muted-foreground flex items-center flex-wrap gap-3 pt-0.5">
               <span>
                 Current Version:{" "}
                 <strong className="text-foreground font-mono">
                   v{status?.currentVersion || "-"}
                 </strong>
               </span>
+              {status?.latestVersion ? (
+                <span>
+                  Latest Version:{" "}
+                  <strong className="text-foreground font-mono">
+                    v{status.latestVersion}
+                  </strong>
+                </span>
+              ) : null}
             </p>
           </div>
 
@@ -130,16 +138,40 @@ export function SystemUpdateCard() {
           <div className="h-16 rounded-xl bg-muted/20 animate-pulse border border-border/40 flex items-center justify-center">
             <span className="text-xs text-muted-foreground">Checking update status...</span>
           </div>
+        ) : hasError ? (
+          <div className="p-4 rounded-xl border border-destructive/25 bg-destructive/5 dark:bg-destructive/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-2.5 text-destructive">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <div className="space-y-0.5">
+                <span className="font-bold">Failed to fetch latest version:</span>
+                <p className="text-muted-foreground">{status?.error}</p>
+              </div>
+            </div>
+            <Button
+              variant="outline"
+              size="xs"
+              onClick={handleCheckUpdates}
+              disabled={isChecking}
+              className="px-3 rounded-lg self-start sm:self-auto shrink-0 cursor-pointer"
+            >
+              Retry
+            </Button>
+          </div>
         ) : hasUpdate ? (
           <div className="p-4 rounded-xl border border-amber-500/25 bg-amber-500/5 dark:bg-amber-500/10 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5">
-              <div className="flex items-center gap-2">
-                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 shrink-0">
                   <ArrowUpRight className="h-3.5 w-3.5" />
                 </span>
                 <span className="text-sm font-bold text-foreground">
                   Update available: v{status?.currentVersion || "-"} → v{status?.latestVersion || "-"}
                 </span>
+                {status?.source && (
+                  <Badge variant="outline" className="text-[10px] py-0 px-1.5 font-normal">
+                    {status.source}
+                  </Badge>
+                )}
               </div>
               <p className="text-xs text-muted-foreground pl-8">
                 {hasWebhook
@@ -153,8 +185,13 @@ export function SystemUpdateCard() {
             <div className="flex items-center gap-2.5">
               <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
               <span className="text-foreground font-medium">
-                Your application is up to date!
+                Your application is up to date! (v{status?.currentVersion || "-"})
               </span>
+              {status?.source && (
+                <span className="text-[11px] text-muted-foreground hidden sm:inline">
+                  • Verified via {status.source}
+                </span>
+              )}
             </div>
             {status?.checkedAt && (
               <span className="text-[11px] text-muted-foreground font-mono">

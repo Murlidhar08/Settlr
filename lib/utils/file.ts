@@ -9,7 +9,7 @@ export function getFileUrl(path?: string | null): string {
   }
 
   // Remove leading slashes and redundant upload directory references
-  let cleanPath = path.replace(/^\/+/, "");
+  let cleanPath = path.trim().replace(/^\/+/, "");
 
   if (cleanPath.startsWith("uploads/")) {
     cleanPath = cleanPath.replace(/^uploads\//, "");

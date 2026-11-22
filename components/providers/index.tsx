@@ -12,6 +12,8 @@ import { QueryProvider } from "./query-provider";
 
 export * from "./confirm-provider";
 export * from "./header-provider";
+export * from "./mobile-tab-provider";
+export * from "./sidebar-provider";
 export * from "./prompt-provider";
 export * from "./query-provider";
 export * from "./recaptcha-provider";

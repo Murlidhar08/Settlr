@@ -75,11 +75,11 @@ export function PromptProvider({ children }: { children: ReactNode }) {
             {children}
 
             <AlertDialog open={open} onOpenChange={setOpen}>
-                <AlertDialogContent className="max-w-100 border-none bg-background/80 backdrop-blur-2xl rounded-[3rem] p-0 overflow-hidden shadow-2xl">
-                    <form onSubmit={handleConfirm} className="relative p-8 pt-10 space-y-6">
+                <AlertDialogContent className="w-[calc(100vw-2rem)] max-w-100 max-h-[90vh] overflow-y-auto border-none bg-background/80 backdrop-blur-2xl rounded-3xl sm:rounded-[3rem] p-0 shadow-2xl overflow-hidden">
+                    <form onSubmit={handleConfirm} className="relative p-6 sm:p-8 pt-8 sm:pt-10 space-y-6 flex flex-col justify-between min-h-0">
                         {/* Decorative background element */}
                         <div className={cn(
-                            "absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2",
+                            "absolute top-0 right-0 w-32 h-32 rounded-full blur-3xl opacity-20 -translate-y-1/2 translate-x-1/2 pointer-events-none",
                             options.destructive ? "bg-rose-500" : "bg-primary"
                         )} />
 
@@ -107,11 +107,11 @@ export function PromptProvider({ children }: { children: ReactNode }) {
                             </div>
                         </div>
 
-                        <AlertDialogFooter className="flex flex-col sm:flex-row gap-3 relative z-10 pt-2">
+                        <AlertDialogFooter className="flex flex-col-reverse sm:flex-row gap-3 relative z-10 pt-2 shrink-0">
                             <AlertDialogCancel
                                 type="button"
                                 onClick={handleCancel}
-                                className="flex-1 h-12 rounded-2xl border-none bg-muted/50 hover:bg-muted text-foreground font-bold transition-all active:scale-95"
+                                className="w-full sm:flex-1 shrink-0 h-12 min-h-12 rounded-2xl border-none bg-muted/50 hover:bg-muted text-foreground font-bold transition-all active:scale-95"
                             >
                                 {options.cancelText ?? "Cancel"}
                             </AlertDialogCancel>
@@ -119,7 +119,7 @@ export function PromptProvider({ children }: { children: ReactNode }) {
                             <AlertDialogAction
                                 type="submit"
                                 className={cn(
-                                    "flex-1 h-12 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg",
+                                    "w-full sm:flex-1 shrink-0 h-12 min-h-12 rounded-2xl font-black uppercase tracking-widest transition-all active:scale-95 shadow-lg",
                                     options.destructive
                                         ? "bg-rose-500 text-white hover:bg-rose-600 shadow-rose-500/20"
                                         : "bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"

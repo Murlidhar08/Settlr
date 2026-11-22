@@ -8,7 +8,7 @@ const UPLOAD_ROOT = path.join(process.cwd(), "uploads");
  */
 export const ensureDir = (dirPath: string) => {
     if (!fs.existsSync(dirPath)) {
-        fs.mkdirSync(dirPath, { recursive: true });
+        fs.mkdirSync(dirPath, { recursive: true, mode: 0o775 });
     }
 };
 

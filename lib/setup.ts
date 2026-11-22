@@ -5,30 +5,45 @@ import { prisma } from "./prisma/prisma";
 let lastLoggedToken: string | null = null;
 
 /**
- * Formats a prominent console log banner displaying the setup token.
+ * Formats and prints a prominent banner displaying the setup token.
+ * Strictly outputs only to the server log/terminal stdout.
  */
-function printSetupTokenLog(token: string, source: string) {
+export function printSetupTokenLog(token: string, source: string = "active setup session") {
+  if (typeof window !== "undefined") {
+    // Guard: Never log setup token in client/browser environments
+    return;
+  }
+
   const line = "═".repeat(68);
-  console.log(`\n╔${line}╗`);
-  console.log(`║                    FIRST-TIME INSTANCE SETUP                       ║`);
-  console.log(`║                                                                    ║`);
-  console.log(`║  A setup token is required to initialize the administrator account.║`);
-  console.log(`║  SETUP_TOKEN (${source.padEnd(28)}):               ║`);
-  console.log(`║  >>> ${token.padEnd(58)} <<< ║`);
-  console.log(`║                                                                    ║`);
-  console.log(`║  Navigate to /setup and paste this token to complete installation.  ║`);
-  console.log(`╚${line}╝\n`);
+  const banner = [
+    line,
+    "                    FIRST-TIME INSTANCE SETUP                       ",
+    "",
+    "  A setup token is required to initialize the administrator account.",
+    `  SETUP_TOKEN (${source}):`,
+    "",
+    `  ${token}`,
+    "",
+    "  Navigate to /setup and paste this token to complete installation.",
+    line,
+  ].join("\n");
+
+  if (typeof process !== "undefined" && process.stdout?.write) {
+    process.stdout.write(`\n${banner}\n\n`);
+  } else {
+    console.info(`\n${banner}\n`);
+  }
 }
 
 /**
  * Retrieves the existing setup token or generates and persists a new random one.
- * Logs the token to stdout when generated or requested.
+ * Logs the token to the server log when generated, or when forceLog is enabled.
  */
-export async function getOrGenerateSetupToken(): Promise<string> {
+export async function getOrGenerateSetupToken(forceLog: boolean = false): Promise<string> {
   // 1. If SETUP_TOKEN is explicitly configured in environment, prioritize it
   if (envServer.SETUP_TOKEN && envServer.SETUP_TOKEN.trim().length > 0) {
     const envToken = envServer.SETUP_TOKEN.trim();
-    if (lastLoggedToken !== envToken) {
+    if (forceLog || lastLoggedToken !== envToken) {
       lastLoggedToken = envToken;
       printSetupTokenLog(envToken, "environment variable");
     }
@@ -42,7 +57,7 @@ export async function getOrGenerateSetupToken(): Promise<string> {
     });
 
     if (existing && existing.value && new Date(existing.expiresAt) > new Date()) {
-      if (lastLoggedToken !== existing.value) {
+      if (forceLog || lastLoggedToken !== existing.value) {
         lastLoggedToken = existing.value;
         printSetupTokenLog(existing.value, "active setup session");
       }
@@ -73,7 +88,7 @@ export async function getOrGenerateSetupToken(): Promise<string> {
     console.error("[SETUP] Failed to persist generated setup token in database:", error);
     // In-memory fallback if DB write fails temporarily
     const fallbackToken = crypto.randomBytes(16).toString("hex");
-    if (lastLoggedToken !== fallbackToken) {
+    if (forceLog || lastLoggedToken !== fallbackToken) {
       lastLoggedToken = fallbackToken;
       printSetupTokenLog(fallbackToken, "in-memory fallback");
     }
@@ -115,19 +130,19 @@ export async function clearSetupToken(): Promise<void> {
   try {
     await prisma.verification.delete({
       where: { id: "setup_token" },
-    }).catch(() => {});
+    }).catch(() => { });
   } catch {
     // Ignore cleanup error
   }
 }
 
-export async function isSetupRequired() {
+export async function isSetupRequired(logTokenIfRequired: boolean = false) {
   try {
     const userCount = await prisma.user.count();
     const required = userCount === 0;
     if (required) {
-      // Ensure token is generated and logged to console
-      await getOrGenerateSetupToken();
+      // Ensure token is generated and logged to server console
+      await getOrGenerateSetupToken(logTokenIfRequired);
     }
     return required;
   } catch (error: any) {

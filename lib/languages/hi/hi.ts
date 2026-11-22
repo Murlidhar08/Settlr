@@ -248,6 +248,7 @@ export default {
         phone_number: "फ़ोन नंबर",
         not_set: "सेट नहीं है",
         manage_profile: "प्रोफ़ाइल",
+        accounts: "खाते",
         switch_account: "खाता बदलें",
         add_account: "खाता जोड़ें",
         signout: "साइन आउट",
