@@ -305,8 +305,9 @@ model Transaction {
   fromAccount   FinancialAccount @relation("SentTransactions", fields: [fromAccountId], references: [id])
   party         Party?           @relation(fields: [partyId], references: [id])
   toAccount     FinancialAccount @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
-  user          User             @relation(fields: [userId], references: [id])
-  isDelete      Boolean          @default(false)
+  user          User                  @relation(fields: [userId], references: [id])
+  isDelete      Boolean               @default(false)
+  documents     TransactionDocument[]
 
   @@index([businessId])
   @@index([businessId, date])
@@ -317,6 +318,22 @@ model Transaction {
   @@index([userId])
   @@index([partyId, date])
   @@map("transaction")
+}
+
+model TransactionDocument {
+  id                   String      @id @default(cuid())
+  transactionId        String      @map("transaction_id")
+  fileName             String      @map("file_name")
+  fileSize             Int?        @map("file_size")
+  fileType             String?     @map("file_type")
+  documentRelativePath String      @map("document_relative_path")
+  createdAt            DateTime    @default(now()) @map("created_at")
+  updatedAt            DateTime    @updatedAt @map("updated_at")
+
+  transaction          Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, map: "fk_transaction_document_transaction_id")
+
+  @@index([transactionId], map: "idx_transaction_document_transaction_id")
+  @@map("transaction_document")
 }
 
 enum FinancialAccountType {

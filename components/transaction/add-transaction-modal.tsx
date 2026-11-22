@@ -4,7 +4,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { format } from "date-fns"
 import { motion } from "framer-motion"
-import { ArrowDownLeft, ArrowUpRight, CalendarIcon, CheckCircle2, ChevronDownIcon, Clock, Loader2, Paperclip, Wallet } from "lucide-react"
+import { ArrowDownLeft, ArrowUpRight, CalendarIcon, CheckCircle2, ChevronDownIcon, Clock, Eye, FileImage, FileText, Loader2, Paperclip, Receipt, Trash2, UploadCloud, Wallet } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { ReactNode, useEffect, useRef, useState } from "react"
 import { toast } from "sonner"
@@ -17,14 +17,16 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet"
 import { Textarea } from "@/components/ui/textarea"
+import { DocumentPreview } from "@/components/document-preview"
 
 // Actions
-import { addTransaction } from "@/actions/transaction.actions"
+import { addTransaction, uploadTransactionFile, deleteTransactionFile } from "@/actions/transaction.actions"
 
 // Library
 import { CategoryType, FinancialAccountType } from "@/lib/generated/prisma/enums"
 import { tran } from "@/lib/languages/i18n"
 import { cn } from "@/lib/utils"
+import { getFileUrl } from "@/lib/utils/file"
 
 // Types
 import { getFinancialAccounts } from "@/actions/financial-account.actions"
@@ -47,6 +49,14 @@ interface TransactionProps {
 }
 
 const EMPTY_ACCOUNTS: any[] = [];
+
+function formatFileSize(bytes?: number | null): string {
+  if (!bytes || bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB", "GB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
+}
 
 export const AddTransactionModal = ({
   title,
@@ -98,12 +108,100 @@ export const AddTransactionModal = ({
     fromAccountId: "",
     toAccountId: "",
     userId: "",
+    documents: transactionData?.documents || [],
   })
+
+  // Document Upload & Preview States
+  const [uploadingCount, setUploadingCount] = useState(0)
+  const isUploading = uploadingCount > 0
+  const [isDragging, setIsDragging] = useState(false)
+  const [previewDoc, setPreviewDoc] = useState<{ url: string; fileName: string } | null>(null)
+  const [previewOpen, setPreviewOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Mode Detection
   const [mode, setMode] = useState<ModalMode>(ModalMode.CASHBOOK)
 
   const lastInitializedRef = useRef<string>("")
+
+  const uploadFiles = async (files: FileList | File[]) => {
+    const fileArray = Array.from(files);
+    if (fileArray.length === 0) return;
+
+    const allowedExtensions = ["jpg", "jpeg", "png", "pdf"];
+    const validFiles: File[] = [];
+
+    for (const file of fileArray) {
+      const ext = (file.name.split(".").pop() || "").toLowerCase();
+      if (!allowedExtensions.includes(ext)) {
+        toast.error(`Invalid format for ${file.name}. Only JPG, PNG, and PDF files are allowed.`);
+        continue;
+      }
+      if (file.size > 15 * 1024 * 1024) {
+        toast.error(`File ${file.name} is too large. Maximum size is 15MB.`);
+        continue;
+      }
+      validFiles.push(file);
+    }
+
+    if (validFiles.length === 0) return;
+
+    setUploadingCount(prev => prev + validFiles.length);
+
+    for (const file of validFiles) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+        const uploaded = await uploadTransactionFile(formData);
+
+        setData((prev: any) => ({
+          ...prev,
+          documents: [
+            ...(prev.documents || []),
+            uploaded
+          ]
+        }));
+        toast.success(`Attached ${file.name}`);
+      } catch (err: any) {
+        toast.error(err?.message || `Failed to upload ${file.name}`);
+      } finally {
+        setUploadingCount(prev => Math.max(0, prev - 1));
+      }
+    }
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      uploadFiles(e.target.files);
+      e.target.value = "";
+    }
+  };
+
+  const handleRemoveDocument = async (indexToRemove: number) => {
+    const docToRemove = data.documents?.[indexToRemove];
+    setData((prev: any) => ({
+      ...prev,
+      documents: (prev.documents || []).filter((_: any, idx: number) => idx !== indexToRemove)
+    }));
+
+    // If doc was freshly uploaded and not yet saved in DB, clean up file on server
+    if (docToRemove?.documentRelativePath && !docToRemove?.id) {
+      try {
+        await deleteTransactionFile(docToRemove.documentRelativePath);
+      } catch {
+        // Silently ignore cleanup error
+      }
+    }
+  };
+
+  const handlePreviewDocument = (doc: any) => {
+    if (!doc?.documentRelativePath) return;
+    setPreviewDoc({
+      url: getFileUrl(doc.documentRelativePath),
+      fileName: doc.fileName || "Document",
+    });
+    setPreviewOpen(true);
+  };
 
   useEffect(() => {
     if (open && !loadingAccounts && allAccounts.length > 0) {
@@ -117,6 +215,7 @@ export const AddTransactionModal = ({
             amount: Number(transactionData.amount).toFixed(2),
             date: format(transactionData?.date ? new Date(transactionData.date) : new Date(), "yyyy-MM-dd"),
             time: format(transactionData?.date ? new Date(transactionData.date) : new Date(), "HH:mm"),
+            documents: transactionData?.documents || [],
           }))
 
           const from = allAccounts.find(a => a.id === transactionData.fromAccountId)
@@ -173,7 +272,8 @@ export const AddTransactionModal = ({
           setPartnerAccountId(initialPartnerAcc)
           setData((pre: any) => ({
             ...pre,
-            partyId: allAccounts.find(a => a.id === initialPartnerAcc)?.partyId || null
+            partyId: allAccounts.find(a => a.id === initialPartnerAcc)?.partyId || null,
+            documents: [],
           }))
         }
         lastInitializedRef.current = initializationKey
@@ -193,9 +293,12 @@ export const AddTransactionModal = ({
           fromAccountId: "",
           toAccountId: "",
           userId: "",
+          documents: [],
         })
         setMoneyAccountId("")
         setPartnerAccountId("")
+        setPreviewDoc(null)
+        setPreviewOpen(false)
       }
     }
   }, [open, loadingAccounts, allAccounts, partyId, accountId, transactionData?.id, currentDirection, isOut, defAccId, defIncomeAccId, defExpenseAccId])
@@ -386,9 +489,12 @@ export const AddTransactionModal = ({
       fromAccountId: "",
       toAccountId: "",
       userId: "",
+      documents: [],
     })
     setMoneyAccountId("")
     setPartnerAccountId("")
+    setPreviewDoc(null)
+    setPreviewOpen(false)
     router.refresh()
   }
 
@@ -704,6 +810,137 @@ export const AddTransactionModal = ({
                   className="min-h-25 rounded-2xl border-2 p-4 text-base font-medium transition-all focus:border-primary focus:ring-0"
                 />
               </motion.div>
+
+              {/* Invoice & Documents Upload */}
+              <motion.div variants={itemVariants} className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60">
+                    <Receipt size={12} /> Invoice & Documents
+                  </Label>
+                  {data.documents?.length > 0 && (
+                    <span className="text-[10px] font-black uppercase tracking-wider text-muted-foreground/50 bg-muted px-2 py-0.5 rounded-full">
+                      {data.documents.length} {data.documents.length === 1 ? "File" : "Files"}
+                    </span>
+                  )}
+                </div>
+
+                {/* Upload Control */}
+                <div
+                  onDragOver={(e) => {
+                    e.preventDefault();
+                    setIsDragging(true);
+                  }}
+                  onDragLeave={() => setIsDragging(false)}
+                  onDrop={(e) => {
+                    e.preventDefault();
+                    setIsDragging(false);
+                    if (e.dataTransfer.files?.length) {
+                      uploadFiles(e.dataTransfer.files);
+                    }
+                  }}
+                  onClick={() => fileInputRef.current?.click()}
+                  className={cn(
+                    "relative group flex flex-col items-center justify-center p-4 border-2 border-dashed rounded-2xl cursor-pointer transition-all duration-200",
+                    isDragging
+                      ? "border-primary bg-primary/5 scale-[1.01]"
+                      : "border-muted-foreground/20 hover:border-primary/50 bg-muted/20 hover:bg-muted/40"
+                  )}
+                >
+                  <input
+                    type="file"
+                    ref={fileInputRef}
+                    multiple
+                    accept=".jpg,.jpeg,.png,.pdf,image/jpeg,image/png,application/pdf"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                  />
+                  {isUploading ? (
+                    <div className="flex items-center gap-3 py-2 text-primary">
+                      <Loader2 className="animate-spin" size={20} />
+                      <span className="text-xs font-bold uppercase tracking-wider">Uploading invoice documents...</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 py-1 text-center sm:text-left">
+                      <div className="h-9 w-9 shrink-0 rounded-xl bg-primary/10 text-primary flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <UploadCloud size={18} />
+                      </div>
+                      <div>
+                        <p className="text-xs font-bold text-foreground">
+                          Click or drag & drop to upload invoices & receipts
+                        </p>
+                        <p className="text-[10px] text-muted-foreground/60 font-medium">
+                          Supports JPG, PNG, JPEG, PDF (up to 15MB each)
+                        </p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Document List */}
+                {data.documents?.length > 0 && (
+                  <div className="space-y-2 mt-2">
+                    {data.documents.map((doc: any, idx: number) => {
+                      const isPdf = doc.fileName?.toLowerCase().endsWith(".pdf") || doc.fileType === "application/pdf";
+                      return (
+                        <div
+                          key={doc.id || doc.documentRelativePath || idx}
+                          className="group flex items-center justify-between p-3 rounded-2xl bg-muted/40 border border-border/50 hover:border-primary/30 transition-all"
+                        >
+                          <div
+                            onClick={() => handlePreviewDocument(doc)}
+                            className="flex items-center gap-3 flex-1 min-w-0 cursor-pointer"
+                          >
+                            <div className={cn(
+                              "h-10 w-10 shrink-0 rounded-xl flex items-center justify-center font-bold text-[10px] uppercase shadow-xs transition-transform group-hover:scale-105",
+                              isPdf ? "bg-rose-500/10 text-rose-600 border border-rose-500/20" : "bg-primary/10 text-primary border border-primary/20"
+                            )}>
+                              {isPdf ? (
+                                <span className="font-black">PDF</span>
+                              ) : (
+                                <FileImage size={18} />
+                              )}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-foreground truncate group-hover:text-primary transition-colors">
+                                {doc.fileName}
+                              </p>
+                              <p className="text-[10px] text-muted-foreground font-semibold">
+                                {doc.fileSize ? formatFileSize(doc.fileSize) : isPdf ? "PDF Document" : "Image File"}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-1 shrink-0 ml-2">
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-xl text-muted-foreground hover:text-foreground hover:bg-background"
+                              onClick={() => handlePreviewDocument(doc)}
+                              title="Preview document"
+                            >
+                              <Eye size={16} />
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 rounded-xl text-rose-500 hover:text-rose-600 hover:bg-rose-500/10"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveDocument(idx);
+                              }}
+                              title="Remove document"
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </motion.div>
             </motion.div>
           </div>
 
@@ -719,7 +956,7 @@ export const AddTransactionModal = ({
               </Button>
               <Button
                 onClick={handleAddTransaction}
-                disabled={loadingAccounts || transactionMutation.isPending}
+                disabled={loadingAccounts || transactionMutation.isPending || isUploading}
                 className={cn(
                   "h-12 flex-2 rounded-2xl text-white text-base font-black uppercase tracking-widest gap-2 shadow-xl active:scale-[0.97] transition-all",
                   isOut
@@ -743,6 +980,19 @@ export const AddTransactionModal = ({
           </div>
         </SheetContent>
       </Sheet>
+
+      {/* Document Preview Lightbox */}
+      {previewDoc && (
+        <DocumentPreview
+          isOpen={previewOpen}
+          onClose={() => {
+            setPreviewOpen(false);
+            setPreviewDoc(null);
+          }}
+          url={previewDoc.url}
+          fileName={previewDoc.fileName}
+        />
+      )}
     </>
   )
 }

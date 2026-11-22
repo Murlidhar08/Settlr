@@ -5,8 +5,12 @@ import { getUserSession } from "@/lib/auth/auth";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { CategoryType, FinancialAccountType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
+import { uploadFile, deleteFile, validateMagicBytes } from "@/lib/file-operations";
+import { UnauthorizedError, ValidationError } from "@/lib/errors";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import path from "path";
+import crypto from "crypto";
 
 export async function addTransaction(transactionData: any, pathToRevalidate?: string) {
   const session = await getUserSession();
@@ -66,21 +70,46 @@ export async function addTransaction(transactionData: any, pathToRevalidate?: st
 
   // If id exists and not zero -> update
   if (!!transactionData.id) {
+    const updateData: any = {
+      amount: new Prisma.Decimal(transactionData.amount),
+      date: finalDate,
+      description: transactionData.description || null,
+      business: { connect: { id: businessId } },
+      user: { connect: { id: userId } },
+      fromAccount: { connect: { id: transactionData.fromAccountId } },
+      toAccount: { connect: { id: transactionData.toAccountId } },
+      party: transactionData.partyId
+        ? { connect: { id: transactionData.partyId } }
+        : { disconnect: true }
+    };
+
+    if (Array.isArray(transactionData.documents)) {
+      const existingDocIds = transactionData.documents
+        .filter((d: any) => d.id)
+        .map((d: any) => d.id);
+
+      updateData.documents = {
+        deleteMany: {
+          id: { notIn: existingDocIds },
+        },
+        create: transactionData.documents
+          .filter((d: any) => !d.id)
+          .map((doc: any) => ({
+            fileName: doc.fileName,
+            fileSize: doc.fileSize ? Number(doc.fileSize) : null,
+            fileType: doc.fileType || null,
+            documentRelativePath: doc.documentRelativePath,
+          })),
+      };
+    }
+
     result = await prisma.transaction.update({
       where: {
         id: transactionData.id,
       },
-      data: {
-        amount: new Prisma.Decimal(transactionData.amount),
-        date: finalDate,
-        description: transactionData.description || null,
-        business: { connect: { id: businessId } },
-        user: { connect: { id: userId } },
-        fromAccount: { connect: { id: transactionData.fromAccountId } },
-        toAccount: { connect: { id: transactionData.toAccountId } },
-        party: transactionData.partyId
-          ? { connect: { id: transactionData.partyId } }
-          : { disconnect: true }
+      data: updateData,
+      include: {
+        documents: true,
       },
     });
   }
@@ -101,8 +130,22 @@ export async function addTransaction(transactionData: any, pathToRevalidate?: st
       createData.party = { connect: { id: transactionData.partyId } };
     }
 
+    if (Array.isArray(transactionData.documents) && transactionData.documents.length > 0) {
+      createData.documents = {
+        create: transactionData.documents.map((doc: any) => ({
+          fileName: doc.fileName,
+          fileSize: doc.fileSize ? Number(doc.fileSize) : null,
+          fileType: doc.fileType || null,
+          documentRelativePath: doc.documentRelativePath,
+        })),
+      };
+    }
+
     result = await prisma.transaction.create({
       data: createData,
+      include: {
+        documents: true,
+      },
     });
   }
 
@@ -600,7 +643,8 @@ export async function getTransactionDetail(transactionId: string) {
       party: { select: { id: true, name: true, contactNo: true } },
       toAccount: { select: { id: true, name: true, type: true, moneyType: true, categoryType: true, party: { select: { id: true, name: true } } } },
       fromAccount: { select: { id: true, name: true, type: true, moneyType: true, categoryType: true, party: { select: { id: true, name: true } } } },
-      user: { select: { name: true } }
+      user: { select: { name: true } },
+      documents: true,
     },
   });
 
@@ -610,4 +654,65 @@ export async function getTransactionDetail(transactionId: string) {
     ...transaction,
     amount: Number(transaction.amount)
   };
+}
+
+const ALLOWED_TRANSACTION_DOC_EXTENSIONS = new Set(["jpg", "jpeg", "png", "pdf"]);
+
+export async function uploadTransactionFile(formData: FormData) {
+  const session = await getUserSession();
+  if (!session?.user?.id) {
+    throw new UnauthorizedError("Unauthorized");
+  }
+
+  const file = formData.get("file") as File | null;
+  if (!file) {
+    throw new ValidationError("No file provided");
+  }
+
+  // 1. File size limit: 15MB
+  if (file.size > 15 * 1024 * 1024) {
+    throw new ValidationError("File size exceeds 15MB limit");
+  }
+
+  // 2. Extension validation
+  const rawExt = (file.name.split(".").pop() || "").toLowerCase();
+  if (!ALLOWED_TRANSACTION_DOC_EXTENSIONS.has(rawExt)) {
+    throw new ValidationError("Invalid file type. Allowed formats: JPG, JPEG, PNG, PDF");
+  }
+
+  // 3. Magic bytes validation
+  const fileBuffer = Buffer.from(await file.arrayBuffer());
+  if (!validateMagicBytes(fileBuffer, rawExt)) {
+    throw new ValidationError("Invalid file content: file signature does not match declared extension");
+  }
+
+  // 4. Upload file to /uploads/invoice/transaction/file
+  const destinationDir = "invoice/transaction/file";
+  const ext = `.${rawExt}`;
+  const safeBaseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50);
+  const uniqueName = `${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeBaseName}${ext}`;
+
+  const relativePath = await uploadFile(file, destinationDir, uniqueName);
+
+  return {
+    fileName: path.basename(file.name),
+    fileSize: file.size,
+    fileType: file.type || (rawExt === "pdf" ? "application/pdf" : `image/${rawExt}`),
+    documentRelativePath: relativePath,
+  };
+}
+
+export async function deleteTransactionFile(relativePath: string) {
+  const session = await getUserSession();
+  if (!session?.user?.id) {
+    throw new UnauthorizedError("Unauthorized");
+  }
+
+  const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
+  if (!normalized.startsWith("invoice/transaction/file/")) {
+    throw new ValidationError("Invalid file path");
+  }
+
+  await deleteFile(normalized);
+  return { success: true };
 }
