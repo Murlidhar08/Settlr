@@ -39,7 +39,7 @@ function UserTab({
     };
 
     return (
-        <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full space-y-6">
+        <div className="flex-1 mx-auto max-w-7xl w-full space-y-6">
             <AdminStats
                 totalUsers={totalUsers}
                 activeUsers={activeUsers}

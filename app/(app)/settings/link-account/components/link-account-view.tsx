@@ -23,7 +23,7 @@ export function LinkAccountView() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="bg-background pb-20">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -62,22 +62,22 @@ export function LinkAccountView() {
             (provider) =>
               enabledProviders[provider] && !currAccount?.find((acc) => acc.providerId === provider)
           ).length > 0 && (
-            <section className="space-y-4">
-              <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">
-                {tran("linked_accounts.available_providers")}
-              </h3>
+              <section className="space-y-4">
+                <h3 className="text-[11px] font-black uppercase tracking-[0.2em] text-muted-foreground ml-2">
+                  {tran("linked_accounts.available_providers")}
+                </h3>
 
-              <div className="grid gap-3">
-                {SUPPORTED_OAUTH_PROVIDERS.filter(
-                  (provider) =>
-                    enabledProviders[provider] &&
-                    !currAccount?.find((acc) => acc.providerId === provider)
-                ).map((provider) => (
-                  <AccountCard key={provider} provider={provider} />
-                ))}
-              </div>
-            </section>
-          )}
+                <div className="grid gap-3">
+                  {SUPPORTED_OAUTH_PROVIDERS.filter(
+                    (provider) =>
+                      enabledProviders[provider] &&
+                      !currAccount?.find((acc) => acc.providerId === provider)
+                  ).map((provider) => (
+                    <AccountCard key={provider} provider={provider} />
+                  ))}
+                </div>
+              </section>
+            )}
         </div>
       </motion.div>
     </div>

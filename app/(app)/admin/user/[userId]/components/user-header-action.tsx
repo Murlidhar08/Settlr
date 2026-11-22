@@ -84,7 +84,6 @@ export function UserHeader({ userId, hasImage }: UserHeaderMenuProps) {
     return (
         <>
             <PageHeader
-                showBack={true}
                 title={"User Details"}
                 showProfile={false}
                 menuItems={[

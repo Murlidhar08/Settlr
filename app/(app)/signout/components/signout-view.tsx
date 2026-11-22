@@ -43,7 +43,7 @@ export function SignOutView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-lg p-4 sm:p-6 mt-4 space-y-6"
+        className="mx-auto max-w-lg space-y-6"
       >
         {/* Account List Card */}
         <motion.div variants={itemVariants}>

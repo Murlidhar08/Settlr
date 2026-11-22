@@ -1,7 +1,9 @@
 "use client";
 
+import { envClient } from "@/lib/env.client";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
+import { cn } from "../lib/utils";
 
 export function AppContentScrollArea({ children }: { children: React.ReactNode }) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -15,7 +17,9 @@ export function AppContentScrollArea({ children }: { children: React.ReactNode }
   return (
     <div
       ref={scrollRef}
-      className="flex-1 min-w-0 h-full overflow-y-auto overflow-x-hidden flex flex-col relative px-2 md:px-12 lg:px-20 pb-10 md:pb-20 lg:pb-10"
+      className={cn("w-full h-full overflow-y-auto overflow-x-hidden relative p-4 md:p-6",
+        envClient.NEXT_PUBLIC_BOTTOM_NAV ? "pb-32" : ""
+      )}
     >
       {children}
     </div>

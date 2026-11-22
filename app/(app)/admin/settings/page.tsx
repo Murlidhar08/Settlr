@@ -9,7 +9,7 @@ export default function AdminSettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
+            <div className="flex-1 max-w-7xl mx-auto w-full space-y-6 animate-in fade-in duration-500">
                 <Skeleton className="h-125 w-full rounded-2xl" />
             </div>
         );
@@ -18,7 +18,7 @@ export default function AdminSettingsPage() {
     if (!config) return null;
 
     return (
-        <div className="flex-1 px-4 pb-34 pt-6 max-w-7xl mx-auto w-full">
+        <div className="flex-1 max-w-7xl mx-auto w-full">
             <AppSettingsForm initialData={config} />
         </div>
     );

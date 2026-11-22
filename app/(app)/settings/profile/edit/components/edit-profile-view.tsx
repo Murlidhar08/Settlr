@@ -157,7 +157,7 @@ export function EditProfileView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-4xl mt-6 space-y-6 sm:space-y-8 px-4 sm:px-6"
+        className="mx-auto max-w-4xl space-y-6 sm:space-y-8 px-4 sm:px-6"
       >
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Avatar Section */}

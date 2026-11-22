@@ -73,12 +73,12 @@ export function SecurityView() {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="bg-background pb-20">
       <motion.div
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-4xl p-4 sm:p-6 mt-4"
+        className="mx-auto max-w-4xl p-4 sm:p-6"
       >
         <AppTabs defaultTab="password" tabs={tabs} />
       </motion.div>

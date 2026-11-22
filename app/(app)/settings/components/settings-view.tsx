@@ -1,23 +1,22 @@
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
-import { LogOut } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { FooterButtons } from "@/components/footer-buttons";
 import { useUserConfig } from "@/components/providers/user-config-provider";
 import { Button } from "@/components/ui/button";
+import { containerVariants, itemVariants } from "@/lib/animations";
 import { useSession } from "@/lib/auth/auth-client";
 import { envClient } from "@/lib/env.client";
-import { Currency } from "@/lib/generated/prisma/enums";
 import { tran } from "@/lib/languages/i18n";
-import { containerVariants, itemVariants } from "@/lib/animations";
 import { useAppVersion, useUpsertUserSettings } from "@/tanstacks/settings";
+import { motion } from "framer-motion";
+import { LogOut } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { SettingsAppearanceSection } from "./settings-appearance-section";
+import { SettingsGeneralSection } from "./settings-general-section";
+import { SettingsSecuritySection } from "./settings-security-section";
 import { SettingsSkeleton } from "./settings-skeleton";
 import { SettingsUserCard } from "./settings-user-card";
-import { SettingsGeneralSection } from "./settings-general-section";
-import { SettingsAppearanceSection } from "./settings-appearance-section";
-import { SettingsSecuritySection } from "./settings-security-section";
 
 export function SettingsView() {
   const router = useRouter();
@@ -49,7 +48,7 @@ export function SettingsView() {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="mx-auto max-w-4xl mt-6 space-y-6 sm:space-y-8 px-4 sm:px-6"
+        className="mx-auto max-w-3xl space-y-8"
       >
         {/* USER PROFILE CARD */}
         <motion.div variants={itemVariants}>
