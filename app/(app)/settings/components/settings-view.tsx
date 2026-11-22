@@ -9,7 +9,7 @@ import { envClient } from "@/lib/env.client";
 import { tran } from "@/lib/languages/i18n";
 import { useAppVersion, useUpsertUserSettings } from "@/tanstacks/settings";
 import { motion } from "framer-motion";
-import { LogOut } from "lucide-react";
+import { LogOut, Trash } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { SettingsAppearanceSection } from "./settings-appearance-section";
@@ -17,6 +17,7 @@ import { SettingsGeneralSection } from "./settings-general-section";
 import { SettingsSecuritySection } from "./settings-security-section";
 import { SettingsSkeleton } from "./settings-skeleton";
 import { SettingsUserCard } from "./settings-user-card";
+import { SettingsRow, SettingsSection } from "./settings-section-row";
 
 export function SettingsView() {
   const router = useRouter();
@@ -85,6 +86,15 @@ export function SettingsView() {
             upsertSettingsMutation={upsertSettingsMutation}
           />
         </motion.div>
+
+        {/* Data Management */}
+        <SettingsSection title={tran("settings.data_management")}>
+          <SettingsRow
+            icon={Trash}
+            label={tran("settings.recycle_bin")}
+            href="/settings/recycle-bin"
+          />
+        </SettingsSection>
 
         {/* SECURITY & PRIVACY */}
         <motion.div variants={itemVariants}>
