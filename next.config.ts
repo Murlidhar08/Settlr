@@ -1,36 +1,71 @@
+
 import type { NextConfig } from "next";
-import withPWA from '@ducanh2912/next-pwa';
-import nextBundleAnalyzer from '@next/bundle-analyzer';
+import withPWA from "@ducanh2912/next-pwa";
+import nextBundleAnalyzer from "@next/bundle-analyzer";
+
+// ==========================================
+// Environment
+// ==========================================
+
+const isDevelopment = process.env.NODE_ENV === "development";
+const isProduction = process.env.NODE_ENV === "production";
+const isAnalyzeEnabled = process.env.ANALYZE === "true";
+
+// ==========================================
+// Bundle Analyzer
+// ==========================================
 
 const withBundleAnalyzer = nextBundleAnalyzer({
-  enabled: process.env.ANALYZE === 'true',
+  enabled: isAnalyzeEnabled,
 });
+
+// ==========================================
+// PWA Configuration
+// ==========================================
 
 const withPWAConfig = withPWA({
-  dest: 'public',                              // where to output SW file (in public/)
-  disable: process.env.NODE_ENV === 'development', // disable in dev
-  register: true,                              // auto-register SW
-  workboxOptions: process.env.NODE_ENV === 'production' ?
-    {
-      // Disallow service worker caching for all dynamic API and file delivery routes
-      runtimeCaching: [
-        {
-          urlPattern: ({ url }: any) => url.pathname.startsWith('/api/'),
-          handler: 'NetworkOnly',
-          options: {
-            cacheName: 'apis',
-          },
-        },
-      ],
-    } : {},
+  dest: "public",
+  register: true,
+  disable: isDevelopment,
+
+  workboxOptions: {
+    disableDevLogs: true,
+
+    runtimeCaching: [
+      // Never cache API responses
+      {
+        urlPattern: ({ url }) => url.pathname.startsWith("/api/"),
+        handler: "NetworkOnly",
+        options: {
+          cacheName: "api-network-only"
+        }
+      },
+
+      // Never cache uploaded files
+      {
+        urlPattern: ({ url }) => url.pathname.startsWith("/uploads/"),
+        handler: "NetworkOnly",
+        options: {
+          cacheName: "uploads-network-only",
+        }
+      }
+    ]
+  }
 });
 
+// ==========================================
+// Next.js Configuration
+// ==========================================
+
 const nextConfig: NextConfig = {
+  // General
   reactStrictMode: true,
   output: "standalone",
   compress: true,
   poweredByHeader: false,
   typedRoutes: true,
+
+  // Server dependencies
   serverExternalPackages: [
     "@prisma/client",
     "prisma",
@@ -38,19 +73,27 @@ const nextConfig: NextConfig = {
     "pg",
     "jimp",
   ],
+
+  // Include additional runtime files in standalone output
   outputFileTracingIncludes: {
     "/*": [
+      "./public/**/*",
       "./prisma/**/*",
       "./prisma7.config.ts",
       "./scripts/reset-password.js",
     ],
   },
+
+  // Compiler optimizations
   compiler: {
-    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error", "warn"] } : false,
+    removeConsole: isProduction
+      ? { exclude: ["error", "warn"] }
+      : false,
   },
+
+  // Package optimizations
   experimental: {
     optimizePackageImports: [
-      "lucide-react",
       "date-fns",
       "framer-motion",
       "@base-ui/react",
@@ -61,6 +104,8 @@ const nextConfig: NextConfig = {
       "@better-auth/passkey",
     ],
   },
+
+  // Image optimization
   images: {
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,
@@ -77,15 +122,10 @@ const nextConfig: NextConfig = {
   },
 };
 
-// let finalConfig = nextConfig;
+// ==========================================
+// Export Composed Configuration
+// ==========================================
 
-// if (process.env.ANALYZE === 'true') {
-//   finalConfig = withBundleAnalyzer(finalConfig);
-// }
-
-// // Only apply PWA in production to speed up development
-// if (process.env.NODE_ENV === 'production') {
-//   finalConfig = withPWAConfig(finalConfig);
-// }
-
-export default withBundleAnalyzer(withPWAConfig(nextConfig));
+export default withBundleAnalyzer(
+  withPWAConfig(nextConfig)
+);
