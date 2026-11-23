@@ -686,8 +686,8 @@ export async function uploadTransactionFile(formData: FormData) {
     throw new ValidationError("Invalid file content: file signature does not match declared extension");
   }
 
-  // 4. Upload file to /uploads/invoice/transaction/file
-  const destinationDir = "invoice/transaction/file";
+  // 4. Upload file to /uploads/invoice/transaction
+  const destinationDir = "invoice/transaction";
   const ext = `.${rawExt}`;
   const safeBaseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50);
   const uniqueName = `${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeBaseName}${ext}`;
