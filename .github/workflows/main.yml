@@ -17,7 +17,7 @@ env:
 
 jobs:
   build-and-push:
-    name: Build and Push Docker Image
+    name: Build and Push Docker Image- ${{ inputs.version }}
     runs-on: ubuntu-latest
 
     steps:
