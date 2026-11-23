@@ -220,7 +220,7 @@ export async function GET(req: NextRequest) {
 
     // Extract domain / URL
     const hostHeader = req.headers.get("host");
-    let fallbackDomain = "next-template.dev";
+    let fallbackDomain = envServer.BETTER_AUTH_URL;
     try {
       if (process.env.BETTER_AUTH_URL) {
         fallbackDomain = new URL(process.env.BETTER_AUTH_URL).hostname;
