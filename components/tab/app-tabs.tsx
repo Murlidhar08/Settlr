@@ -216,10 +216,10 @@ export default function AppTabs({
                     )}
                 >
                     {tabs.map((tab) => {
+                        if (tab.hidden) return null;
                         const isActive = activeTab === tab.id;
                         return (
                             <TabsTrigger
-                                hidden={tab.hidden}
                                 key={tab.id}
                                 value={tab.id}
                                 className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-muted-foreground data-[state=active]:text-primary font-black text-[10px] tracking-widest transition-all uppercase whitespace-nowrap bg-transparent z-10 border-none shadow-none ring-0 focus-visible:ring-0 shrink-0 flex-none"
