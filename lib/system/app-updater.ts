@@ -1,9 +1,7 @@
 import type { SystemUpdateStatus, TriggerUpdateResult } from "@/types/admin-dashboard";
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-
-const BRANCH = "main";
-const DEFAULT_REPO = "Murlidhar08/next-auth-template";
+import { BRANCH, DEFAULT_REPO } from "../config/repo";
 
 /**
  * Normalizes any GitHub repo string (full URL, git@ URL, or owner/repo) to 'owner/repo'.
