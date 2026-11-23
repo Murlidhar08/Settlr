@@ -211,40 +211,28 @@ export default function AppTabs({
                     onMouseUp={handleMouseUp}
                     onMouseMove={handleMouseMove}
                     className={cn(
-                        "relative w-full flex items-center justify-start h-auto p-1 bg-slate-100 dark:bg-slate-900/30 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-x-auto scrollbar-hide no-scrollbar flex-nowrap shrink-0 transition-all select-none gap-1 sm:gap-2",
+                        "relative w-full flex items-center justify-start h-auto p-1.5 bg-slate-100/30 dark:bg-slate-900/30 backdrop-blur-xl rounded-2xl border border-slate-200/50 dark:border-slate-800/50 overflow-x-auto scrollbar-hide no-scrollbar flex-nowrap shrink-0 transition-all select-none",
                         isDragging ? "cursor-grabbing" : "cursor-grab"
                     )}
                 >
                     {tabs.map((tab) => {
-                        if (tab.hidden) return null;
                         const isActive = activeTab === tab.id;
                         return (
                             <TabsTrigger
+                                hidden={tab.hidden}
                                 key={tab.id}
                                 value={tab.id}
-                                className={cn(
-                                    "group relative flex items-center gap-2.5 px-3.5 py-2 rounded-xl text-sm transition-all whitespace-nowrap bg-transparent z-10 border-none shadow-none ring-0 focus-visible:ring-0 shrink-0 flex-none cursor-pointer",
-                                    isActive
-                                        ? "text-foreground font-semibold"
-                                        : "text-muted-foreground/80 hover:text-foreground font-medium hover:bg-secondary/50 dark:hover:bg-zinc-800/50"
-                                )}
+                                className="group relative flex items-center gap-2 px-5 py-2.5 rounded-xl text-muted-foreground data-[state=active]:text-primary font-black text-[10px] tracking-widest transition-all uppercase whitespace-nowrap bg-transparent z-10 border-none shadow-none ring-0 focus-visible:ring-0 shrink-0 flex-none"
                             >
-                                <span
-                                    className={cn(
-                                        "transition-colors [&>svg]:size-4 shrink-0",
-                                        isActive
-                                            ? "text-foreground"
-                                            : "text-muted-foreground/80 group-hover:text-foreground"
-                                    )}
-                                >
+                                <span className={cn("transition-all duration-300 [&>svg]:size-4", isActive && "scale-110 text-primary")}>
                                     {tab.icon}
                                 </span>
 
                                 <span className="relative">
                                     {tab.label}
                                     {!!tab.badgeCount && (
-                                        <div className="absolute -top-2.5 -right-4 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-bold text-primary-foreground ring-2 ring-background">
-                                            {tab.badgeCount > 99 ? "99+" : tab.badgeCount}
+                                        <div className="absolute -top-3 -right-5 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-black text-white shadow-lg shadow-primary/20 ring-2 ring-white dark:ring-slate-900 animate-in zoom-in duration-300">
+                                            {tab.badgeCount > 99 ? '99+' : tab.badgeCount}
                                         </div>
                                     )}
                                 </span>
