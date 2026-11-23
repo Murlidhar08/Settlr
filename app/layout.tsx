@@ -57,9 +57,7 @@ export const metadata: Metadata = {
       { url: "/images/logo/maskable_icon_x192.png", sizes: "192x192", type: "image/png" },
       { url: "/images/logo/maskable_icon_x512.png", sizes: "512x512", type: "image/png" },
     ],
-    apple: [
-      { url: "/images/app-icon/apple-icon-180.png", sizes: "180x180", type: "image/png" },
-    ],
+    apple: "/images/logo/maskable_icon_x192.png",
   },
   openGraph: envServer.NODE_ENV === "development" ? {} : {
     title: envClient.NEXT_PUBLIC_APP_NAME,

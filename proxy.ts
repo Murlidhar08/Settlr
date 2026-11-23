@@ -15,11 +15,11 @@ const isDev = process.env.NODE_ENV !== "production";
 const CSP_POLICY = [
   "default-src 'self'",
   // Next.js & Webpack HMR/Fast Refresh in development require 'unsafe-eval' for source maps
-  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com`,
+  `script-src 'self' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ""} https://challenges.cloudflare.com https://static.cloudflareinsights.com`,
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
   "font-src 'self' https://fonts.gstatic.com data:",
   "img-src 'self' data: blob: https://lh3.googleusercontent.com https://cdn.discordapp.com",
-  `connect-src 'self'${isDev ? " ws: wss:" : ""} https://challenges.cloudflare.com`,
+  `connect-src 'self'${isDev ? " ws: wss:" : ""} https://challenges.cloudflare.com https://cloudflareinsights.com`,
   "frame-src 'self' https://challenges.cloudflare.com",
   "frame-ancestors 'self'",
   "object-src 'none'",
