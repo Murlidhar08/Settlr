@@ -119,14 +119,8 @@ function validateServerEnv(): ServerEnv {
   const data = result.data;
 
   // Reject known default secrets in production.
-  if (
-    !isBuilding &&
-    data.NODE_ENV === "production" &&
-    KNOWN_DEFAULT_SECRETS.has(data.BETTER_AUTH_SECRET)
-  ) {
-    throw new Error(
-      "❌ Insecure BETTER_AUTH_SECRET: Please generate a unique random secret."
-    );
+  if (!isBuilding && data.NODE_ENV === "production" && KNOWN_DEFAULT_SECRETS.has(data.BETTER_AUTH_SECRET)) {
+    throw new Error("❌ Insecure BETTER_AUTH_SECRET: Please generate a unique random secret.");
   }
 
   // Reject invalid production hostnames.
@@ -134,9 +128,7 @@ function validateServerEnv(): ServerEnv {
     const hostname = new URL(data.BETTER_AUTH_URL).hostname;
 
     if (hostname === "0.0.0.0" || hostname === "[::]") {
-      throw new Error(
-        "❌ Invalid BETTER_AUTH_URL: Hostname cannot be 0.0.0.0 or [::] in production."
-      );
+      throw new Error("❌ Invalid BETTER_AUTH_URL: Hostname cannot be 0.0.0.0 or [::] in production.");
     }
   }
 
