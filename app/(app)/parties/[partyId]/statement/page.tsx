@@ -14,13 +14,13 @@ import StatementSkeleton from "./components/statement-skeleton";
 import { getPartyStatement } from "@/actions/transaction.actions";
 import { FooterButtons } from "@/components/footer-buttons";
 import { FormattedDate, FormattedTime } from "@/components/ui/date-time";
-import { envClient } from "@/lib/env.client";
 import { getUserConfig } from "@/lib/user-config";
 import { cn } from "@/lib/utils";
 import { getInitials } from "@/utility/common-function";
 import { formatAmount } from "@/utility/transaction";
 import * as motion from "framer-motion/client";
 
+import { APP } from "@/lib/config/repo";
 import { getPartyTransactionPerspective } from "@/lib/transaction-logic";
 import { TransactionDirection } from "@/types/transaction/TransactionDirection";
 
@@ -197,7 +197,7 @@ async function StatementContent({ partyId, filters }: { partyId: string, filters
 
         <div className="mt-4 flex justify-center border-t border-muted pt-4">
           <p className="flex items-center gap-1.5 text-[10px] font-medium text-muted-foreground/60 uppercase tracking-widest">
-            <Lock size={10} /> Secure Encryption • {envClient.NEXT_PUBLIC_APP_NAME} Cloud
+            <Lock size={10} /> Secure Encryption • {APP.NAME} Cloud
           </p>
         </div>
       </div>

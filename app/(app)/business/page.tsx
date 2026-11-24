@@ -54,8 +54,8 @@ export default function BusinessPage() {
     } = useBusinessManagement("month")
 
     return (
-        <div className="flex-1 w-full bg-background pb-34">
-            <div className="mx-auto w-full max-w-4xl px-6 py-8">
+        <div className="flex-1 w-full bg-background">
+            <div className="mx-auto w-full max-w-4xl">
                 {/* Header with Title and Period Filter */}
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
                     <div className="flex flex-col">
@@ -317,7 +317,7 @@ export default function BusinessPage() {
                 )}
             </div>
 
-            <FooterButtons bottomSpace={true}>
+            <FooterButtons>
                 <Button
                     className="h-14 w-14 md:w-auto md:px-12 rounded-full md:gap-3 font-semibold uppercase bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 p-0 md:py-2"
                     onClick={() => setIsAddOpen(true)}

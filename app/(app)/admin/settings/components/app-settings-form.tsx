@@ -212,7 +212,7 @@ export function AppSettingsForm({ initialData }: AppSettingsFormProps) {
                 </div>
             </ConfigCard>
 
-            <FooterButtons bottomSpace={true}>
+            <FooterButtons>
                 <Button
                     type="submit"
                     disabled={loading}

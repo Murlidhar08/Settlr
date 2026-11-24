@@ -9,7 +9,7 @@ import { Plus } from "lucide-react";
 
 export function AddTransactionButton() {
     return (
-        <FooterButtons bottomSpace={true}>
+        <FooterButtons>
             <AddTransactionModal
                 title={tran("cashbook.new_entry")}
                 direction={TransactionDirection.OUT}

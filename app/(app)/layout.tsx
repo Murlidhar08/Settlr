@@ -4,21 +4,21 @@ export const dynamic = "force-dynamic";
 
 // Lib
 import { getUserSession } from "@/lib/auth/auth";
-import { isSetupRequired } from "@/lib/setup";
 import { setActiveLanguage } from "@/lib/languages/i18n";
+import { isSetupRequired } from "@/lib/setup";
 
 // Components
+import { AppContentScrollArea } from "@/components/app-content-scroll-area";
 import { ImpersonationIndicator } from "@/components/auth/impersonation-indicator";
+import { AppHeader, HeaderProvider } from "@/components/header";
 import { LayoutTransitions } from "@/components/layout/layout-transitions";
 import { NavBar } from "@/components/navbar/nav-bar";
-import { AppHeader, HeaderProvider } from "@/components/header";
-import { AppMobileTab, MobileTabProvider } from "@/components/tab";
 import { SidebarProvider } from "@/components/providers";
-import { AppContentScrollArea } from "@/components/app-content-scroll-area";
 import { UserConfigProvider } from "@/components/providers/user-config-provider";
+import { AppMobileTab, MobileTabProvider } from "@/components/tab";
+import { DEFAULT_CONFIG } from "@/lib/config/repo";
 import { UserStatus } from "@/lib/generated/prisma/enums";
 import { getDefaultConfig, getUserConfig } from "@/lib/user-config";
-import { envClient } from "@/lib/config/env";
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   // Check if setup is needed
@@ -68,7 +68,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               </div>
 
               {/* Persistent Mobile Tab */}
-              {envClient.NEXT_PUBLIC_BOTTOM_NAV && <AppMobileTab />}
+              {DEFAULT_CONFIG.BOTTOM_NAV && <AppMobileTab />}
 
               {/* Only when admin is impersonating */}
               <ImpersonationIndicator />

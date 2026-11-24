@@ -1,14 +1,14 @@
+import { APP } from "@/lib/config/repo";
 import type { Metadata } from "next";
 import { LegalPageLayout, type LegalSection } from "./components/legal-page-layout";
-import { envClient } from "@/lib/env.client";
 
 export const metadata: Metadata = {
-  title: `Terms & Services - ${envClient.NEXT_PUBLIC_APP_NAME}`,
-  description: `Terms and conditions governing the access, use, and security responsibilities for ${envClient.NEXT_PUBLIC_APP_NAME}.`,
+  title: `Terms & Services - ${APP.NAME}`,
+  description: `Terms and conditions governing the access, use, and security responsibilities for ${APP.NAME}.`,
 };
 
 export default function TermsAndServicesPage() {
-  const appName = envClient.NEXT_PUBLIC_APP_NAME;
+  const appName = APP.NAME;
 
   const sections: LegalSection[] = [
     {

@@ -49,7 +49,7 @@ function UserTab({
 
             <UserList />
 
-            <FooterButtons bottomSpace={true}>
+            <FooterButtons>
                 <Button
                     onClick={handleNavigateToAddUser}
                     className="h-14 w-14 md:w-auto md:px-12 rounded-full md:gap-3 font-semibold uppercase bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 p-0 md:py-2"

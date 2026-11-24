@@ -32,8 +32,8 @@ export default async function CashbookPage({ searchParams }: CashbookPageProps) 
   const effectiveEndDate = params.endDate || (!isSearchActive ? today : undefined);
 
   return (
-    <div className="w-full flex-1 bg-background pb-34">
-      <div className="mx-auto w-full max-w-4xl px-6">
+    <div className="w-full flex-1 bg-background">
+      <div className="mx-auto w-full max-w-4xl">
         <CashFilters effectiveStartDate={effectiveStartDate} effectiveEndDate={effectiveEndDate} />
 
         <Suspense
@@ -49,7 +49,7 @@ export default async function CashbookPage({ searchParams }: CashbookPageProps) 
         </Suspense>
       </div>
 
-      <FooterButtons bottomSpace={true}>
+      <FooterButtons>
         <AddTransactionModal
           title={t("cashbook.new_entry", lang)}
           direction={TransactionDirection.OUT}

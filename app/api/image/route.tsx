@@ -1,9 +1,10 @@
+import { apiError } from "@/lib/api/response";
+import { APP } from "@/lib/config/repo";
+import { envServer } from "@/lib/env.server";
 import { ImageResponse } from "next/og";
 import type { NextRequest } from "next/server";
 import fs from "node:fs";
 import path from "node:path";
-import { apiError } from "@/lib/api/response";
-import { envServer } from "@/lib/env.server";
 
 export const runtime = "nodejs";
 
@@ -184,8 +185,8 @@ export async function GET(req: NextRequest) {
     const { width, height, isSquare, isBanner } = parseDimensions(typeParam, widthParam, heightParam);
 
     // Extract brand name & description with defaults
-    const defaultBrand = envServer.NEXT_PUBLIC_APP_NAME;
-    const defaultDescription = envServer.NEXT_PUBLIC_APP_DESCRIPTION;
+    const defaultBrand = APP.NAME;
+    const defaultDescription = APP.DESCRIPTION;
 
     const brand = (
       searchParams.get("brand") ||

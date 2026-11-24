@@ -39,8 +39,8 @@ export default async function Parties({ searchParams }: PageProps) {
   );
 
   return (
-    <div className="w-full mx-auto pb-34">
-      <div className="w-full mx-auto max-w-4xl mt-6 space-y-8 px-6">
+    <div className="w-full mx-auto">
+      <div className="w-full mx-auto max-w-4xl space-y-8">
         <PartiesClientProvider currentTab={currentTab}>
           <PartyFilters />
 

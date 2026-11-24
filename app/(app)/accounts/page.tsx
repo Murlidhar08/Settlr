@@ -15,7 +15,7 @@ export default async function AccountsPage({ searchParams }: PageProps) {
     const period = (params.period as 'month' | 'year' | 'all') || 'month';
 
     return (
-        <div className="flex-1 w-full bg-background pb-34">
+        <div className="flex-1 w-full bg-background">
             <Suspense fallback={<AccountsSkeleton />}>
                 <AccountsContent
                     currency={currency}

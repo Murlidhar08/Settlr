@@ -1,6 +1,5 @@
 "use client";
 
-import { envClient } from "@/lib/env.client";
 import { useAppVersion } from "@/hooks/queries";
 import clsx from "clsx";
 import Image from "next/image";
@@ -8,6 +7,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../providers/sidebar-provider";
 import { useNavItems } from "./use-nav-items";
+import { APP } from "@/lib/config/repo";
 
 const NavBar = () => {
     const { isCollapsed: collapsed, setIsCollapsed: setCollapsed } = useSidebar();
@@ -56,7 +56,7 @@ const NavBar = () => {
                     {!collapsed && (
                         <div className="flex flex-col min-w-0 animate-in fade-in duration-200">
                             <span className="text-sm font-bold text-sidebar-foreground tracking-tight truncate leading-tight">
-                                {envClient.NEXT_PUBLIC_APP_NAME}
+                                {APP.NAME}
                             </span>
                             <span className="text-xs text-muted-foreground font-normal leading-tight mt-0.5">
                                 {displayVersion}

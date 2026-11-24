@@ -5,7 +5,7 @@ import { useUserConfig } from "@/components/providers/user-config-provider";
 import { Button } from "@/components/ui/button";
 import { containerVariants, itemVariants } from "@/lib/animations";
 import { useSession } from "@/lib/auth/auth-client";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 import { tran } from "@/lib/languages/i18n";
 import { useAppVersion, useUpsertUserSettings } from "@/tanstacks/settings";
 import { motion } from "framer-motion";
@@ -108,13 +108,13 @@ export function SettingsView() {
         >
           <p className="text-[10px] font-black uppercase tracking-[0.3em]">Build Version {version}</p>
           <p className="text-[9px] font-medium italic">
-            © {new Date().getFullYear()} {envClient.NEXT_PUBLIC_APP_NAME}. All rights reserved.
+            © {new Date().getFullYear()} {APP.NAME}. All rights reserved.
           </p>
         </motion.div>
       </motion.div>
 
       {/* SIGNOUT BUTTON */}
-      <FooterButtons bottomSpace={true}>
+      <FooterButtons>
         <Button
           onClick={handleSignOut}
           variant="destructive"

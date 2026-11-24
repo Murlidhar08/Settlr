@@ -34,8 +34,13 @@ export const API_PAGINATION = {
   MAX_LIMIT: 100,
 } as const;
 
+export const MAX_TRANSACTION_FILE_SIZE_MB = 10;
+export const MAX_TRANSACTION_FILE_SIZE_BYTES = MAX_TRANSACTION_FILE_SIZE_MB * 1024 * 1024; // 10MB in bytes
+
 export const FILE_UPLOAD_LIMITS = {
   MAX_FILE_SIZE_BYTES: 10 * 1024 * 1024, // 10MB
+  MAX_TRANSACTION_FILE_SIZE_MB,
+  MAX_TRANSACTION_FILE_SIZE_BYTES,
   ALLOWED_IMAGE_TYPES: ["image/jpeg", "image/png", "image/webp", "image/gif"],
   ALLOWED_DOCUMENT_TYPES: [
     "application/pdf",
@@ -44,4 +49,5 @@ export const FILE_UPLOAD_LIMITS = {
     "application/msword",
     "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
   ],
+  ALLOWED_TRANSACTION_DOC_EXTENSIONS: ["jpg", "jpeg", "png", "pdf"] as const,
 } as const;

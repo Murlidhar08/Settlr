@@ -65,7 +65,7 @@ export default function BusinessDetailPage() {
 
     if (!data) {
         return (
-            <div className="w-full bg-background min-h-screen pb-34">
+            <div className="w-full bg-background">
                 <div className="text-center py-20 space-y-4">
                     <div className="mx-auto w-16 h-16 bg-muted rounded-full flex items-center justify-center text-2xl">⚠️</div>
                     <p className="text-muted-foreground font-medium">Business not found</p>
@@ -129,7 +129,7 @@ export default function BusinessDetailPage() {
     }
 
     return (
-        <div className="w-full bg-background min-h-screen pb-34">
+        <div className="w-full bg-background">
             <AppHeader
                 showProfile={false}
                 title={business.name}

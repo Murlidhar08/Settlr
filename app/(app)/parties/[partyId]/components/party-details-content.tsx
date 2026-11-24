@@ -85,7 +85,7 @@ export function PartyDetailsContent({ partyId, currency }: PartyDetailsContentPr
             />
 
             {/* Main Content */}
-            <div className="mx-auto max-w-4xl mt-2 space-y-8 px-6 pb-34">
+            <div className="mx-auto max-w-4xl space-y-8">
                 <main>
                     {/* Balance Card */}
                     <BalanceCard
