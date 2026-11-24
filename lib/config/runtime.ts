@@ -13,9 +13,7 @@ export type PublicRuntimeConfig = Record<string, string | boolean>;
 export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
   NEXT_PUBLIC_APP_NAME: DEFAULT_CONFIG.APP_NAME,
   NEXT_PUBLIC_APP_DESCRIPTION: DEFAULT_CONFIG.APP_DESCRIPTION,
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: "",
-  NEXT_PUBLIC_SLIDE_NAV: false,
-  NEXT_PUBLIC_BOTTOM_NAV: true,
+  NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
 };
 
 declare global {
