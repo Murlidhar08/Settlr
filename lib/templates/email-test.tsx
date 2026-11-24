@@ -1,4 +1,5 @@
 import { envServer } from "../env.server";
+import { APP } from "@/lib/config/repo";
 
 export interface TestEmailDetails {
     toEmail: string;
@@ -10,7 +11,7 @@ export interface TestEmailDetails {
 
 export function getTestEmailHtml(details: TestEmailDetails): string {
     const primaryColor = "#7c3aed";
-    const appName = envServer.NEXT_PUBLIC_APP_NAME;
+    const appName = APP.NAME;
     const appUrl = envServer.BETTER_AUTH_URL;
 
     return `

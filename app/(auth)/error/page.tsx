@@ -4,7 +4,7 @@ import AuthCenterLayout from "@/components/layout/auth-layout";
 import { Button } from "@/components/ui/button";
 import { itemVariants } from "@/lib/animations";
 import { AUTH_PAGES_COPY } from "@/lib/config/auth-error-copy";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 import { motion } from "framer-motion";
 import { AlertCircle, ArrowLeft, Home } from "lucide-react";
 import Link from "next/link";
@@ -27,7 +27,7 @@ function ErrorContent() {
             System Reliability Unit
           </p>
           <p className="text-muted-foreground text-xs font-medium">
-            &copy; {new Date().getFullYear()} {envClient.NEXT_PUBLIC_APP_NAME}
+            &copy; {new Date().getFullYear()} {APP.NAME}
           </p>
         </div>
       }

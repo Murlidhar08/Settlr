@@ -21,7 +21,7 @@ import { toast } from "sonner";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 
 export interface LegalSection {
   id: string;
@@ -109,14 +109,14 @@ export function LegalPageLayout({
               <div className="w-9 h-9 rounded-xl bg-card border border-border/50 flex items-center justify-center p-1.5 shadow-xs group-hover:scale-105 transition-all duration-300">
                 <Image
                   src="/images/logo/maskable_icon_x192.png"
-                  alt={envClient.NEXT_PUBLIC_APP_NAME}
+                  alt={APP.NAME}
                   width={24}
                   height={24}
                   className="object-contain"
                 />
               </div>
               <span className="font-extrabold text-lg tracking-tight bg-clip-text text-transparent bg-linear-to-r from-foreground to-foreground/75">
-                {envClient.NEXT_PUBLIC_APP_NAME}
+                {APP.NAME}
               </span>
             </Link>
 
@@ -271,7 +271,7 @@ export function LegalPageLayout({
                   Security Commitment
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  {envClient.NEXT_PUBLIC_APP_NAME} implements multi-factor authentication, Passkeys, and strict OWASP security standards.
+                  {APP.NAME} implements multi-factor authentication, Passkeys, and strict OWASP security standards.
                 </p>
               </div>
             </div>
@@ -361,7 +361,7 @@ export function LegalPageLayout({
       <footer className="border-t border-border/40 bg-card/40 py-8 px-4 sm:px-6 lg:px-8 mt-auto">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
           <p>
-            &copy; {new Date().getFullYear()} {envClient.NEXT_PUBLIC_APP_NAME}. All rights reserved.
+            &copy; {new Date().getFullYear()} {APP.NAME}. All rights reserved.
           </p>
           <div className="flex items-center gap-4">
             <Link href={"/privacy-policy" as any} className="hover:text-foreground transition-colors">

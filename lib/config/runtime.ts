@@ -1,4 +1,3 @@
-
 /**
  * Public Runtime Configuration
  *
@@ -6,13 +5,9 @@
  * and client contexts without embedding values during Docker image build time.
  */
 
-import { DEFAULT_CONFIG } from "./repo";
-
 export type PublicRuntimeConfig = Record<string, string | boolean>;
 
 export const DEFAULT_PUBLIC_CONFIG: PublicRuntimeConfig = {
-  NEXT_PUBLIC_APP_NAME: DEFAULT_CONFIG.APP_NAME,
-  NEXT_PUBLIC_APP_DESCRIPTION: DEFAULT_CONFIG.APP_DESCRIPTION,
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: ""
 };
 

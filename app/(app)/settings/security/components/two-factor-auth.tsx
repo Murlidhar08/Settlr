@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { LoadingSwap } from "@/components/ui/loading-swap"
 import { authClient } from "@/lib/auth/auth-client"
-import { envClient } from "@/lib/env.client"
+import { APP } from "@/lib/config/repo"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { motion } from 'framer-motion'
 import { Copy, RefreshCw, ShieldCheck } from 'lucide-react'
@@ -65,7 +65,7 @@ export function TwoFactorAuth({ isEnabled }: { isEnabled: boolean }) {
   async function enable2FA(values: PasswordForm) {
     const result = await authClient.twoFactor.enable({
       password: values.password,
-      issuer: envClient.NEXT_PUBLIC_APP_NAME,
+      issuer: APP.NAME,
     })
 
     if (result.error) {

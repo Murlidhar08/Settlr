@@ -1,6 +1,5 @@
 "use client";
 
-import { envClient } from "@/lib/env.client";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { cn } from "../lib/utils";

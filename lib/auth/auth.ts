@@ -23,6 +23,7 @@ import { getPasswordResetSuccessEmailHtml } from "../templates/email-password-re
 import { getResetPasswordEmailHtml } from "../templates/email-reset-password";
 import { getVerificationEmailHtml } from "../templates/email-verification";
 import { toSlug } from "../utils";
+import { APP } from "@/lib/config/repo";
 
 /**
  * Generates an HMAC signature for authenticating internal admin setup calls.
@@ -35,7 +36,7 @@ export const getSetupSignature = () => {
 };
 
 export const auth = betterAuth({
-  appName: envServer.NEXT_PUBLIC_APP_NAME,
+  appName: APP.NAME,
   baseURL: envServer.BETTER_AUTH_URL,
   secret: envServer.BETTER_AUTH_SECRET,
   errorPage: "/error",
@@ -59,7 +60,7 @@ export const auth = betterAuth({
     },
   },
   advanced: {
-    cookiePrefix: toSlug(envServer.NEXT_PUBLIC_APP_NAME),
+    cookiePrefix: toSlug(APP.NAME),
     ipAddress: {
       ipAddressHeaders: ["x-forwarded-for", "cf-connecting-ip", "x-real-ip"],
       trustedProxies: [

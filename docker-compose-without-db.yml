@@ -5,8 +5,6 @@ services:
     environment:
       # Application
       NODE_ENV: "production"
-      NEXT_PUBLIC_APP_NAME: "AppName"
-      NEXT_PUBLIC_APP_DESCRIPTION: "This is the application description."
       ADVANCE_PASS_CHECK: "true"
 
       # Better Auth (C-5: Require unique random secret)
@@ -16,14 +14,6 @@ services:
 
       # DATABASE
       DATABASE_URL: "${DATABASE_URL:?DATABASE_URL is required}"
-
-      # Email Service
-      SMTP_HOST: "${SMTP_HOST:-mail.example.com}"
-      SMTP_PORT: ${SMTP_PORT:-587}
-      SMTP_USER: "${SMTP_USER:-user@example.com}"
-      SMTP_PASS: "${SMTP_PASS:-}"
-      SMTP_SECURE: ${SMTP_SECURE:-false}
-      FROM_EMAIL: "${FROM_EMAIL:-user <user@example.com>}"
 
     ports:
       - "3000:3000"

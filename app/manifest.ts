@@ -1,11 +1,9 @@
-import { DEFAULT_CONFIG } from '@/lib/config/repo';
-import { getPublicRuntimeConfig } from '@/lib/config/runtime';
+import { APP } from '@/lib/config/repo';
 import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
-  const config = getPublicRuntimeConfig();
-  const appName = String(config.NEXT_PUBLIC_APP_NAME ?? DEFAULT_CONFIG.APP_NAME);
-  const appDescription = String(config.NEXT_PUBLIC_APP_DESCRIPTION ?? DEFAULT_CONFIG.APP_DESCRIPTION);
+  const appName = String(APP.NAME);
+  const appDescription = String(APP.DESCRIPTION);
 
   return {
     name: appName,

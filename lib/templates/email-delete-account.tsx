@@ -1,11 +1,12 @@
 import { envServer } from "../env.server";
+import { APP } from "@/lib/config/repo";
 
 export function getDeleteAccountEmailHtml(
   email: string,
   deleteUrl: string
 ): string {
   const primaryColor = "#dc2626"; // Vibrant danger red
-  const appName = envServer.NEXT_PUBLIC_APP_NAME;
+  const appName = APP.NAME;
   const appUrl = envServer.BETTER_AUTH_URL;
 
   return `

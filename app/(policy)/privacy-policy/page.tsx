@@ -1,14 +1,14 @@
 import type { Metadata } from "next";
 import { LegalPageLayout, type LegalSection } from "@/app/(policy)/terms-and-services/components/legal-page-layout";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 
 export const metadata: Metadata = {
-  title: `Privacy Policy - ${envClient.NEXT_PUBLIC_APP_NAME}`,
-  description: `Learn how ${envClient.NEXT_PUBLIC_APP_NAME} collects, protects, encrypts, and handles your personal information and authentication credentials.`,
+  title: `Privacy Policy - ${APP.NAME}`,
+  description: `Learn how ${APP.NAME} collects, protects, encrypts, and handles your personal information and authentication credentials.`,
 };
 
 export default function PrivacyPolicyPage() {
-  const appName = envClient.NEXT_PUBLIC_APP_NAME;
+  const appName = APP.NAME;
 
   const sections: LegalSection[] = [
     {

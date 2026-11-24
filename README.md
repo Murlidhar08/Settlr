@@ -124,8 +124,6 @@ Open `.env` and configure your settings:
 ```env
 # Application
 NODE_ENV=development
-NEXT_PUBLIC_APP_NAME="My Awesome App"
-NEXT_PUBLIC_APP_DESCRIPTION="My application built with Next.js and Better Auth"
 ADVANCE_PASS_CHECK=true
 
 # Better Auth Secret (generate with: openssl rand -base64 32)

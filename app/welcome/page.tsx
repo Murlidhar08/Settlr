@@ -2,7 +2,7 @@ import { BuildVersion } from "@/components/auth/build-version";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { buttonVariants } from "@/components/ui/button";
 import { getServerSession } from "@/lib/auth/auth";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 import { cn } from "@/lib/utils";
 import {
   ArrowRight,
@@ -24,8 +24,8 @@ export const dynamic = "force-dynamic";
 
 export default async function WelcomePage() {
   const session = await getServerSession();
-  const appName = envClient.NEXT_PUBLIC_APP_NAME;
-  const appDescription = envClient.NEXT_PUBLIC_APP_DESCRIPTION;
+  const appName = APP.NAME;
+  const appDescription = APP.DESCRIPTION;
 
   const features = [
     {

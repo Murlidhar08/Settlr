@@ -1,7 +1,6 @@
 
 import { z } from "zod";
 import { getPublicRuntimeConfig } from "./runtime";
-import { DEFAULT_CONFIG } from "./repo";
 
 /**
  * Known placeholder / development secrets that must never be used in production.
@@ -36,10 +35,6 @@ const booleanEnv = (defaultValue: boolean) =>
 const serverEnvSchema = z.object({
   // Runtime environment
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
-
-  // Application metadata
-  NEXT_PUBLIC_APP_NAME: z.string().min(1).default(DEFAULT_CONFIG.APP_NAME),
-  NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1).default(DEFAULT_CONFIG.APP_DESCRIPTION),
 
   ADVANCE_PASS_CHECK: z.enum(["true", "false"]).default("false"),
 
@@ -80,8 +75,6 @@ const serverEnvSchema = z.object({
  */
 const clientEnvSchema = z
   .object({
-    NEXT_PUBLIC_APP_NAME: z.string().min(1).default(DEFAULT_CONFIG.APP_NAME),
-    NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1).default(DEFAULT_CONFIG.APP_DESCRIPTION),
     NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional()
   })
   .catchall(z.union([z.string(), z.boolean()]));
