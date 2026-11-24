@@ -28,20 +28,9 @@ set -a
 source <(tr -d '\r' < "$ENV_FILE")
 set +a
 
-# Construct build arguments dynamically from the env file keys
-BUILD_ARGS=()
-while IFS= read -r line || [ -n "$line" ]; do
-  clean_line=$(echo "$line" | tr -d '\r')
-  if [[ ! "$clean_line" =~ ^# ]] && [[ "$clean_line" =~ = ]]; then
-    key="${clean_line%%=*}"
-    value="${!key}"
-    BUILD_ARGS+=(--build-arg "$key=$value")
-  fi
-done < "$ENV_FILE"
+echo "🚀 Building Docker image with tag $VERSION (runtime-configured, zero embedded secrets)..."
 
-echo "🚀 Building Docker image with tag $VERSION..."
-
-docker build "${BUILD_ARGS[@]}" -t $IMAGE:$VERSION .
+docker build -t $IMAGE:$VERSION .
 
 echo "🔖 Tagging image as latest..."
 docker tag $IMAGE:$VERSION $IMAGE:latest

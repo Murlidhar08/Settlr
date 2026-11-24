@@ -21,12 +21,6 @@ services:
   app:
     build:
       context: .
-      args:
-        - NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME}
-        - NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION}
-        - BETTER_AUTH_URL=${BETTER_AUTH_URL}
-        - BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET}
-        - DATABASE_URL=${DATABASE_URL}
     container_name: app
     env_file:
       - .env

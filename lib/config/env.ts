@@ -1,4 +1,7 @@
-import { boolean, z } from "zod";
+
+import { z } from "zod";
+import { getPublicRuntimeConfig } from "./runtime";
+import { DEFAULT_CONFIG } from "./repo";
 
 /**
  * Known placeholder / development secrets that must never be used in production.
@@ -8,31 +11,52 @@ const KNOWN_DEFAULT_SECRETS = new Set([
 ]);
 
 /**
- * Server-side Environment Variables Schema
+ * Detects whether Next.js is executing during static build/compilation.
+ */
+function isBuildPhase(): boolean {
+  return (
+    process.env.NEXT_PHASE === "phase-production-build" ||
+    process.env.npm_lifecycle_event === "build" ||
+    process.env.IS_DOCKER_BUILD === "true"
+  );
+}
+
+/**
+ * Shared boolean environment variable parser.
+ */
+const booleanEnv = (defaultValue: boolean) =>
+  z
+    .enum(["true", "false"])
+    .default(String(defaultValue) as "true" | "false")
+    .transform((value) => value === "true");
+
+/**
+ * Server-side Environment Variables Schema.
  */
 const serverEnvSchema = z.object({
   // Runtime environment
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
 
   // Application metadata
-  NEXT_PUBLIC_APP_NAME: z.string().min(1, "NEXT_PUBLIC_APP_NAME is required"),
-  NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1, "NEXT_PUBLIC_APP_DESCRIPTION is required"),
-  ADVANCE_PASS_CHECK: z.enum(["true", "false"]).default("false").optional(),
+  NEXT_PUBLIC_APP_NAME: z.string().min(1).default(DEFAULT_CONFIG.APP_NAME),
+  NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1).default(DEFAULT_CONFIG.APP_DESCRIPTION),
 
-  NEXT_PUBLIC_SLIDE_NAV: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
-  NEXT_PUBLIC_BOTTOM_NAV: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
+  ADVANCE_PASS_CHECK: z.enum(["true", "false"]).default("false"),
 
-  // Database Connection
+  NEXT_PUBLIC_SLIDE_NAV: booleanEnv(false),
+  NEXT_PUBLIC_BOTTOM_NAV: booleanEnv(true),
+
+  // Database
   DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
 
-  // Better Auth Core
+  // Better Auth
   BETTER_AUTH_SECRET: z.string().min(16, "BETTER_AUTH_SECRET must be at least 16 characters long"),
   BETTER_AUTH_URL: z.string().url("BETTER_AUTH_URL must be a valid URL"),
   BETTER_AUTH_TRUSTED_ORIGINS: z.string().optional(),
   TRUSTED_PROXIES: z.string().optional(),
   SETUP_TOKEN: z.string().optional(),
 
-  // OAuth Providers (Optional)
+  // OAuth
   GOOGLE_CLIENT_ID: z.string().optional(),
   GOOGLE_CLIENT_SECRET: z.string().optional(),
   DISCORD_CLIENT_ID: z.string().optional(),
@@ -40,11 +64,11 @@ const serverEnvSchema = z.object({
   FACEBOOK_CLIENT_ID: z.string().optional(),
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
 
-  // Cloudflare Turnstile Captcha (Optional)
+  // Cloudflare Turnstile
   NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
   TURNSTILE_SECRET_KEY: z.string().optional(),
 
-  // Application Update Webhook (Optional)
+  // Update webhook
   UPDATE_WEBHOOK_URL: z.string().optional(),
 
   // Bundle analysis
@@ -52,92 +76,156 @@ const serverEnvSchema = z.object({
 });
 
 /**
- * Client-safe Environment Variables Schema
+ * Client-safe Environment Variables Schema.
+ *
+ * Known variables receive validation and defaults.
+ * Unknown NEXT_PUBLIC_* variables are automatically supported.
  */
-const clientEnvSchema = z.object({
-  NEXT_PUBLIC_APP_NAME: z.string().min(1, "NEXT_PUBLIC_APP_NAME is required"),
-  NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1, "NEXT_PUBLIC_APP_DESCRIPTION is required"),
-  NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
-  NEXT_PUBLIC_SLIDE_NAV: z.enum(["true", "false"]).default("false").transform((value) => value === "true"),
-  NEXT_PUBLIC_BOTTOM_NAV: z.enum(["true", "false"]).default("true").transform((value) => value === "true"),
-});
+const clientEnvSchema = z
+  .object({
+    NEXT_PUBLIC_APP_NAME: z.string().min(1).default(DEFAULT_CONFIG.APP_NAME),
+    NEXT_PUBLIC_APP_DESCRIPTION: z.string().min(1).default(DEFAULT_CONFIG.APP_DESCRIPTION),
+    NEXT_PUBLIC_TURNSTILE_SITE_KEY: z.string().optional(),
+    NEXT_PUBLIC_SLIDE_NAV: z.boolean().default(false),
+    NEXT_PUBLIC_BOTTOM_NAV: z.boolean().default(true),
+  })
+  .catchall(z.union([z.string(), z.boolean()]));
 
 export type ServerEnv = z.infer<typeof serverEnvSchema>;
 export type ClientEnv = z.infer<typeof clientEnvSchema>;
 
 /**
- * Validates and extracts server-side environment variables with descriptive error output.
+ * Validates server environment variables.
+ *
+ * During build, safe placeholders are used for required variables.
+ * Actual runtime values are validated when the container starts.
  */
 function validateServerEnv(): ServerEnv {
-  const result = serverEnvSchema.safeParse(process.env);
+  const isBuilding = isBuildPhase();
+
+  const envToValidate = isBuilding
+    ? {
+      ...process.env,
+      DATABASE_URL: process.env.DATABASE_URL || "postgresql://build_placeholder:build_placeholder@localhost:5432/build_placeholder",
+      BETTER_AUTH_SECRET: process.env.BETTER_AUTH_SECRET || "build_dummy_secret_at_least_16_characters_long",
+      BETTER_AUTH_URL: process.env.BETTER_AUTH_URL || "http://localhost:3000",
+    }
+    : process.env;
+
+  const result = serverEnvSchema.safeParse(envToValidate);
 
   if (!result.success) {
     const formattedErrors = result.error.issues
       .map((issue) => `  - [${issue.path.join(".")}]: ${issue.message}`)
       .join("\n");
 
-    const message = `❌ Invalid or missing Server Environment Variables:\n${formattedErrors}\n\nPlease check your .env or .env.local file.`;
+    const message =
+      `❌ Invalid or missing Server Environment Variables:\n` +
+      `${formattedErrors}\n\n` +
+      "Please check your .env or container environment.";
+
     console.error(message);
     throw new Error(message);
   }
 
-  // Reject known default secrets in production
-  if (result.data.NODE_ENV === "production" && KNOWN_DEFAULT_SECRETS.has(result.data.BETTER_AUTH_SECRET)) {
-    const message = "❌ Insecure BETTER_AUTH_SECRET: You are using a known public default secret in production. Please generate a unique random secret.";
-    console.error(message);
-    throw new Error(message);
+  const data = result.data;
+
+  // Reject known default secrets in production.
+  if (
+    !isBuilding &&
+    data.NODE_ENV === "production" &&
+    KNOWN_DEFAULT_SECRETS.has(data.BETTER_AUTH_SECRET)
+  ) {
+    throw new Error(
+      "❌ Insecure BETTER_AUTH_SECRET: Please generate a unique random secret."
+    );
+  }
+
+  // Reject invalid production hostnames.
+  if (!isBuilding && data.NODE_ENV === "production") {
+    const hostname = new URL(data.BETTER_AUTH_URL).hostname;
+
+    if (hostname === "0.0.0.0" || hostname === "[::]") {
+      throw new Error(
+        "❌ Invalid BETTER_AUTH_URL: Hostname cannot be 0.0.0.0 or [::] in production."
+      );
+    }
+  }
+
+  return data;
+}
+
+/**
+ * Validates public runtime configuration dynamically.
+ *
+ * New NEXT_PUBLIC_* variables are automatically supported
+ * without modifying this schema.
+ */
+function validateClientEnv(): ClientEnv {
+  const runtimeConfig = getPublicRuntimeConfig();
+
+  const result = clientEnvSchema.safeParse(runtimeConfig);
+
+  if (!result.success) {
+    const formattedErrors = result.error.issues
+      .map((issue) => `  - [${issue.path.join(".")}]: ${issue.message}`)
+      .join("\n");
+
+    throw new Error(
+      `❌ Invalid Public Runtime Configuration:\n${formattedErrors}`
+    );
   }
 
   return result.data;
 }
 
 /**
- * Validates and extracts client-side environment variables.
+ * Lazy/cached environment access.
  */
-function validateClientEnv(): ClientEnv {
-  const clientValues = {
-    NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
-    NEXT_PUBLIC_APP_DESCRIPTION: process.env.NEXT_PUBLIC_APP_DESCRIPTION,
-    NEXT_PUBLIC_TURNSTILE_SITE_KEY: process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY,
-
-    NEXT_PUBLIC_SLIDE_NAV: process.env.NEXT_PUBLIC_SLIDE_NAV,
-    NEXT_PUBLIC_BOTTOM_NAV: process.env.NEXT_PUBLIC_BOTTOM_NAV,
-  };
-
-  const result = clientEnvSchema.safeParse(clientValues);
-
-  if (!result.success) {
-    const formattedErrors = result.error.issues
-      .map((issue) => `  - [${issue.path.join(".")}]: ${issue.message}`)
-      .join("\n");
-
-    const message = `❌ Invalid or missing Client Environment Variables:\n${formattedErrors}`;
-    console.error(message);
-    throw new Error(message);
-  }
-
-  return result.data;
-}
-
-// Lazy/cached access for environment variables
 let parsedServerEnv: ServerEnv | null = null;
-let parsedClientEnv: ClientEnv | null = null;
 
 export const env = {
   get server(): ServerEnv {
+    if (typeof window !== "undefined") {
+      throw new Error("Server environment cannot be accessed in the browser.");
+    }
+
     if (!parsedServerEnv) {
       parsedServerEnv = validateServerEnv();
     }
+
     return parsedServerEnv;
   },
+
   get client(): ClientEnv {
-    if (!parsedClientEnv) {
-      parsedClientEnv = validateClientEnv();
-    }
-    return parsedClientEnv;
+    return validateClientEnv();
   },
 };
 
-// Aliases for backward compatibility
-export const envServer = typeof window === "undefined" ? env.server : ({} as ServerEnv);
-export const envClient = env.client;
+/**
+ * Lazy server-side environment proxy.
+ */
+export const envServer: ServerEnv = new Proxy({} as ServerEnv, {
+  get(_target, prop: string | symbol) {
+    if (typeof window !== "undefined" || typeof prop !== "string") {
+      return undefined;
+    }
+
+    return env.server[prop as keyof ServerEnv];
+  },
+});
+
+/**
+ * Dynamic client environment proxy.
+ *
+ * Supports both known and newly added public environment variables.
+ */
+export const envClient: ClientEnv = new Proxy({} as ClientEnv, {
+  get(_target, prop: string | symbol) {
+    if (typeof prop !== "string") {
+      return undefined;
+    }
+
+    return env.client[prop];
+  },
+});
