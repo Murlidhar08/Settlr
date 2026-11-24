@@ -17,8 +17,7 @@ FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci \
-    && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 
 # ==========================================
@@ -33,6 +32,8 @@ COPY . .
 # Only build-essential flags (no runtime secrets, URLs, or branding variables)
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
+    NEXT_PUBLIC_APP_NAME="App Name" \
+    NEXT_PUBLIC_APP_DESCRIPTION="This is the application description" \
     IS_DOCKER_BUILD=true
 
 # Generate Prisma client
