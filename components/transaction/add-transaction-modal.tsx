@@ -26,7 +26,8 @@ import { addTransaction, uploadTransactionFile, deleteTransactionFile } from "@/
 import { CategoryType, FinancialAccountType } from "@/lib/generated/prisma/enums"
 import { tran } from "@/lib/languages/i18n"
 import { cn } from "@/lib/utils"
-import { getFileUrl } from "@/lib/utils/file"
+import { getFileUrl, formatFileSize } from "@/lib/utils/file"
+import { MAX_TRANSACTION_FILE_SIZE_BYTES, MAX_TRANSACTION_FILE_SIZE_MB } from "@/lib/config/constants"
 
 // Types
 import { getFinancialAccounts } from "@/actions/financial-account.actions"
@@ -49,14 +50,6 @@ interface TransactionProps {
 }
 
 const EMPTY_ACCOUNTS: any[] = [];
-
-function formatFileSize(bytes?: number | null): string {
-  if (!bytes || bytes === 0) return "0 B";
-  const k = 1024;
-  const sizes = ["B", "KB", "MB", "GB"];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(1))} ${sizes[i]}`;
-}
 
 export const AddTransactionModal = ({
   title,
@@ -134,11 +127,18 @@ export const AddTransactionModal = ({
     for (const file of fileArray) {
       const ext = (file.name.split(".").pop() || "").toLowerCase();
       if (!allowedExtensions.includes(ext)) {
-        toast.error(`Invalid format for ${file.name}. Only JPG, PNG, and PDF files are allowed.`);
+        toast.error(`"${file.name}" has an unsupported format (.${ext || "unknown"}). Only JPG, PNG, and PDF files are allowed.`);
         continue;
       }
-      if (file.size > 15 * 1024 * 1024) {
-        toast.error(`File ${file.name} is too large. Maximum size is 15MB.`);
+      if (file.size === 0) {
+        toast.error(`"${file.name}" is empty (0 bytes). Please select a valid file.`);
+        continue;
+      }
+      if (file.size > MAX_TRANSACTION_FILE_SIZE_BYTES) {
+        const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
+        toast.error(
+          `"${file.name}" (${sizeInMb}MB) exceeds the maximum allowed file size of ${MAX_TRANSACTION_FILE_SIZE_MB}MB.`
+        );
         continue;
       }
       validFiles.push(file);
@@ -869,7 +869,7 @@ export const AddTransactionModal = ({
                           Click or drag & drop to upload invoices & receipts
                         </p>
                         <p className="text-[10px] text-muted-foreground/60 font-medium">
-                          Supports JPG, PNG, JPEG, PDF (up to 15MB each)
+                          Supports JPG, PNG, JPEG, PDF (up to {MAX_TRANSACTION_FILE_SIZE_MB}MB each)
                         </p>
                       </div>
                     </div>

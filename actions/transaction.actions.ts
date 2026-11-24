@@ -1,12 +1,13 @@
 "use server";
 
 // Lib
-import { getUserSession } from "@/lib/auth/auth";
+import { getServerSession, getUserSession } from "@/lib/auth/auth";
 import { Prisma } from "@/lib/generated/prisma/client";
 import { CategoryType, FinancialAccountType } from "@/lib/generated/prisma/enums";
 import { prisma } from "@/lib/prisma/prisma";
 import { uploadFile, deleteFile, validateMagicBytes } from "@/lib/file-operations";
 import { UnauthorizedError, ValidationError } from "@/lib/errors";
+import { MAX_TRANSACTION_FILE_SIZE_BYTES, MAX_TRANSACTION_FILE_SIZE_MB } from "@/lib/config/constants";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import path from "path";
@@ -659,7 +660,7 @@ export async function getTransactionDetail(transactionId: string) {
 const ALLOWED_TRANSACTION_DOC_EXTENSIONS = new Set(["jpg", "jpeg", "png", "pdf"]);
 
 export async function uploadTransactionFile(formData: FormData) {
-  const session = await getUserSession();
+  const session = await getServerSession();
   if (!session?.user?.id) {
     throw new UnauthorizedError("Unauthorized");
   }
@@ -669,9 +670,15 @@ export async function uploadTransactionFile(formData: FormData) {
     throw new ValidationError("No file provided");
   }
 
-  // 1. File size limit: 15MB
-  if (file.size > 15 * 1024 * 1024) {
-    throw new ValidationError("File size exceeds 15MB limit");
+  // 1. File size limit validation
+  if (file.size === 0) {
+    throw new ValidationError("File is empty (0 bytes)");
+  }
+  if (file.size > MAX_TRANSACTION_FILE_SIZE_BYTES) {
+    const sizeInMb = (file.size / (1024 * 1024)).toFixed(1);
+    throw new ValidationError(
+      `File size (${sizeInMb}MB) exceeds the maximum allowed limit of ${MAX_TRANSACTION_FILE_SIZE_MB}MB`
+    );
   }
 
   // 2. Extension validation
@@ -686,8 +693,8 @@ export async function uploadTransactionFile(formData: FormData) {
     throw new ValidationError("Invalid file content: file signature does not match declared extension");
   }
 
-  // 4. Upload file to /uploads/invoice/transaction
-  const destinationDir = "invoice/transaction";
+  // 4. Upload file to /uploads/transaction
+  const destinationDir = "transaction";
   const ext = `.${rawExt}`;
   const safeBaseName = path.basename(file.name, ext).replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 50);
   const uniqueName = `${Date.now()}_${crypto.randomUUID().slice(0, 8)}_${safeBaseName}${ext}`;
@@ -703,7 +710,7 @@ export async function uploadTransactionFile(formData: FormData) {
 }
 
 export async function deleteTransactionFile(relativePath: string) {
-  const session = await getUserSession();
+  const session = await getServerSession();
   if (!session?.user?.id) {
     throw new UnauthorizedError("Unauthorized");
   }

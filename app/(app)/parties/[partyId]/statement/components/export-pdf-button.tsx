@@ -1,7 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 import { Currency } from "@/lib/generated/prisma/enums";
 import { getCurrencySymbol } from "@/utility/transaction";
 import { format } from "date-fns";
@@ -41,7 +41,7 @@ export default function ExportPDFButton({
             // Branding
             doc.setFontSize(30);
             doc.setTextColor(59, 130, 246); // Brand Color
-            doc.text(envClient.NEXT_PUBLIC_APP_NAME, 105, 20, { align: "center" });
+            doc.text(String(APP.NAME), 105, 20, { align: "center" });
 
             doc.setFontSize(14);
             doc.setTextColor(100);
@@ -125,7 +125,7 @@ export default function ExportPDFButton({
                     doc.setFontSize(8);
                     doc.setTextColor(150);
                     doc.text(str, data.settings.margin.left, doc.internal.pageSize.height - 10);
-                    doc.text(`Secure Statement powered by ${envClient.NEXT_PUBLIC_APP_NAME} Business App`, 196, doc.internal.pageSize.height - 10, { align: "right" });
+                    doc.text(`Secure Statement powered by ${APP.NAME} Business App`, 196, doc.internal.pageSize.height - 10, { align: "right" });
                 }
             });
 

@@ -15,7 +15,7 @@ import { AppHeader } from "@/components/header"
 import { DocumentPreview } from "@/components/document-preview"
 import { tran } from "@/lib/languages/i18n"
 import { cn } from "@/lib/utils"
-import { getFileUrl } from "@/lib/utils/file"
+import { getFileUrl, formatFileSize } from "@/lib/utils/file"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -360,7 +360,7 @@ export function TransactionDetailView({ transaction, isIn }: TransactionDetailVi
                                                             {doc.fileName}
                                                         </p>
                                                         <p className="text-[10px] font-semibold text-muted-foreground/60">
-                                                            {doc.fileSize ? `${(doc.fileSize / (1024 * 1024)).toFixed(1)} MB` : isPdf ? "PDF Document" : "Image File"}
+                                                            {doc.fileSize ? formatFileSize(doc.fileSize) : isPdf ? "PDF Document" : "Image File"}
                                                         </p>
                                                     </div>
                                                     <div className="p-2 rounded-xl text-muted-foreground/50 group-hover/item:text-primary group-hover/item:bg-primary/10 transition-colors">

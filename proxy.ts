@@ -1,5 +1,5 @@
-import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { NextResponse } from "next/server";
 
 /**
  * Security headers applied to responses to prevent common web attacks:
@@ -103,8 +103,7 @@ export function proxy(request: NextRequest) {
   if (isApiRoute && !isAuthRoute && isMutatingMethod) {
     if (!isValidOrigin(request)) {
       console.warn(
-        `[Security] Blocked potential CSRF request from origin: ${
-          request.headers.get("origin") || request.headers.get("referer")
+        `[Security] Blocked potential CSRF request from origin: ${request.headers.get("origin") || request.headers.get("referer")
         } on ${pathname}`
       );
       return new NextResponse(
