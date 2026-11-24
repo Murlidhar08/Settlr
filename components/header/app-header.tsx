@@ -1,7 +1,7 @@
 "use client";
 
 import type { HeaderConfig } from "@/components/header/header-config";
-import { envClient } from "@/lib/env.client";
+import { DEFAULT_CONFIG } from "@/lib/config/repo";
 import { tran } from "@/lib/languages/i18n";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -72,7 +72,7 @@ function AppHeaderContent({ standaloneProps }: { standaloneProps?: AppHeaderProp
   const valueConfig = useHeaderValue();
   const config: HeaderConfig = standaloneProps || valueConfig || {};
   const { toggleSidebar } = useSidebar();
-  const showSidebar = envClient.NEXT_PUBLIC_SLIDE_NAV == true;
+  const showSidebar = DEFAULT_CONFIG.SLIDE_NAV;
 
   // If hidden is true, do not render any header markup!
   if (config.hidden) {

@@ -1,4 +1,4 @@
-import { envClient } from "@/lib/env.client";
+import { DEFAULT_CONFIG } from "@/lib/config/repo";
 import { hasTranslationKey, tran } from "@/lib/languages/i18n";
 import { toTitleCase } from "@/utility/common-function";
 import type { Route } from "next";
@@ -88,7 +88,7 @@ export function getHeaderConfigForPath(pathname: string, customRules?: HeaderRou
     title: formattedTitle,
     showBack: false,
     backUrl: undefined,
-    showMobileNav: envClient.NEXT_PUBLIC_SLIDE_NAV,
+    showMobileNav: DEFAULT_CONFIG.SLIDE_NAV,
     showProfile: true,
   };
 }

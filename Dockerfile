@@ -17,8 +17,7 @@ FROM node:24-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci \
-    && npm cache clean --force
+RUN npm ci && npm cache clean --force
 
 
 # ==========================================
@@ -30,20 +29,10 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Build-time arguments
-ARG NEXT_PUBLIC_APP_NAME=Settlr
-ARG NEXT_PUBLIC_APP_DESCRIPTION="Settlr for managing personal finance"
-ARG BETTER_AUTH_URL="http://localhost:3000"
-ARG BETTER_AUTH_SECRET="build_dummy_secret_for_docker_build_only_32_chars"
-ARG DATABASE_URL="postgresql://postgres:postgres@localhost:5432/settlr"
-
+# Only build-essential flags (no runtime secrets, URLs, or branding variables)
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
-    NEXT_PUBLIC_APP_NAME=${NEXT_PUBLIC_APP_NAME} \
-    NEXT_PUBLIC_APP_DESCRIPTION=${NEXT_PUBLIC_APP_DESCRIPTION} \
-    BETTER_AUTH_URL=${BETTER_AUTH_URL} \
-    BETTER_AUTH_SECRET=${BETTER_AUTH_SECRET} \
-    DATABASE_URL=${DATABASE_URL}
+    IS_DOCKER_BUILD=true
 
 # Generate Prisma client
 RUN npm run db:generate
@@ -67,7 +56,8 @@ WORKDIR /app
 ENV NODE_ENV=production \
     NEXT_TELEMETRY_DISABLED=1 \
     PORT=3000 \
-    HOSTNAME=0.0.0.0
+    HOSTNAME=0.0.0.0 \
+    IS_DOCKER_BUILD=true
 
 # Bootstrap script
 COPY --from=builder /app/resources/scripts/docker-bootstrap.sh /usr/local/bin/bootstrap.sh

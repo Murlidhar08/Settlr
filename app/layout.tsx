@@ -7,7 +7,6 @@ import { Geist_Mono, Nunito_Sans } from "next/font/google";
 import "./globals.css";
 
 // Lib
-import { envClient } from "@/lib/env.client";
 import { envServer } from "@/lib/env.server";
 
 import AppIconsMetaTags from "@/components/app-icons-metatags";
@@ -15,6 +14,7 @@ import { ImpersonationIndicator } from "@/components/auth/impersonation-indicato
 import { PwaPinchZoomPreventer } from "@/components/pwa-pinch-zoom-preventer";
 import { AppProviders } from "@/components/providers";
 import NextTopLoader from 'nextjs-toploader';
+import { APP } from "@/lib/config/repo";
 
 const nunitoSans = Nunito_Sans({
   variable: '--font-sans',
@@ -41,14 +41,14 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: envClient.NEXT_PUBLIC_APP_NAME,
+  title: APP.NAME,
   metadataBase: new URL(envServer.BETTER_AUTH_URL),
-  description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
+  description: APP.DESCRIPTION,
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: envClient.NEXT_PUBLIC_APP_NAME,
+    title: APP.NAME,
   },
   icons: {
     icon: [
@@ -60,15 +60,15 @@ export const metadata: Metadata = {
     apple: "/images/logo/maskable_icon_x192.png",
   },
   openGraph: envServer.NODE_ENV === "development" ? {} : {
-    title: envClient.NEXT_PUBLIC_APP_NAME,
-    description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
-    siteName: envClient.NEXT_PUBLIC_APP_NAME,
+    title: APP.NAME,
+    description: APP.DESCRIPTION,
+    siteName: APP.NAME,
     images: [
       {
         url: '/api/image?type=og',
         width: 1200,
         height: 630,
-        alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
+        alt: `${APP.NAME} - ${APP.DESCRIPTION}`,
       },
     ],
     locale: 'en_US',
@@ -76,14 +76,14 @@ export const metadata: Metadata = {
   },
   twitter: envServer.NODE_ENV === "development" ? {} : {
     card: 'summary_large_image',
-    title: envClient.NEXT_PUBLIC_APP_NAME,
-    description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
+    title: APP.NAME,
+    description: APP.DESCRIPTION,
     images: [
       {
         url: '/api/image?type=twitter',
         width: 1500,
         height: 500,
-        alt: `${envClient.NEXT_PUBLIC_APP_NAME} - ${envClient.NEXT_PUBLIC_APP_DESCRIPTION}`,
+        alt: `${APP.NAME} - ${APP.DESCRIPTION}`,
       },
     ],
   },

@@ -7,8 +7,8 @@ import { type ComponentType, type ReactNode, Suspense } from "react";
 
 import { containerVariants, floatAnimate, floatTransition, itemVariants } from "@/lib/animations";
 import { formatCopy } from "@/lib/config/auth-error-copy";
-import { envClient } from "@/lib/env.client";
 import { cn } from "@/lib/utils";
+import { APP } from "@/lib/config/repo";
 
 export type AuthLayoutColorTheme =
   | "primary"
@@ -224,7 +224,7 @@ export function AuthCenterLayout({
     heroCandidate.titleLine1 ||
     heroCandidate.title ||
     heroCandidate.label ||
-    envClient.NEXT_PUBLIC_APP_NAME;
+    APP.NAME;
 
   const resolvedLine2 =
     titleLine2 ||
@@ -279,7 +279,7 @@ export function AuthCenterLayout({
     return (
       <Image
         src="/images/logo/dark_logo.png"
-        alt={envClient.NEXT_PUBLIC_APP_NAME}
+        alt={APP.NAME}
         loading="eager"
         width={80}
         height={80}
@@ -334,7 +334,7 @@ export function AuthCenterLayout({
               >
                 <Image
                   src="/images/logo/light_logo.png"
-                  alt={envClient.NEXT_PUBLIC_APP_NAME}
+                  alt={APP.NAME}
                   loading="eager"
                   width={32}
                   height={32}
@@ -342,7 +342,7 @@ export function AuthCenterLayout({
                 />
                 <Image
                   src="/images/logo/dark_logo.png"
-                  alt={envClient.NEXT_PUBLIC_APP_NAME}
+                  alt={APP.NAME}
                   loading="eager"
                   width={32}
                   height={32}
@@ -352,7 +352,7 @@ export function AuthCenterLayout({
             </div>
             <div className="flex flex-col gap-0">
               <h1 className="text-2xl font-black tracking-tight bg-clip-text text-transparent bg-linear-to-br from-foreground to-foreground/70 leading-none">
-                {envClient.NEXT_PUBLIC_APP_NAME}
+                {APP.NAME}
               </h1>
             </div>
           </motion.div>

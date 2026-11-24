@@ -1,4 +1,4 @@
-import { envClient } from "@/lib/env.client";
+import { APP } from "@/lib/config/repo";
 
 /**
  * ==============================================================================
@@ -15,7 +15,7 @@ import { envClient } from "@/lib/env.client";
 
 // ------------------------------------------------------------------------------
 // Helper: formatCopy
-// Replaces {appName} with current envClient.NEXT_PUBLIC_APP_NAME and any dynamic variables
+// Replaces {appName} with current APP.NAME and any dynamic variables
 // ------------------------------------------------------------------------------
 export function formatCopy(
   template: string,
@@ -23,7 +23,7 @@ export function formatCopy(
 ): string {
   let result = template.replace(
     /\{appName\}/g,
-    envClient.NEXT_PUBLIC_APP_NAME
+    APP.NAME
   );
   if (variables) {
     for (const [key, value] of Object.entries(variables)) {

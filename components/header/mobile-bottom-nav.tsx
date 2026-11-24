@@ -1,7 +1,7 @@
 "use client";
 
-import { envClient } from "@/lib/env.client";
 import { useAppVersion } from "@/hooks/queries";
+import { APP } from "@/lib/config/repo";
 import clsx from "clsx";
 import { X } from "lucide-react";
 import Image from "next/image";
@@ -65,7 +65,7 @@ export default function MobileBottomNav({ navPropItems }: MobileBottomNavProps) 
                         </div>
                         <div className="flex flex-col text-left">
                             <span className="text-sm font-bold text-sidebar-foreground tracking-tight leading-tight">
-                                {envClient.NEXT_PUBLIC_APP_NAME}
+                                {APP.NAME}
                             </span>
                             <span className="text-xs text-muted-foreground font-normal leading-tight mt-0.5">
                                 {displayVersion}

@@ -1,11 +1,14 @@
-import { envClient } from '@/lib/env.client'
-import type { MetadataRoute } from 'next'
+import { APP } from '@/lib/config/repo';
+import type { MetadataRoute } from 'next';
 
 export default function manifest(): MetadataRoute.Manifest {
+  const appName = String(APP.NAME);
+  const appDescription = String(APP.DESCRIPTION);
+
   return {
-    name: envClient.NEXT_PUBLIC_APP_NAME,
-    short_name: envClient.NEXT_PUBLIC_APP_NAME,
-    description: envClient.NEXT_PUBLIC_APP_DESCRIPTION,
+    name: appName,
+    short_name: appName,
+    description: appDescription,
     start_url: '/',
     display: 'standalone',
     background_color: '#ffffff',
@@ -54,5 +57,5 @@ export default function manifest(): MetadataRoute.Manifest {
         type: 'image/png',
       }
     ]
-  }
+  };
 }
