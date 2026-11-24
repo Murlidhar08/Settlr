@@ -220,8 +220,8 @@ export function AccountDetailsView({ accountId, currency }: AccountDetailsViewPr
         <>
             <BackAccountHeaderClient account={account} />
 
-            <div className="w-full bg-background relative pb-34">
-                <main className="relative z-10 mx-auto max-w-4xl px-4 py-8 space-y-12">
+            <div className="w-full bg-background relative">
+                <main className="relative z-10 mx-auto max-w-4xl space-y-12">
                     {/* Hero Stats Card */}
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}

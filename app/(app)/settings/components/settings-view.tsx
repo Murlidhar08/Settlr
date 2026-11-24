@@ -114,7 +114,7 @@ export function SettingsView() {
       </motion.div>
 
       {/* SIGNOUT BUTTON */}
-      <FooterButtons bottomSpace={true}>
+      <FooterButtons>
         <Button
           onClick={handleSignOut}
           variant="destructive"

@@ -125,7 +125,7 @@ export function PasskeyTab() {
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 ml-2">
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                     <DialogTrigger>
-                        <FooterButtons bottomSpace={true}>
+                        <FooterButtons>
                             <Button
                                 size="sm"
                                 variant="default"

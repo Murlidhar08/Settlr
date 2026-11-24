@@ -51,7 +51,7 @@ export default async function CustomersTab({ partyType, search, includeInactive 
         />
       </Suspense>
 
-      <FooterButtons bottomSpace={true}>
+      <FooterButtons>
         <AddPartiesModal type={partyType}>
           <Button className="h-14 w-14 md:w-auto md:px-12 rounded-full md:gap-3 font-semibold uppercase bg-primary text-white shadow-lg shadow-primary/30 transition-all hover:shadow-xl hover:-translate-y-0.5 active:translate-y-0 p-0 md:py-2">
             <Plus className="size-6 sm:size-5" />

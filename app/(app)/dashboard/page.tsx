@@ -20,7 +20,7 @@ export default async function Page() {
 
   return (
     <>
-      <div className="flex-1 px-4 space-y-6 sm:space-y-8 pb-34">
+      <div className="flex-1 space-y-6 sm:space-y-8">
         {/* Header Section */}
         <section className="flex flex-col md:flex-row md:items-end justify-between gap-4 pt-4">
           <WelcomeNote firstName={firstName} />
