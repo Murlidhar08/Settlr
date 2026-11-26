@@ -52,7 +52,7 @@ model User {
   createdAt        DateTime   @default(now())
   updatedAt        DateTime   @updatedAt
   role             String     @default("user")
-  status           UserStatus @default(pendingapproval)
+  status           UserStatus @default(approved)
   banned           Boolean?   @default(false)
   banReason        String?
   banExpires       DateTime?
@@ -290,21 +290,21 @@ model Party {
 }
 
 model Transaction {
-  id            String           @id @default(cuid())
+  id            String                @id @default(cuid())
   businessId    String
-  amount        Decimal          @db.Decimal(12, 2)
-  date          DateTime         @default(now())
+  amount        Decimal               @db.Decimal(12, 2)
+  date          DateTime              @default(now())
   description   String?
   userId        String
-  createdAt     DateTime         @default(now())
-  updatedAt     DateTime         @default(now()) @updatedAt
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @default(now()) @updatedAt
   fromAccountId String
   toAccountId   String
   partyId       String?
-  business      Business         @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  fromAccount   FinancialAccount @relation("SentTransactions", fields: [fromAccountId], references: [id])
-  party         Party?           @relation(fields: [partyId], references: [id])
-  toAccount     FinancialAccount @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
+  business      Business              @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  fromAccount   FinancialAccount      @relation("SentTransactions", fields: [fromAccountId], references: [id])
+  party         Party?                @relation(fields: [partyId], references: [id])
+  toAccount     FinancialAccount      @relation("ReceivedTransactions", fields: [toAccountId], references: [id])
   user          User                  @relation(fields: [userId], references: [id])
   isDelete      Boolean               @default(false)
   documents     TransactionDocument[]
@@ -321,16 +321,16 @@ model Transaction {
 }
 
 model TransactionDocument {
-  id                   String      @id @default(cuid())
-  transactionId        String      @map("transaction_id")
-  fileName             String      @map("file_name")
-  fileSize             Int?        @map("file_size")
-  fileType             String?     @map("file_type")
-  documentRelativePath String      @map("document_relative_path")
-  createdAt            DateTime    @default(now()) @map("created_at")
-  updatedAt            DateTime    @updatedAt @map("updated_at")
+  id                   String   @id @default(cuid())
+  transactionId        String   @map("transaction_id")
+  fileName             String   @map("file_name")
+  fileSize             Int?     @map("file_size")
+  fileType             String?  @map("file_type")
+  documentRelativePath String   @map("document_relative_path")
+  createdAt            DateTime @default(now()) @map("created_at")
+  updatedAt            DateTime @updatedAt @map("updated_at")
 
-  transaction          Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, map: "fk_transaction_document_transaction_id")
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade, map: "fk_transaction_document_transaction_id")
 
   @@index([transactionId], map: "idx_transaction_document_transaction_id")
   @@map("transaction_document")

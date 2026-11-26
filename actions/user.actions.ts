@@ -28,7 +28,7 @@ const adminCreateUserSchema = z.object({
     }).default(false),
     contactNo: z.string().nullable().optional(),
     username: z.string().min(3).regex(/^[a-zA-Z0-9_-]+$/, "Username can only contain alphanumeric characters, underscores, and dashes").nullable().optional(),
-    status: z.nativeEnum(UserStatus).default(UserStatus.pendingapproval),
+    status: z.nativeEnum(UserStatus).default(UserStatus.approved),
     occupation: z.string().nullable().optional(),
     address: z.string().nullable().optional(),
     description: z.string().nullable().optional(),

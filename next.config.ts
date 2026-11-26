@@ -98,6 +98,10 @@ const nextConfig: NextConfig = {
 
   // Package optimizations
   experimental: {
+    serverActions: {
+      bodySizeLimit: "20mb",
+    },
+    proxyClientMaxBodySize: "20mb",
     optimizePackageImports: [
       "date-fns",
       "framer-motion",
