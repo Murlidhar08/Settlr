@@ -716,7 +716,7 @@ export async function deleteTransactionFile(relativePath: string) {
   }
 
   const normalized = relativePath.replace(/\\/g, "/").replace(/^\/+/, "");
-  if (!normalized.startsWith("invoice/transaction/file/")) {
+  if (!normalized.startsWith("invoice/transaction")) {
     throw new ValidationError("Invalid file path");
   }
 

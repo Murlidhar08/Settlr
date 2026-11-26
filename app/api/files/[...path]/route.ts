@@ -85,7 +85,7 @@ export async function GET(
     // 1. Profile avatars (profile/<filename>) are accessible to active authenticated users
     // Strictly match single-level profile avatars (e.g. profile/user123.png)
     const isAvatar = /^profile\/[^/]+$/.test(canonicalRelativePath);
-    const isInvoiceFile = canonicalRelativePath.startsWith("invoice/transaction/file/");
+    const isInvoiceFile = canonicalRelativePath.startsWith("invoice/transaction");
 
     if (!isAvatar) {
       let isOwner = false;
